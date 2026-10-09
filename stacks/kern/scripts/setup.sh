@@ -16,7 +16,9 @@ if [ ! -f .env ]; then
     for v in OZ_SECRET_KEY OK_SECRET_KEY OBJ_SECRET_KEY OT_SECRET_KEY OF_SECRET_KEY; do echo "$v=$(gen 30)"; done
     for v in OZ_OPENFORMS_SECRET OZ_DEMO_SECRET OT_TOKEN_OBJECTS OT_TOKEN_OPENFORMS OT_TOKEN_SEED \
              OBJ_TOKEN_OPENFORMS OBJ_TOKEN_KISS OK_TOKEN_KISS; do echo "$v=$(gen 20)"; done
-    for v in KISS_OIDC_SECRET KISS_ZGW_SECRET KISS_MI_KEY; do echo "$v=$(gen 24)"; done
+    for v in KISS_OIDC_SECRET KISS_ZGW_SECRET KISS_MI_KEY GZAC_M2M_SECRET; do echo "$v=$(gen 24)"; done
+    for v in GZAC_DB_PASSWORD GZAC_OPERATON_PASSWORD GZAC_ACTUATOR_PASSWORD; do echo "$v=$(gen 16)"; done
+    echo "GZAC_PLUGIN_SECRET=$(gen 8)"   # precies 16 tekens
     for v in KISS_OT_AFDELING KISS_OT_GROEP KISS_OT_MEDEWERKER KISS_OT_VAC KISS_OT_KENNISARTIKEL; do echo "$v="; done
   } > .env
   echo "Nieuwe .env aangemaakt."
@@ -75,6 +77,14 @@ run_seed openforms seed_mail.py
 wait_http 8108 /healthz
 envsubst < scripts/seed_kiss.sql.tmpl | docker compose exec -T db psql -U postgres -d kiss -q -v ON_ERROR_STOP=1
 docker compose run --rm -T kiss-sync-vac >/dev/null 2>&1 && docker compose run --rm -T kiss-sync-smoelenboek >/dev/null 2>&1
+
+# GZAC: Keycloak-clients, -rollen en -gebruikers, daarna dossierrechten voor ROLE_USER
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e GZAC_M2M_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+  python /scripts/keycloak_gzac.py 2>&1 | q
+docker compose up -d gzac-backend gzac
+for _ in $(seq 1 60); do docker compose logs gzac-backend 2>&1 | grep -q "Started ApplicationKt" && break; sleep 5; done
+docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts/gzac_permissions.py:/t.py:ro" \
+  mcr.microsoft.com/playwright/python:v1.55.0-noble sh -c "pip -q install playwright==1.55.0 2>/dev/null; python /t.py" | tail -1
 
 KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
 ./welkom/screenshots.sh || echo "Screenshots mislukt; de welkomstpagina werkt ook zonder."

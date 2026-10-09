@@ -15,3 +15,4 @@ mk objecttypes "$OT_DB_PASSWORD"
 mk openforms "$OF_DB_PASSWORD" pg_trgm
 mk keycloak "$KC_DB_PASSWORD"
 mk kiss "$KISS_DB_PASSWORD"
+mk gzac "$GZAC_DB_PASSWORD"

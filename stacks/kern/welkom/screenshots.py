@@ -92,12 +92,26 @@ with sync_playwright() as p:
 
     def behandelaar():
         pg = new()
+        pg.goto(f"https://gzac.{D}/")
+        pg.wait_for_timeout(3000)
+        pg.fill("#username", "behandelaar"); pg.fill("#password", PW); pg.click("#kc-login")
+        pg.wait_for_timeout(8000)
+        shot(pg, "behandelaar-1")
+        pg.get_by_text("Dossiers").first.click()
+        pg.wait_for_timeout(1500)
+        pg.locator("[class*=side-nav] >> text=Evenementenvergunnin").first.click()
+        pg.wait_for_timeout(5000)
+        shot(pg, "behandelaar-2")
+        rows = pg.locator("table tbody tr")
+        if rows.count():
+            rows.first.click()
+            pg.wait_for_timeout(6000)
+            shot(pg, "behandelaar-3")
+        pg.close()
+        pg = new()
         django_login(pg, "zaken", "/admin/zaken/zaak/")
         pg.goto(f"https://zaken.{D}/admin/zaken/zaak/")
-        shot(pg, "behandelaar-1")
-        pg.locator("#result_list tbody tr a").first.click()
-        pg.wait_for_load_state("networkidle")
-        shot(pg, "behandelaar-2")
+        shot(pg, "behandelaar-oz")
         pg.close()
 
     def beheer():

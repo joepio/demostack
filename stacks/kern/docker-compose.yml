@@ -184,6 +184,9 @@ services:
       OBJ_DB_PASSWORD: ${OBJ_DB_PASSWORD}
       OT_DB_PASSWORD: ${OT_DB_PASSWORD}
       OF_DB_PASSWORD: ${OF_DB_PASSWORD}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KISS_DB_PASSWORD: ${KISS_DB_PASSWORD}
+      GZAC_DB_PASSWORD: ${GZAC_DB_PASSWORD}
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d:ro
       - db:/var/lib/postgresql/data
@@ -371,6 +374,57 @@ services:
     profiles: [jobs]
     command: ["smoelenboek"]
     environment: *kiss-env
+
+  # ---------- Zaakafhandeling: GZAC (Valtimo) met de demo-casus evenementenvergunning ----------
+  gzac-backend:
+    image: ritense/gzac-evenementenvergunning-demo-backend:13.49.1
+    restart: unless-stopped
+    mem_limit: 2g
+    environment:
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70"
+      SPRING_PROFILES_ACTIVE: cloud
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/gzac
+      SPRING_DATASOURCE_NAME: gzac
+      SPRING_DATASOURCE_USERNAME: gzac
+      SPRING_DATASOURCE_PASSWORD: ${GZAC_DB_PASSWORD}
+      VALTIMO_DATABASE: postgres
+      VALTIMO_APP_HOSTNAME: https://gzac.${BASE_DOMAIN}
+      VALTIMO_API_URL: https://gzac.${BASE_DOMAIN}/api/v1/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAKJWT_ISSUERURI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAKAPI_ISSUERURI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAKJWT_CLIENTID: gzac-console
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAKAPI_CLIENTID: gzac-m2m
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAKAPI_CLIENTSECRET: ${GZAC_M2M_SECRET}
+      VALTIMO_PLUGIN_ENCRYPTIONSECRET: ${GZAC_PLUGIN_SECRET}
+      OPERATON_BPM_ADMINUSER_PASSWORD: ${GZAC_OPERATON_PASSWORD}
+      SPRINGACTUATOR_PASSWORD: ${GZAC_ACTUATOR_PASSWORD}
+      VALTIMO_WEB_CORS_CORSCONFIGURATION_ALLOWEDORIGINS: https://gzac.${BASE_DOMAIN}
+      VALTIMO_WEB_CORS_CORSCONFIGURATION_ALLOWEDMETHODS: "*"
+      VALTIMO_WEB_CORS_CORSCONFIGURATION_ALLOWEDHEADERS: "*"
+      VALTIMO_WEB_CORS_PATHS: /**
+      VALTIMO_CHANGELOG_PBAC_CLEARTABLES: "false"
+      VALTIMO_OUTBOX_ENABLED: "false"
+      VALTIMO_OPENSEARCH_ENABLED: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # De nginx in dit image stuurt /api door naar http://gzac-backend:8080
+  gzac:
+    image: ritense/gzac-evenementenvergunning-demo-frontend:13.49.1
+    restart: unless-stopped
+    environment:
+      API_URI: /api/
+      KEYCLOAK_URL: https://keycloak.${BASE_DOMAIN}
+      KEYCLOAK_REALM: demogemeente
+      KEYCLOAK_CLIENT_ID: gzac-console
+      KEYCLOAK_REDIRECT_URI: https://gzac.${BASE_DOMAIN}/keycloak/callback
+      KEYCLOAK_LOGOUT_REDIRECT_URI: https://gzac.${BASE_DOMAIN}
+    ports:
+      - 127.0.0.1:8109:8080
+    depends_on:
+      - gzac-backend
 
 volumes:
   db:
