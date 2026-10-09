@@ -117,6 +117,14 @@ with sync_playwright() as p:
         django_login(pg2, "zaken", "/admin/catalogi/zaaktype/")
         pg2.goto(f"https://zaken.{D}/admin/catalogi/zaaktype/")
         shot(pg2, "beheer-3")
+        for host, path, name in [("klant", "/admin/klantinteracties/klantcontact/", "beheer-openklant"),
+                                 ("objecten", "/admin/core/object/", "beheer-objecten"),
+                                 ("objecttypen", "/admin/core/objecttype/", "beheer-objecttypen")]:
+            pg3 = new()
+            django_login(pg3, host, path)
+            pg3.goto(f"https://{host}.{D}{path}")
+            shot(pg3, name)
+            pg3.close()
         pg.close(); pg2.close()
 
     def ontwikkelaar():
@@ -129,6 +137,20 @@ with sync_playwright() as p:
         pg.wait_for_load_state("networkidle")
         pg.wait_for_timeout(3000)
         shot(pg, "ontwikkelaar-2")
+        pg.goto(f"https://zaken.{D}/catalogi/api/v1/schema/")
+        pg.wait_for_load_state("networkidle")
+        pg.wait_for_timeout(3000)
+        shot(pg, "ontwikkelaar-catalogi")
+        ctx = b.new_context(viewport=VIEW, http_credentials={"username": "admin", "password": PW})
+        pg2 = ctx.new_page()
+        pg2.goto(f"https://mail.{D}/")
+        pg2.wait_for_load_state("networkidle")
+        first = pg2.locator(".message, a[href*='/view/']").first
+        if first.count():
+            first.click()
+            pg2.wait_for_timeout(1500)
+        shot(pg2, "ontwikkelaar-mailpit")
+        ctx.close()
         pg.close()
 
     for fn in (inwoner, kcc, behandelaar, beheer, ontwikkelaar):

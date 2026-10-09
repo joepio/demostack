@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"; . ../.env
 if [ "${KISS:-0}" = 1 ]; then
-  LINK="<a class=\"btn\" href=\"https://kiss.$BASE_DOMAIN/\">Open KISS <small>werkplek KCC</small></a>"
+  LINK="<a class=\"btn\" data-shot=\"kcc-1.jpg\" href=\"https://kiss.$BASE_DOMAIN/\">Open KISS <small>werkplek KCC</small></a>"
   STATE='<span class="state ok">Draait</span>'; VER="${KISS_VERSION:-}"
 else
   LINK='<span class="btn off">KISS <small>wordt ingericht</small></span>'

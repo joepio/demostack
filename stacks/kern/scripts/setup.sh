@@ -70,6 +70,7 @@ GID=$(docker compose exec -T openforms python src/manage.py shell -c \
 run_seed openforms seed_openforms.py -e OF_TOKEN="$TOKEN" -e ZGW_GROUP_ID="$GID"
 run_seed objects seed_kiss_objecten.py -e OBJ_TOKEN_KISS -e KISS_OT_AFDELING -e KISS_OT_GROEP -e KISS_OT_MEDEWERKER -e KISS_OT_VAC -e KISS_OT_KENNISARTIKEL
 run_seed openzaak seed_testpersoon.py -e OZ_DEMO_SECRET
+run_seed openforms seed_mail.py
 
 wait_http 8108 /healthz
 envsubst < scripts/seed_kiss.sql.tmpl | docker compose exec -T db psql -U postgres -d kiss -q -v ON_ERROR_STOP=1
