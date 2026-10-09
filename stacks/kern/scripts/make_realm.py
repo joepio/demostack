@@ -3,9 +3,10 @@ import json, os, sys
 B, PW, SECRET = os.environ["BASE_DOMAIN"], os.environ["ADMIN_PASSWORD"], os.environ["KISS_OIDC_SECRET"]
 ROLES = ["Klantcontactmedewerker", "Redacteur", "Beheerder", "Kennisbank"]
 users = [
-    ("kcc", "Kim", "Contact", ["Klantcontactmedewerker", "Kennisbank"]),
-    ("redacteur", "Rik", "Redacteur", ["Klantcontactmedewerker", "Redacteur", "Kennisbank"]),
-    ("beheerder", "Bea", "Beheer", ROLES),
+    # Let op: de rol Kennisbank zet KISS in een aparte modus met alleen de kennisbank (geen startscherm)
+    ("kcc", "Kim", "Contact", ["Klantcontactmedewerker"]),
+    ("redacteur", "Rik", "Redacteur", ["Klantcontactmedewerker", "Redacteur"]),
+    ("beheerder", "Bea", "Beheer", ["Klantcontactmedewerker", "Redacteur", "Beheerder"]),
 ]
 realm = {
     "realm": "demogemeente", "enabled": True, "displayName": "Demogemeente", "sslRequired": "external",
