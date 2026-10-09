@@ -21,3 +21,38 @@ SELECT now(), t, u, c FROM (VALUES
  ('Demogemeente startpagina', 'https://${BASE_DOMAIN}/', 'Systemen')
 ) AS v(t,u,c)
 WHERE NOT EXISTS (SELECT 1 FROM "Links" WHERE "Titel" = v.t);
+
+-- Categorieën (skills) en extra berichten
+INSERT INTO "Skills" ("DateCreated","DateUpdated","IsDeleted","Naam")
+SELECT now(), now(), false, n FROM (VALUES ('Openbare ruimte'), ('Burgerzaken'), ('Belastingen'), ('Afval')) AS v(n)
+WHERE NOT EXISTS (SELECT 1 FROM "Skills" WHERE "Naam" = v.n);
+
+INSERT INTO "Berichten" ("DateCreated","PublicatieDatum","Titel","Inhoud","IsBelangrijk","Type")
+SELECT now(), now(), t, i, false, ty FROM (VALUES
+ ('Werkinstructie: terugbelverzoek doorzetten naar een afdeling', '<p>Kan je de vraag niet zelf beantwoorden? Kies bij het afronden "Contactverzoek gemaakt", selecteer de afdeling of het team en noteer het telefoonnummer en het beste tijdstip om terug te bellen. Het team ziet het verzoek direct in hun werkvoorraad.</p>', 'Werkinstructie'),
+ ('Werkinstructie: identiteit controleren aan de telefoon', '<p>Vraag naar geboortedatum en postcode voordat je persoonsgegevens of zaakinformatie deelt. Deel nooit het BSN. De BRP-gegevens in KISS zijn alleen bedoeld om de identiteit te controleren.</p>', 'Werkinstructie'),
+ ('Werkinstructie: grofvuil laten ophalen', '<p>Inwoners kunnen grofvuil twee keer per jaar gratis laten ophalen. Maak de afspraak via het formulier of noteer het adres en de gewenste week in een contactverzoek voor team Afval.</p>', 'Werkinstructie'),
+ ('Gewijzigde openingstijden stadhuis in de herfstvakantie', '<p>In de herfstvakantie is het stadhuis alleen op afspraak open van 9.00 tot 13.00 uur. Het KCC is telefonisch gewoon bereikbaar.</p>', 'Nieuws'),
+ ('Aanslag gemeentelijke belastingen verstuurd', '<p>Deze week zijn de aanslagen voor de gemeentelijke belastingen verstuurd. Verwacht meer vragen over betalingsregelingen en kwijtschelding; zie de veelgestelde vragen in de kennisbank.</p>', 'Nieuws')
+) AS v(t,i,ty)
+WHERE NOT EXISTS (SELECT 1 FROM "Berichten" WHERE "Titel" = v.t);
+
+INSERT INTO "BerichtSkill" ("BerichtenId","SkillsId")
+SELECT b."Id", s."Id" FROM "Berichten" b JOIN "Skills" s ON (s."Naam", b."Titel") IN (
+ ('Openbare ruimte', 'Storing straatverlichting Dorpsstraat'),
+ ('Openbare ruimte', 'Nieuw: meldingen openbare ruimte via het formulier'),
+ ('Openbare ruimte', 'Werkinstructie: status van een melding opzoeken'),
+ ('Burgerzaken', 'Werkinstructie: identiteit controleren aan de telefoon'),
+ ('Burgerzaken', 'Gewijzigde openingstijden stadhuis in de herfstvakantie'),
+ ('Afval', 'Werkinstructie: grofvuil laten ophalen'),
+ ('Belastingen', 'Aanslag gemeentelijke belastingen verstuurd'))
+WHERE NOT EXISTS (SELECT 1 FROM "BerichtSkill" x WHERE x."BerichtenId" = b."Id" AND x."SkillsId" = s."Id");
+
+INSERT INTO "Links" ("DateCreated","Titel","Url","Categorie")
+SELECT now(), t, u, c FROM (VALUES
+ ('Afvalkalender', 'https://${BASE_DOMAIN}/', 'Inwoners'),
+ ('Kwijtschelding aanvragen', 'https://${BASE_DOMAIN}/', 'Inwoners'),
+ ('Smoelenboek en teams (Objecten)', 'https://objecten.${BASE_DOMAIN}/admin/', 'Systemen'),
+ ('Testomgeving KvK', 'https://developers.kvk.nl/nl/documentation/testing', 'Bronnen')
+) AS v(t,u,c)
+WHERE NOT EXISTS (SELECT 1 FROM "Links" WHERE "Titel" = v.t);

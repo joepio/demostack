@@ -47,6 +47,18 @@ VAC = [
     ("Kan ik uitstel van betaling krijgen voor de gemeentelijke belastingen?",
      "Ja, u kunt een betalingsregeling aanvragen via het formulier op de website of via het KCC.", "AFD-BEL",
      ["belasting", "betalingsregeling", "uitstel"]),
+    ("Wanneer wordt mijn grofvuil opgehaald?",
+     "Grofvuil wordt op afspraak opgehaald, meestal binnen twee weken. Twee keer per jaar is gratis.", "AFD-OR",
+     ["grofvuil", "afval", "ophalen"]),
+    ("Hoe verhuis ik naar een ander adres in de gemeente?",
+     "Geef de verhuizing online door, uiterlijk vijf dagen na de verhuisdatum. Inloggen met DigiD is nodig.", "AFD-BZ",
+     ["verhuizen", "adres", "brp"]),
+    ("Kan ik kwijtschelding krijgen van de afvalstoffenheffing?",
+     "Bij een laag inkomen en weinig vermogen kunt u kwijtschelding aanvragen. Dat kan tot drie maanden na de dagtekening van de aanslag.", "AFD-BEL",
+     ["kwijtschelding", "afvalstoffenheffing", "belasting"]),
+    ("Er ligt een boom over de weg, wat moet ik doen?",
+     "Bij direct gevaar: bel 112. Anders doorverbinden met team Meldingen; zij sturen binnen 2 uur iemand langs.", "AFD-OR",
+     ["boom", "gevaar", "storm", "melding"]),
 ]
 for vraag, antw, afd, tw in VAC:
     ensure("VAC", "vraag", {"vraag": vraag, "antwoord": antw, "status": "actief", "doelgroep": "eu-burger",
