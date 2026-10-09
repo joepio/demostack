@@ -11,6 +11,7 @@ Een melding van een inwoner, van formulier tot klantcontact.
 | Objecten / Objecttypen | 3.6.2 / 3.4.2 | `objecten.<domein>`, `objecttypen.<domein>` |
 | KISS | 3.2.0 | `kiss.<domein>` |
 | GZAC (Valtimo), demo-casus evenementenvergunning | 13.49.1 | `gzac.<domein>` |
+| Open Notificaties | 1.17.0 | `notificaties.<domein>` |
 | Keycloak | 26.7.5 | `keycloak.<domein>` |
 | Mailpit (basic auth) | 1.31.4 | `mail.<domein>` |
 
@@ -39,14 +40,14 @@ Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur
 ## Opbouw
 
 - `config/templates/`: setup_configuration per component, met `${VAR}` uit `.env`. `scripts/render-config.sh` schrijft ze naar `config/generated/`.
-- `config/nginx/`: nginx tussen Caddy en de Django-apps. KISS stuurt request-bodies chunked en uWSGI leest die als leeg; nginx buffert ze en zet een Content-Length.
+- Open Notificaties: Open Zaak en Objecten sturen hun wijzigingen naar de kanalen zaken, documenten, besluiten, objecten enz. Rooktest: `scripts/test_notificatie.py`.
+- `config/nginx/`: nginx tussen Caddy en de Django-apps (zoekt containernamen dynamisch op, zodat een herstarte app direct bereikbaar is). KISS stuurt request-bodies chunked en uWSGI leest die als leeg; nginx buffert ze en zet een Content-Length.
 - `config/objecttypes-schemas/`: JSON-schema's voor de KISS-objecttypen, uit [Dimpact-Samenwerking/objecttypes2](https://github.com/Dimpact-Samenwerking/objecttypes2).
 - `welkom/`: template en build-script voor de welkomstpagina.
 - De KISS-zoekindex wordt bijgewerkt met `docker compose run --rm kiss-sync-vac` en `kiss-sync-smoelenboek`; zet dit in cron.
 
 ## Nog niet gekoppeld
 
-- Open Notificaties (statuswijzigingen naar buiten).
 - Open Klant aan Open Formulieren.
 - Kennisartikelen (producten en diensten) in KISS: het objecttype bestaat, inhoud nog niet.
 - DigiD/eHerkenning: het formulier is anoniem.

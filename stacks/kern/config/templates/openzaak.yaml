@@ -12,6 +12,8 @@ vng_api_common_credentials:
       secret: ${OZ_DEMO_SECRET}
     - identifier: kiss
       secret: ${KISS_ZGW_SECRET}
+    - identifier: opennotificaties
+      secret: ${ON_CLIENT_SECRET}
 vng_api_common_applicaties_config_enable: true
 vng_api_common_applicaties:
   items:
@@ -27,3 +29,24 @@ vng_api_common_applicaties:
       client_ids: [kiss]
       label: KISS
       heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a04
+      client_ids: [opennotificaties, openzaak, objecten]
+      label: Open Notificaties en notificerende componenten
+      heeft_alle_autorisaties: true
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: notifications-api
+      label: Notificaties API
+      api_root: https://notificaties.${BASE_DOMAIN}/api/v1/
+      api_connection_check_path: kanaal
+      api_type: nrc
+      auth_type: zgw
+      client_id: openzaak
+      secret: ${OZ_TO_ON_SECRET}
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notifications-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 3
+  notification_delivery_retry_backoff_max: 30

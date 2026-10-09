@@ -19,6 +19,9 @@ if [ ! -f .env ]; then
     for v in KISS_OIDC_SECRET KISS_ZGW_SECRET KISS_MI_KEY GZAC_M2M_SECRET; do echo "$v=$(gen 24)"; done
     for v in GZAC_DB_PASSWORD GZAC_OPERATON_PASSWORD GZAC_ACTUATOR_PASSWORD; do echo "$v=$(gen 16)"; done
     echo "GZAC_PLUGIN_SECRET=$(gen 8)"   # precies 16 tekens
+    for v in ON_DB_PASSWORD; do echo "$v=$(gen 16)"; done
+    echo "ON_SECRET_KEY=$(gen 30)"
+    for v in ON_CLIENT_SECRET OZ_TO_ON_SECRET OBJ_TO_ON_SECRET; do echo "$v=$(gen 20)"; done
     for v in KISS_OT_AFDELING KISS_OT_GROEP KISS_OT_MEDEWERKER KISS_OT_VAC KISS_OT_KENNISARTIKEL; do echo "$v="; done
   } > .env
   echo "Nieuwe .env aangemaakt."
@@ -36,14 +39,14 @@ wait_http() { # poort pad
     case "$code" in 200|302) return 0;; esac; sleep 5
   done; echo "Timeout op poort $1"; exit 1
 }
-for p in 8101 8102 8103 8104 8105; do wait_http $p /admin/login/; done
+for p in 8101 8102 8103 8104 8105 8110; do wait_http $p /admin/login/; done
 
 apply() { # service template
   echo "== setup_configuration $1 ($2)"
   docker compose run --rm -T -v "$PWD/config/generated/$2.yaml:/app/setup_configuration/data.yaml:ro" "$1" \
     src/manage.py setup_configuration --yaml-file setup_configuration/data.yaml 2>&1 | grep -E "Success|rror|completed" || true
 }
-apply openzaak openzaak; apply objecttypes objecttypes; apply objects objects; apply openforms openforms; apply openklant openklant
+apply opennotificaties opennotificaties; apply openzaak openzaak; apply objecttypes objecttypes; apply objects objects; apply openforms openforms; apply openklant openklant
 
 for s in openklant objects objecttypes openforms; do
   docker compose exec -T "$s" python src/manage.py createsuperuser --noinput --username admin --email admin@demogemeente.local >/dev/null 2>&1 || true
