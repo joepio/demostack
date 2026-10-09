@@ -23,7 +23,7 @@ if [ ! -f .env ]; then
     echo "ON_SECRET_KEY=$(gen 30)"
     for v in ON_CLIENT_SECRET OZ_TO_ON_SECRET OBJ_TO_ON_SECRET OK_TOKEN_ZAC OBJ_TOKEN_ZAC; do echo "$v=$(gen 20)"; done
     for v in ZAC_DB_PASSWORD PABC_DB_PASSWORD SOLR_PASSWORD OFFICE_CONVERTER_PASSWORD; do echo "$v=$(gen 16)"; done
-    for v in ZAC_OIDC_SECRET ZAC_ADMIN_SECRET PABC_OIDC_SECRET PABC_ADMIN_SECRET PABC_API_KEY ZAC_ZGW_SECRET ZAC_ON_KEY ZAC_INTERNAL_KEY; do echo "$v=$(gen 24)"; done
+    for v in BEHEER_OIDC_SECRET ZAC_OIDC_SECRET ZAC_ADMIN_SECRET PABC_OIDC_SECRET PABC_ADMIN_SECRET PABC_API_KEY ZAC_ZGW_SECRET ZAC_ON_KEY ZAC_INTERNAL_KEY; do echo "$v=$(gen 24)"; done
     for v in KISS_OT_AFDELING KISS_OT_GROEP KISS_OT_MEDEWERKER KISS_OT_VAC KISS_OT_KENNISARTIKEL; do echo "$v="; done
   } > .env
   echo "Nieuwe .env aangemaakt."
@@ -103,6 +103,12 @@ docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts
   mcr.microsoft.com/playwright/python:v1.55.0-noble sh -c "pip -q install playwright==1.55.0 2>/dev/null; python /t.py" | tail -2
 apply opennotificaties opennotificaties-zac
 curl -s -o /dev/null -H "X-API-KEY: $ZAC_INTERNAL_KEY" http://127.0.0.1:8111/rest/internal/indexeren/herindexeren/ZAAK
+
+# Single sign-on: account 'demo', langere sessies, beheerschermen via Keycloak
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+  python /scripts/keycloak_sso.py 2>&1 | q
+for s in openzaak openklant objects objecttypes opennotificaties; do apply $s oidc; done
+apply openforms oidc-openforms
 
 KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
 ./welkom/screenshots.sh || echo "Screenshots mislukt; de welkomstpagina werkt ook zonder."
