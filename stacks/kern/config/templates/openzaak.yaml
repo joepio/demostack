@@ -14,6 +14,8 @@ vng_api_common_credentials:
       secret: ${KISS_ZGW_SECRET}
     - identifier: opennotificaties
       secret: ${ON_CLIENT_SECRET}
+    - identifier: zac
+      secret: ${ZAC_ZGW_SECRET}
 vng_api_common_applicaties_config_enable: true
 vng_api_common_applicaties:
   items:
@@ -32,6 +34,10 @@ vng_api_common_applicaties:
     - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a04
       client_ids: [opennotificaties, openzaak, objecten]
       label: Open Notificaties en notificerende componenten
+      heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a05
+      client_ids: [zac]
+      label: ZAC (Dimpact)
       heeft_alle_autorisaties: true
 zgw_consumers_config_enable: true
 zgw_consumers:

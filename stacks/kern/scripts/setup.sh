@@ -21,15 +21,17 @@ if [ ! -f .env ]; then
     echo "GZAC_PLUGIN_SECRET=$(gen 8)"   # precies 16 tekens
     for v in ON_DB_PASSWORD; do echo "$v=$(gen 16)"; done
     echo "ON_SECRET_KEY=$(gen 30)"
-    for v in ON_CLIENT_SECRET OZ_TO_ON_SECRET OBJ_TO_ON_SECRET; do echo "$v=$(gen 20)"; done
+    for v in ON_CLIENT_SECRET OZ_TO_ON_SECRET OBJ_TO_ON_SECRET OK_TOKEN_ZAC OBJ_TOKEN_ZAC; do echo "$v=$(gen 20)"; done
+    for v in ZAC_DB_PASSWORD PABC_DB_PASSWORD SOLR_PASSWORD OFFICE_CONVERTER_PASSWORD; do echo "$v=$(gen 16)"; done
+    for v in ZAC_OIDC_SECRET ZAC_ADMIN_SECRET PABC_OIDC_SECRET PABC_ADMIN_SECRET PABC_API_KEY ZAC_ZGW_SECRET ZAC_ON_KEY ZAC_INTERNAL_KEY; do echo "$v=$(gen 24)"; done
     for v in KISS_OT_AFDELING KISS_OT_GROEP KISS_OT_MEDEWERKER KISS_OT_VAC KISS_OT_KENNISARTIKEL; do echo "$v="; done
   } > .env
   echo "Nieuwe .env aangemaakt."
 fi
-grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac" >> .env
+grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac" >> .env
 set -a; . ./.env; set +a
 # Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
-WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac
+WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac
 setenv() { if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 q() { grep -v -E '^\{"|Container|^$' || true; }
 
@@ -91,6 +93,16 @@ docker compose up -d gzac-backend gzac
 for _ in $(seq 1 60); do docker compose logs gzac-backend 2>&1 | grep -q "Started ApplicationKt" && break; sleep 5; done
 docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts/gzac_permissions.py:/t.py:ro" \
   mcr.microsoft.com/playwright/python:v1.55.0-noble sh -c "pip -q install playwright==1.55.0 2>/dev/null; python /t.py" | tail -1
+
+# ZAC (Dimpact): Keycloak, zaakafhandelparameters, notificaties en zoekindex
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e ZAC_OIDC_SECRET -e ZAC_ADMIN_SECRET -e PABC_OIDC_SECRET \
+  -e PABC_ADMIN_SECRET -v "$PWD/scripts:/scripts:ro" openforms python /scripts/keycloak_zac.py 2>&1 | q
+docker compose up -d
+for _ in $(seq 1 60); do curl -s http://127.0.0.1:8111/ -o /dev/null -w '%{http_code}' | grep -qE '200|302' && break; sleep 5; done
+docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts/zac_inrichten.py:/t.py:ro" \
+  mcr.microsoft.com/playwright/python:v1.55.0-noble sh -c "pip -q install playwright==1.55.0 2>/dev/null; python /t.py" | tail -2
+apply opennotificaties opennotificaties-zac
+curl -s -o /dev/null -H "X-API-KEY: $ZAC_INTERNAL_KEY" http://127.0.0.1:8111/rest/internal/indexeren/herindexeren/ZAAK
 
 KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
 ./welkom/screenshots.sh || echo "Screenshots mislukt; de welkomstpagina werkt ook zonder."

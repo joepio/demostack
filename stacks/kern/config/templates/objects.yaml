@@ -47,3 +47,11 @@ tokenauth:
       application: KISS
       administration: Demo
       is_superuser: true
+    - identifier: zac
+      token: ${OBJ_TOKEN_ZAC}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: ZAC
+      administration: Demo
+      is_superuser: true

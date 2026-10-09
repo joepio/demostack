@@ -8,3 +8,10 @@ tokenauth:
       organization: Demogemeente
       application: KISS
       administration: Demo
+    - identifier: zac
+      token: ${OK_TOKEN_ZAC}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: ZAC
+      administration: Demo

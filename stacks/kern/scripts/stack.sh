@@ -5,10 +5,10 @@
 #   ./scripts/stack.sh uit kcc           profiel uitzetten
 #   ./scripts/stack.sh alleen gzac       alleen dit profiel aan (naast de registers)
 #   ./scripts/stack.sh toepassen         zet de profielen uit .env (COMPOSE_PROFILES) door
-# Profielen: kcc (KISS, Elasticsearch, BRP-mock), gzac (GZAC/Valtimo)
+# Profielen: kcc (KISS, Elasticsearch, BRP-mock), gzac (GZAC/Valtimo), zac (ZAC van Dimpact met Solr, OPA, PABC)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ALL="kcc gzac"
+ALL="kcc gzac zac"
 cur=$(grep '^COMPOSE_PROFILES=' .env | cut -d= -f2 | tr ',' ' ')
 want="$cur"
 case "${1:-status}" in

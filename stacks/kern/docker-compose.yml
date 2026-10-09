@@ -205,6 +205,8 @@ services:
       KISS_DB_PASSWORD: ${KISS_DB_PASSWORD}
       GZAC_DB_PASSWORD: ${GZAC_DB_PASSWORD}
       ON_DB_PASSWORD: ${ON_DB_PASSWORD}
+      ZAC_DB_PASSWORD: ${ZAC_DB_PASSWORD}
+      PABC_DB_PASSWORD: ${PABC_DB_PASSWORD}
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d:ro
       - db:/var/lib/postgresql/data
@@ -381,7 +383,7 @@ services:
       retries: 20
 
   personen-mock:
-    profiles: [kcc]
+    profiles: [kcc, zac]
     image: ghcr.io/brp-api/personen-mock:2.7.0-latest
     restart: unless-stopped
     environment:
@@ -449,6 +451,18 @@ services:
       db:
         condition: service_healthy
 
+  # Herstelt de dossierrechten van ROLE_USER na elke herstart van GZAC
+  gzac-permissions:
+    image: python:3.13-alpine
+    profiles: [gzac]
+    restart: unless-stopped
+    command: ["python", "-u", "/watch.py"]
+    environment:
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ./scripts/gzac_permissions_watch.py:/watch.py:ro
+
   # De nginx in dit image stuurt /api door naar http://gzac-backend:8080
   gzac:
     profiles: [gzac]
@@ -466,8 +480,153 @@ services:
     depends_on:
       - gzac-backend
 
+  # ---------- Zaakafhandeling Dimpact: ZAC met Solr, OPA, PABC en documentconversie ----------
+  solr:
+    image: solr:9.11.0-slim
+    profiles: [zac]
+    restart: unless-stopped
+    user: root  # om security.json te kopiëren; Solr zelf draait daarna als gebruiker solr
+    environment:
+      SOLR_JAVA_MEM: "-Xms256m -Xmx512m"
+    volumes:
+      - solr-data:/var/solr
+    # ZAC 5.8 spreekt Solr zonder wachtwoord aan; Solr is alleen binnen het Docker-netwerk bereikbaar.
+    # (Vanaf ZAC 5.9 kan basic auth: zet dan config/generated/solr/security.json terug.)
+    command: bash -c "mkdir -p /var/solr/data && rm -f /var/solr/data/security.json && chown -R 8983:8983 /var/solr && runuser -u solr -- solr-precreate zac"
+
+  opa:
+    image: openpolicyagent/opa:1.21.1-static
+    profiles: [zac]
+    restart: unless-stopped
+    command: run --server --addr=0.0.0.0:8181
+
+  office-converter:
+    image: gotenberg/gotenberg:8.37.0
+    profiles: [zac]
+    restart: unless-stopped
+    command: ["gotenberg", "--chromium-disable-routes=true", "--api-enable-basic-auth=true"]
+    environment:
+      GOTENBERG_API_BASIC_AUTH_USERNAME: zac
+      GOTENBERG_API_BASIC_AUTH_PASSWORD: ${OFFICE_CONVERTER_PASSWORD}
+
+  pabc-migrations:
+    image: ghcr.io/platform-autorisatie-beheer-component/pabc-migrations:2.1.0
+    profiles: [zac]
+    environment:
+      ConnectionStrings__Pabc: Host=db;Port=5432;Username=pabc;Password=${PABC_DB_PASSWORD};Database=pabc
+      JSON_DATASET_PATH: /app/json/pabc-mapping-data.json
+    volumes:
+      - ./config/pabc-dataset.json:/app/json/pabc-mapping-data.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  pabc-api:
+    image: ghcr.io/platform-autorisatie-beheer-component/pabc-api:2.1.0
+    profiles: [zac]
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "8000"
+      API_KEY__0: ${PABC_API_KEY}
+      ConnectionStrings__Pabc: Host=db;Port=5432;Username=pabc;Password=${PABC_DB_PASSWORD};Database=pabc
+      Oidc__Authority: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/
+      Oidc__ClientId: pabc
+      Oidc__ClientSecret: ${PABC_OIDC_SECRET}
+      Oidc__FunctioneelBeheerderRole: administrator
+      KeycloakAdmin__ClientId: pabc-admin-client
+      KeycloakAdmin__ClientSecret: ${PABC_ADMIN_SECRET}
+      KeycloakAdmin__ExcludedRoles__0: offline_access
+      KeycloakAdmin__ExcludedRoles__1: uma_authorization
+      KeycloakAdmin__ExcludedRoles__2: default-roles-demogemeente
+      ZgwZaakregister__Enabled: "false"
+    ports:
+      - 127.0.0.1:8112:8000
+    depends_on:
+      pabc-migrations:
+        condition: service_completed_successfully
+
+  zac:
+    # 5.9.x: het amd64-image ontbreekt in de registry (okt 2026), daarom 5.8.0
+    image: ghcr.io/infonl/zaakafhandelcomponent:5.8.0
+    profiles: [zac]
+    restart: unless-stopped
+    mem_limit: 2500m
+    environment:
+      JAVA_OPTS: "-Xms512m -Xmx1280m"
+      TZ: Europe/Amsterdam
+      CONTEXT_URL: https://zac.${BASE_DOMAIN}
+      AUTH_SERVER: https://keycloak.${BASE_DOMAIN}
+      AUTH_REALM: demogemeente
+      AUTH_RESOURCE: zac
+      AUTH_SECRET: ${ZAC_OIDC_SECRET}
+      AUTH_SSL_REQUIRED: external
+      AUTH_ENABLE_PKCE: "true"
+      KEYCLOAK_ADMIN_CLIENT_ID: zac-admin-client
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${ZAC_ADMIN_SECRET}
+      DB_HOST: db
+      DB_NAME: zac
+      DB_USER: zac
+      DB_PASSWORD: ${ZAC_DB_PASSWORD}
+      ZGW_API_CLIENT_MP_REST_URL: https://zaken.${BASE_DOMAIN}/
+      ZGW_API_CLIENTID: zac
+      ZGW_API_SECRET: ${ZAC_ZGW_SECRET}
+      CATALOGUS_DOMEIN: DEMO
+      OBJECTS_API_CLIENT_MP_REST_URL: https://objecten.${BASE_DOMAIN}
+      OBJECTS_API_TOKEN: ${OBJ_TOKEN_ZAC}
+      KLANTINTERACTIES_API_CLIENT_MP_REST_URL: https://klant.${BASE_DOMAIN}
+      KLANTINTERACTIES_API_TOKEN: ${OK_TOKEN_ZAC}
+      BRP_API_CLIENT_MP_REST_URL: http://personen-mock:5010/haalcentraal/api/brp
+      BRP_PROTOCOLLERING_ENABLED: "false"
+      BRP_DOELBINDING_PER_ZAAKTYPE: "false"
+      BRP_ORIGIN_OIN: "00000001002220647000"
+      BRP_SYSTEM_USER: ZacSystemUser
+      KVK_API_CLIENT_MP_REST_URL: https://api.kvk.nl/test/
+      # Openbare testsleutel van de KvK, zie developers.kvk.nl
+      KVK_API_KEY: l7xx1f2691f2520d487b902f4e0b57a0b197
+      BAG_API_CLIENT_MP_REST_URL: https://api.bag.kadaster.nl/lvbag/individuelebevragingen/v2/
+      BAG_API_KEY: niet-geconfigureerd
+      OPA_API_CLIENT_MP_REST_URL: http://opa:8181
+      OFFICE_CONVERTER_CLIENT_MP_REST_URL: http://office-converter:3000
+      OFFICE_CONVERTER_USERNAME: zac
+      OFFICE_CONVERTER_PASSWORD: ${OFFICE_CONVERTER_PASSWORD}
+      PABC_API_CLIENT_MP_REST_URL: http://pabc-api:8000
+      PABC_API_KEY: ${PABC_API_KEY}
+      SOLR_URL: http://solr:8983
+      SOLR_USERNAME: zac
+      SOLR_PASSWORD: ${SOLR_PASSWORD}
+      OPEN_NOTIFICATIONS_API_SECRET_KEY: ${ZAC_ON_KEY}
+      OPEN_FORMS_URL: https://formulieren.${BASE_DOMAIN}
+      SMTP_SERVER: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USERNAME: zac
+      SMTP_PASSWORD: zac
+      GEMEENTE_CODE: "9999"
+      GEMEENTE_NAAM: Demogemeente
+      GEMEENTE_MAIL: noreply@demogemeente.local
+      BRON_ORGANISATIE_RSIN: "002220647"
+      VERANTWOORDELIJKE_ORGANISATIE_RSIN: "002220647"
+      SIGNALERINGEN_DELETE_OLDER_THAN_DAYS: "14"
+      ZAC_INTERNAL_ENDPOINTS_API_KEY: ${ZAC_INTERNAL_KEY}
+      SMARTDOCUMENTS_ENABLED: "false"
+      SMARTDOCUMENTS_AUTHENTICATION: niet-geconfigureerd
+      SMARTDOCUMENTS_CLIENT_MP_REST_URL: http://localhost:1
+      OTEL_SDK_DISABLED: "true"
+    ports:
+      - 127.0.0.1:8111:8080
+    depends_on:
+      db:
+        condition: service_healthy
+      solr:
+        condition: service_started
+      opa:
+        condition: service_started
+      pabc-api:
+        condition: service_started
+
 volumes:
   db:
+  solr-data:
   es:
   redis:
   oz-media:

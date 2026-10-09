@@ -26,52 +26,72 @@ else:
         "domein": "DEMO", "rsin": RSIN, "naam": "Demogemeente",
         "contactpersoonBeheerNaam": "Functioneel beheer", "contactpersoonBeheerEmailadres": "beheer@demogemeente.local",
         "versie": "1", "begindatumVersie": "2026-01-01"})
+import datetime
+TODAY = datetime.date.today()
 existing = call("GET", "zaaktypen", params={"catalogus": cat["url"], "identificatie": "MOR", "status": "alles"})["results"]
 for z in existing:
     if z["concept"]:
         call("DELETE", z["url"]); print("concept opgeruimd", z["url"])
-    else:
-        print("zaaktype bestaat al", z["url"]); sys.exit(0)
+published = [z for z in existing if not z["concept"]]
+
+def statusnamen(z):
+    return {s["omschrijving"] for s in call("GET", "statustypen", params={"zaaktype": z["url"]})["results"]}
+
+# De zaaktype-inrichting voldoet aan de eisen van ZAC (statustypen, rollen Initiator/Behandelaar, informatieobjecttype e-mail)
+current = [z for z in published if not z.get("eindeGeldigheid")]
+if current and "Intake" in statusnamen(current[0]):
+    print("zaaktype bestaat al", current[0]["url"]); sys.exit(0)
+begin = TODAY.isoformat() if published else "2026-01-01"
+if current:  # oude versie afsluiten; de nieuwe versie gaat vandaag in
+    call("PATCH", current[0]["url"], json={"eindeGeldigheid": (TODAY - datetime.timedelta(days=1)).isoformat()})
+    print("oude versie afgesloten", current[0]["url"])
 
 proc = requests.get(f"{SL}/procestypen", params={"jaar": 2020}, timeout=30).json()
 procestype = next(p for p in proc if p["nummer"] == 11)  # Behandelen van een melding
 resultaten = requests.get(f"{SL}/resultaten", params={"procesType": procestype["url"]}, timeout=30).json()["results"]
 resultaat = next(r for r in resultaten if r.get("waardering") == "vernietigen" and r.get("procestermijn") != "bestaansduur_procesobject")
 omschr = requests.get(f"{SL}/resultaattypeomschrijvingen", timeout=30).json()
-afgehandeld = next(o for o in omschr if o["omschrijving"].lower() == "afgehandeld")
+def omschrijving(naam): return next(o for o in omschr if o["omschrijving"].lower() == naam)
 
-iots = [i for i in call("GET", "informatieobjecttypen", params={"catalogus": cat["url"]})["results"] if i["omschrijving"] == "Bijlage melding"]
-iot = iots[0] if iots else None
-if not iot:
-  iot = call("POST", "informatieobjecttypen", json={
-    "catalogus": cat["url"], "omschrijving": "Bijlage melding", "vertrouwelijkheidaanduiding": "openbaar",
-    "beginGeldigheid": "2026-01-01", "informatieobjectcategorie": "Bijlage"})
-  call("POST", iot["url"] + "/publish")
+def iot(naam, categorie):
+    found = [i for i in call("GET", "informatieobjecttypen", params={"catalogus": cat["url"]})["results"] if i["omschrijving"] == naam]
+    if found: return found[0]
+    i = call("POST", "informatieobjecttypen", json={
+        "catalogus": cat["url"], "omschrijving": naam, "vertrouwelijkheidaanduiding": "openbaar",
+        "beginGeldigheid": "2026-01-01", "informatieobjectcategorie": categorie})
+    call("POST", i["url"] + "/publish")
+    return i
+bijlage, email = iot("Bijlage melding", "Bijlage"), iot("e-mail", "E-mail")
 
 zt = call("POST", "zaaktypen", json={
     "identificatie": "MOR", "omschrijving": "Melding openbare ruimte", "vertrouwelijkheidaanduiding": "openbaar",
     "doel": "Meldingen over de openbare ruimte afhandelen", "aanleiding": "Een inwoner doet een melding",
     "indicatieInternOfExtern": "extern", "handelingInitiator": "Melden", "onderwerp": "Openbare ruimte",
-    "handelingBehandelaar": "Afhandelen", "doorlooptijd": "P14D", "opschortingEnAanhoudingMogelijk": False,
-    "verlengingMogelijk": False, "publicatieIndicatie": False, "productenOfDiensten": [],
+    "handelingBehandelaar": "Afhandelen", "doorlooptijd": "P14D", "opschortingEnAanhoudingMogelijk": True,
+    "verlengingMogelijk": True, "verlengingstermijn": "P14D", "publicatieIndicatie": False, "productenOfDiensten": [],
     "referentieproces": {"naam": "Melding openbare ruimte"}, "verantwoordelijke": "Demogemeente",
     "selectielijstProcestype": procestype["url"],
     "catalogus": cat["url"], "besluittypen": [], "gerelateerdeZaaktypen": [], "informatieobjecttypen": [],
-    "beginGeldigheid": "2026-01-01", "versiedatum": "2026-01-01"})
+    "beginGeldigheid": begin, "versiedatum": begin})
 
-for nr, (oms, toel) in enumerate([("Ontvangen", "De melding is ontvangen"),
+for nr, (oms, toel) in enumerate([("Intake", "De melding is ontvangen"),
                                   ("In behandeling", "De melding wordt behandeld"),
-                                  ("Afgehandeld", "De melding is afgehandeld")], start=1):
+                                  ("Wacht op aanvullende informatie", "We wachten op informatie van de melder"),
+                                  ("Heropend", "De melding is heropend"),
+                                  ("Afgerond", "De melding is afgehandeld")], start=1):
     call("POST", "statustypen", json={"zaaktype": zt["url"], "omschrijving": oms, "volgnummer": nr,
                                      "statustekst": toel, "informeren": nr > 1})
-call("POST", "roltypen", json={"zaaktype": zt["url"], "omschrijving": "Melder", "omschrijvingGeneriek": "initiator"})
-call("POST", "roltypen", json={"zaaktype": zt["url"], "omschrijving": "Behandelaar", "omschrijvingGeneriek": "behandelaar"})
-call("POST", "resultaattypen", json={
-    "zaaktype": zt["url"], "omschrijving": "Afgehandeld", "resultaattypeomschrijving": afgehandeld["url"],
-    "selectielijstklasse": resultaat["url"], "archiefnominatie": "vernietigen", "archiefactietermijn": "P1Y",
-    "brondatumArchiefprocedure": {"afleidingswijze": "afgehandeld", "datumkenmerk": "", "einddatumBekend": False,
-                                  "objecttype": "", "registratie": "", "procestermijn": None}})
-call("POST", "zaaktype-informatieobjecttypen", json={"zaaktype": zt["url"], "informatieobjecttype": iot["url"],
-                                                     "volgnummer": 1, "richting": "inkomend"})
+for oms, gen in [("Initiator", "initiator"), ("Behandelaar", "behandelaar"), ("Belanghebbende", "belanghebbende")]:
+    call("POST", "roltypen", json={"zaaktype": zt["url"], "omschrijving": oms, "omschrijvingGeneriek": gen})
+brondatum = {"afleidingswijze": "afgehandeld", "datumkenmerk": "", "einddatumBekend": False,
+             "objecttype": "", "registratie": "", "procestermijn": None}
+for oms, rto in [("Afgehandeld", "afgehandeld"), ("Niet ontvankelijk", "afgebroken")]:
+    call("POST", "resultaattypen", json={
+        "zaaktype": zt["url"], "omschrijving": oms, "resultaattypeomschrijving": omschrijving(rto)["url"],
+        "selectielijstklasse": resultaat["url"], "archiefnominatie": "vernietigen", "archiefactietermijn": "P1Y",
+        "brondatumArchiefprocedure": brondatum})
+for nr, (i, richting) in enumerate([(bijlage, "inkomend"), (email, "uitgaand")], start=1):
+    call("POST", "zaaktype-informatieobjecttypen", json={"zaaktype": zt["url"], "informatieobjecttype": i["url"],
+                                                         "volgnummer": nr, "richting": richting})
 call("POST", zt["url"] + "/publish")
 print("klaar:", zt["url"])
