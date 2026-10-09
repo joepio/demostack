@@ -43,7 +43,6 @@ x-openzaak-env: &openzaak-env
   OPENZAAK_SUPERUSER_USERNAME: admin
   OPENZAAK_SUPERUSER_EMAIL: admin@demogemeente.local
   DEFAULT_FROM_EMAIL: zaken@demogemeente.local
-  NOTIFICATIONS_DISABLED: "true"
 
 x-openklant-env: &openklant-env
   <<: *base-env
@@ -77,7 +76,6 @@ x-objects-env: &objects-env
   CELERY_RESULT_BACKEND: redis://redis:6379/5
   CELERY_WORKER_NAME: celery@objects
   DEFAULT_FROM_EMAIL: objecten@demogemeente.local
-  NOTIFICATIONS_DISABLED: "true"
 
 x-objecttypes-env: &objecttypes-env
   <<: *base-env
@@ -91,6 +89,25 @@ x-objecttypes-env: &objecttypes-env
   CACHE_DEFAULT: redis:6379/6
   CACHE_AXES: redis:6379/6
   DEFAULT_FROM_EMAIL: objecttypen@demogemeente.local
+
+x-opennotificaties-env: &opennotificaties-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: nrc.conf.docker
+  SECRET_KEY: ${ON_SECRET_KEY}
+  DB_NAME: opennotificaties
+  DB_USER: opennotificaties
+  DB_PASSWORD: ${ON_DB_PASSWORD}
+  ALLOWED_HOSTS: notificaties.${BASE_DOMAIN},opennotificaties,localhost
+  CSRF_TRUSTED_ORIGINS: https://notificaties.${BASE_DOMAIN}
+  CACHE_DEFAULT: redis:6379/9
+  CACHE_AXES: redis:6379/9
+  CELERY_BROKER_URL: redis://redis:6379/10
+  CELERY_RESULT_BACKEND: redis://redis:6379/10
+  CELERY_WORKER_NAME: celery@opennotificaties
+  OPENNOTIFICATIES_SUPERUSER_USERNAME: admin
+  OPENNOTIFICATIES_SUPERUSER_EMAIL: admin@demogemeente.local
+  LOG_NOTIFICATIONS_IN_DB: "yes"
+  DEFAULT_FROM_EMAIL: notificaties@demogemeente.local
 
 x-openforms-env: &openforms-env
   <<: *base-env
@@ -187,6 +204,7 @@ services:
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
       KISS_DB_PASSWORD: ${KISS_DB_PASSWORD}
       GZAC_DB_PASSWORD: ${GZAC_DB_PASSWORD}
+      ON_DB_PASSWORD: ${ON_DB_PASSWORD}
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d:ro
       - db:/var/lib/postgresql/data
@@ -219,6 +237,7 @@ services:
       - 127.0.0.1:8103:8103
       - 127.0.0.1:8104:8104
       - 127.0.0.1:8105:8105
+      - 127.0.0.1:8110:8110
 
   mailpit:
     image: axllent/mailpit:v1.31.4
@@ -280,6 +299,22 @@ services:
     <<: *common
     image: maykinmedia/objecttypes-api:3.4.2
     environment: *objecttypes-env
+
+  # Open Notificaties
+  opennotificaties:
+    <<: *common
+    image: openzaak/open-notificaties:1.17.0
+    environment: *opennotificaties-env
+  opennotificaties-celery:
+    <<: *common
+    image: openzaak/open-notificaties:1.17.0
+    command: /celery_worker.sh
+    environment: *opennotificaties-env
+  opennotificaties-beat:
+    <<: *common
+    image: openzaak/open-notificaties:1.17.0
+    command: /celery_beat.sh
+    environment: *opennotificaties-env
 
   # Open Formulieren
   openforms:

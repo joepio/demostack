@@ -14,6 +14,20 @@ zgw_consumers:
     auth_type: api_key
     header_key: Authorization
     header_value: Token ${OT_TOKEN_OBJECTS}
+  - identifier: notifications-api
+    label: Notificaties API
+    api_root: https://notificaties.${BASE_DOMAIN}/api/v1/
+    api_connection_check_path: kanaal
+    api_type: nrc
+    auth_type: zgw
+    client_id: objecten
+    secret: ${OBJ_TO_ON_SECRET}
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notifications-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 3
+  notification_delivery_retry_backoff_max: 30
 tokenauth_config_enable: true
 tokenauth:
   items:
