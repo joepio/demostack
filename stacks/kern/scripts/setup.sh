@@ -76,4 +76,5 @@ envsubst < scripts/seed_kiss.sql.tmpl | docker compose exec -T db psql -U postgr
 docker compose run --rm -T kiss-sync-vac >/dev/null 2>&1 && docker compose run --rm -T kiss-sync-smoelenboek >/dev/null 2>&1
 
 KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
+./welkom/screenshots.sh || echo "Screenshots mislukt; de welkomstpagina werkt ook zonder."
 echo "Klaar. Welkomstpagina: https://$BASE_DOMAIN/ (Caddy-config: scripts/caddyfile.sh)"

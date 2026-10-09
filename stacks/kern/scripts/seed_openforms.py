@@ -38,7 +38,8 @@ fd = call("POST", "form-definitions", json={
 form = call("POST", "forms", json={
     "name": "Melding openbare ruimte", "internalName": "Melding openbare ruimte", "slug": "melding-openbare-ruimte",
     "active": True, "showProgressIndicator": True, "submissionAllowed": "yes",
-    "translations": {"nl": {"name": "Melding openbare ruimte"}},
+    "translations": {"nl": {"name": "Melding openbare ruimte", "beginText": "Melding starten",
+                            "previousText": "", "changeText": "", "confirmText": ""}},
     "registrationBackends": [{"key": "zaak", "name": "Open Zaak", "backend": "zgw-create-zaak", "options": {
         "zgwApiGroup": group_id, "catalogue": {"domain": "DEMO", "rsin": "002220647"},
         "caseTypeIdentification": "MOR", "documentTypeDescription": "Bijlage melding",

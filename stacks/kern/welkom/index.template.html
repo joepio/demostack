@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Demogemeente</title>
-<meta name="description" content="Demo-omgeving met Common Ground-componenten: Open Formulieren, Open Zaak, Open Klant, Objecten en KISS.">
+<title>DemoStack</title>
+<meta name="description" content="DemoStack: demogemeente met Common Ground-componenten: Open Formulieren, Open Zaak, Open Klant, Objecten en KISS.">
 <style>
 :root {
   --bg: #f6f7f9; --surface: #ffffff; --text: #1a1f2b; --muted: #5b6475; --border: #dde1e8;
@@ -60,6 +60,27 @@ tr:last-child td { border-bottom: 0; }
 .state.ok { background: var(--ok-soft); color: var(--ok); }
 .state.soon { background: var(--soon-soft); color: var(--soon); }
 code { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 14px; }
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 12px 0 8px; }
+.brand h1 { margin: 0; letter-spacing: -.02em; }
+.brand h1 b { color: var(--accent); }
+.brand .place { font-size: 18px; color: var(--muted); font-weight: 600; }
+.card { padding: 0; overflow: hidden; }
+.card .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.shots { position: relative; margin: 0; aspect-ratio: 16 / 10; background: var(--bg);
+  border-bottom: 1px solid var(--border); overflow: hidden; }
+.shots img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left;
+  opacity: 0; transition: opacity .45s ease; }
+.shots img.on { opacity: 1; }
+.shots figcaption { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px);
+  font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+  background: rgba(15, 20, 30, .78); color: #fff; }
+.dots { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 4px; }
+.dots button { width: 10px; height: 10px; padding: 0; border-radius: 50%; border: 2px solid #fff;
+  background: rgba(15, 20, 30, .45); cursor: pointer; }
+.dots button[aria-current="true"] { background: #fff; }
+.shots .hint { position: absolute; top: 8px; right: 8px; font-size: 11px; font-weight: 600; padding: 2px 7px;
+  border-radius: 6px; background: rgba(15, 20, 30, .6); color: #fff; transition: opacity .2s; }
+.card:hover .hint, .card:focus-within .hint { opacity: 0; }
 footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 </style>
 </head>
@@ -67,7 +88,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 <header>
   <div class="wrap">
     <span class="badge">Demo-omgeving, geen echte gegevens</span>
-    <h1>Demogemeente</h1>
+    <div class="brand"><h1>Demo<b>Stack</b></h1><span class="place">Demogemeente</span></div>
     <p class="lead">Een werkende gemeente in het klein, gebouwd met open source Common Ground-componenten.
       Kies hieronder je rol en bekijk hoe een melding van een inwoner door de gemeente loopt.</p>
   </div>
@@ -90,33 +111,66 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
   <p class="sub">Elke rol heeft een eigen ingang. De beheerschermen zijn voor functioneel beheer, niet voor medewerkers.</p>
   <div class="grid">
     <section class="card">
+      <figure class="shots">
+        <img src="shots/inwoner-1.jpg" alt="Startpagina van het formulier" data-caption="Startpagina van het formulier" loading="lazy" class="on">
+        <img src="shots/inwoner-2.jpg" alt="Melding invullen" data-caption="Melding invullen" loading="lazy">
+        <figcaption>Startpagina van het formulier</figcaption>
+        <span class="hint" aria-hidden="true">2 schermen</span>
+      </figure>
+      <div class="body">
       <div class="who">Inwoner</div>
       <h3>Een melding doen</h3>
       <p>Meld een losliggende stoeptegel, kapotte lantaarnpaal of zwerfafval. Je melding wordt direct een zaak bij de gemeente.</p>
       <div class="links">
         <a class="btn" href="https://formulieren.__BASE__/melding-openbare-ruimte">Melding openbare ruimte <small>Open Formulieren</small></a>
       </div>
+      </div>
     </section>
 
     <section class="card">
+      <figure class="shots">
+        <img src="shots/kcc-1.jpg" alt="Startscherm met nieuws en werkinstructies" data-caption="Startscherm met nieuws en werkinstructies" loading="lazy" class="on">
+        <img src="shots/kcc-2.jpg" alt="Inwoner opzoeken via de BRP" data-caption="Inwoner opzoeken via de BRP" loading="lazy">
+        <img src="shots/kcc-3.jpg" alt="Zaak van de inwoner" data-caption="Zaak van de inwoner" loading="lazy">
+        <figcaption>Startscherm met nieuws en werkinstructies</figcaption>
+        <span class="hint" aria-hidden="true">3 schermen</span>
+      </figure>
+      <div class="body">
       <div class="who">KCC-medewerker</div>
       <h3>Klantcontact</h3>
       <p>Zoek een inwoner op, zie lopende zaken en eerdere contacten, beantwoord vragen met de kennisbank en zet terugbelverzoeken door.</p>
       <div class="links">
         __KISS_LINK__
       </div>
+      </div>
     </section>
 
     <section class="card">
+      <figure class="shots">
+        <img src="shots/behandelaar-1.jpg" alt="Binnengekomen zaken" data-caption="Binnengekomen zaken" loading="lazy" class="on">
+        <img src="shots/behandelaar-2.jpg" alt="Een zaak bekijken" data-caption="Een zaak bekijken" loading="lazy">
+        <figcaption>Binnengekomen zaken</figcaption>
+        <span class="hint" aria-hidden="true">2 schermen</span>
+      </figure>
+      <div class="body">
       <div class="who">Zaakbehandelaar</div>
       <h3>Zaken afhandelen</h3>
       <p>Bekijk binnengekomen meldingen, de rol van de melder en het PDF-document van het formulier. In deze demo nog via het beheerscherm van Open Zaak.</p>
       <div class="links">
         <a class="btn" href="https://zaken.__BASE__/admin/zaken/zaak/">Zaken in Open Zaak <small>beheerscherm</small></a>
       </div>
+      </div>
     </section>
 
     <section class="card">
+      <figure class="shots">
+        <img src="shots/beheer-1.jpg" alt="Formulieren in Open Formulieren" data-caption="Formulieren in Open Formulieren" loading="lazy" class="on">
+        <img src="shots/beheer-2.jpg" alt="Formulierbouwer" data-caption="Formulierbouwer" loading="lazy">
+        <img src="shots/beheer-3.jpg" alt="Zaaktypen in Open Zaak" data-caption="Zaaktypen in Open Zaak" loading="lazy">
+        <figcaption>Formulieren in Open Formulieren</figcaption>
+        <span class="hint" aria-hidden="true">3 schermen</span>
+      </figure>
+      <div class="body">
       <div class="who">Functioneel beheerder</div>
       <h3>Inrichting</h3>
       <p>Formulieren bouwen, zaaktypen en catalogi beheren, objecttypen en API-koppelingen instellen.</p>
@@ -127,9 +181,17 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
         <a class="btn" href="https://objecten.__BASE__/admin/">Objecten <small>registraties</small></a>
         <a class="btn" href="https://objecttypen.__BASE__/admin/">Objecttypen <small>schema's</small></a>
       </div>
+      </div>
     </section>
 
     <section class="card">
+      <figure class="shots">
+        <img src="shots/ontwikkelaar-1.jpg" alt="Documentatie Zaken API" data-caption="Documentatie Zaken API" loading="lazy" class="on">
+        <img src="shots/ontwikkelaar-2.jpg" alt="Documentatie Klantinteracties API" data-caption="Documentatie Klantinteracties API" loading="lazy">
+        <figcaption>Documentatie Zaken API</figcaption>
+        <span class="hint" aria-hidden="true">2 schermen</span>
+      </figure>
+      <div class="body">
       <div class="who">Ontwikkelaar / integrator</div>
       <h3>API's en testtools</h3>
       <p>De standaard ZGW- en Klantinteracties-API's, en een mailbox die alle uitgaande mail van de demo opvangt.</p>
@@ -138,6 +200,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
         <a class="btn" href="https://zaken.__BASE__/catalogi/api/v1/schema/">Catalogi API <small>OAS</small></a>
         <a class="btn" href="https://klant.__BASE__/klantinteracties/api/v1/schema/">Klantinteracties API <small>OAS</small></a>
         <a class="btn" href="https://mail.__BASE__/">Mailpit <small>uitgaande mail</small></a>
+      </div>
       </div>
     </section>
   </div>
@@ -176,7 +239,43 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 </main>
 
 <footer>
-  <div class="wrap">Demogemeente door <a href="https://ontola.io">Ontola</a>, op basis van Common Ground-componenten van Maykin Media, Dimpact en anderen.</div>
+  <div class="wrap">DemoStack door <a href="https://ontola.io">Ontola</a>, op basis van Common Ground-componenten van Maykin Media, Dimpact en anderen.</div>
 </footer>
+<script>
+(() => {
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.card').forEach((card) => {
+    const fig = card.querySelector('.shots');
+    if (!fig) return;
+    const imgs = [...fig.querySelectorAll('img')];
+    const cap = fig.querySelector('figcaption');
+    if (imgs.length < 2) return;
+    const dots = document.createElement('div');
+    dots.className = 'dots';
+    let i = 0, timer = null;
+    const show = (n) => {
+      i = (n + imgs.length) % imgs.length;
+      imgs.forEach((im, k) => im.classList.toggle('on', k === i));
+      dots.querySelectorAll('button').forEach((d, k) => d.setAttribute('aria-current', k === i));
+      cap.textContent = imgs[i].dataset.caption;
+    };
+    imgs.forEach((im, k) => {
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.setAttribute('aria-label', 'Toon ' + im.alt);
+      d.addEventListener('click', () => { stop(); show(k); });
+      dots.appendChild(d);
+    });
+    fig.appendChild(dots);
+    const start = () => { if (still || timer) return; show(i + 1); timer = setInterval(() => show(i + 1), 1600); };
+    const stop = () => { clearInterval(timer); timer = null; };
+    card.addEventListener('mouseenter', start);
+    card.addEventListener('mouseleave', () => { stop(); show(0); });
+    card.addEventListener('focusin', start);
+    card.addEventListener('focusout', (e) => { if (!card.contains(e.relatedTarget)) { stop(); show(0); } });
+    show(0);
+  });
+})();
+</script>
 </body>
 </html>
