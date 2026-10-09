@@ -87,10 +87,11 @@ code { background: var(--bg); border: 1px solid var(--border); border-radius: 4p
   padding: 6px 10px; border-radius: 4px; }
 body[data-off~="kcc"] [data-profile="kcc"] .offnote, body[data-off~="gzac"] [data-profile="gzac"] .offnote { display: block; }
 body[data-off~="kcc"] .card[data-profile="kcc"] .btn:first-child,
-body[data-off~="gzac"] .card[data-profile="gzac"] .btn:first-child { opacity: .45; pointer-events: none; }
-body[data-off~="kcc"] tr[data-profile="kcc"] .state, body[data-off~="gzac"] tr[data-profile="gzac"] .state { visibility: hidden; }
+body[data-off~="gzac"] .btn[data-profile="gzac"], body[data-off~="zac"] .btn[data-profile="zac"] { opacity: .45; pointer-events: none; }
+body[data-off~="gzac"] .btn[data-profile="gzac"] small::after, body[data-off~="zac"] .btn[data-profile="zac"] small::after { content: " (staat uit)"; }
+body[data-off~="kcc"] tr[data-profile="kcc"] .state, body[data-off~="gzac"] tr[data-profile="gzac"] .state, body[data-off~="zac"] tr[data-profile="zac"] .state { visibility: hidden; }
 body[data-off~="kcc"] tr[data-profile="kcc"] td:last-child::after,
-body[data-off~="gzac"] tr[data-profile="gzac"] td:last-child::after { content: "Staat nu uit"; font-size: 13px; font-weight: 600; white-space: nowrap;
+body[data-off~="gzac"] tr[data-profile="gzac"] td:last-child::after, body[data-off~="zac"] tr[data-profile="zac"] td:last-child::after { content: "Staat nu uit"; font-size: 13px; font-weight: 600; white-space: nowrap;
   color: var(--soon); margin-left: -60px; }
 footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 </style>
@@ -115,7 +116,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     <div class="arrow" aria-hidden="true">→</div>
     <div class="step" role="listitem">KCC ziet de zaak<span>KISS + Open Klant</span></div>
     <div class="arrow" aria-hidden="true">→</div>
-    <div class="step" role="listitem">Behandelaar handelt af<span>GZAC, met Open Zaak als register</span></div>
+    <div class="step" role="listitem">Behandelaar handelt af<span>ZAC of GZAC, met Open Zaak als register</span></div>
   </div>
 
   <h2>Kies je rol</h2>
@@ -157,22 +158,23 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       </div>
     </section>
 
-    <section class="card" data-profile="gzac">
+    <section class="card">
       <figure class="shots">
-        <img src="shots/behandelaar-1.jpg" alt="Dashboard in GZAC" data-caption="Dashboard in GZAC" loading="lazy" class="on">
-        <img src="shots/behandelaar-2.jpg" alt="Dossiers in GZAC" data-caption="Dossiers in GZAC" loading="lazy">
-        <img src="shots/behandelaar-3.jpg" alt="Een dossier behandelen" data-caption="Een dossier behandelen" loading="lazy">
+        <img src="shots/behandelaar-zac.jpg" alt="Werkvoorraad in ZAC" data-caption="Werkvoorraad in ZAC" loading="lazy" class="on">
+        <img src="shots/behandelaar-zac-2.jpg" alt="Een zaak in ZAC" data-caption="Een zaak in ZAC" loading="lazy">
+        <img src="shots/behandelaar-1.jpg" alt="Dashboard in GZAC" data-caption="Dashboard in GZAC" loading="lazy">
+        <img src="shots/behandelaar-3.jpg" alt="Een dossier in GZAC" data-caption="Een dossier in GZAC" loading="lazy">
         <img src="shots/behandelaar-oz.jpg" alt="Zaken in het register (Open Zaak)" data-caption="Zaken in het register (Open Zaak)" data-extra loading="lazy">
-        <figcaption>Dashboard in GZAC</figcaption>
-        <span class="hint" aria-hidden="true">3 schermen</span>
+        <figcaption>Werkvoorraad in ZAC</figcaption>
+        <span class="hint" aria-hidden="true">4 schermen</span>
       </figure>
       <div class="body">
-      <div class="offnote">Staat nu uit om geheugen te sparen. Vraag Ontola om hem aan te zetten.</div>
       <div class="who">Zaakbehandelaar</div>
       <h3>Zaken afhandelen</h3>
-      <p>In GZAC (Valtimo) werk je dossiers af: taken oppakken, beoordelen, besluiten. Open Zaak is daarbij het register waarin de zaken staan. Deze demo bevat de voorbeeldcasus evenementenvergunning.</p>
+      <p>Twee werkplekken naast elkaar op dezelfde zaken: ZAC (Dimpact, onderdeel van PodiumD) en GZAC (Valtimo, Ritense). Open Zaak is in beide gevallen het register. GZAC bevat ook de voorbeeldcasus evenementenvergunning.</p>
       <div class="links">
-        <a class="btn" data-shot="behandelaar-1.jpg" href="https://gzac.__BASE__/">GZAC <small>werkplek behandelaar</small></a>
+        <a class="btn" data-profile="zac" data-shot="behandelaar-zac.jpg" href="https://zac.__BASE__/zaken/werkvoorraad">ZAC <small>Dimpact / PodiumD</small></a>
+        <a class="btn" data-profile="gzac" data-shot="behandelaar-1.jpg" href="https://gzac.__BASE__/">GZAC <small>Valtimo</small></a>
         <a class="btn" data-shot="behandelaar-oz.jpg" href="https://zaken.__BASE__/admin/zaken/zaak/">Zaken in Open Zaak <small>register</small></a>
       </div>
       </div>
@@ -239,6 +241,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <tr><td>Open Klant</td><td>Klantgegevens en contactmomenten</td><td>2.19.1</td><td><span class="state ok">Draait</span></td></tr>
       <tr><td>Objecten en Objecttypen</td><td>Overige registraties volgens zelf gedefinieerde schema's</td><td>3.6.2 / 3.4.2</td><td><span class="state ok">Draait</span></td></tr>
       <tr data-profile="kcc"><td>KISS</td><td>Werkplek voor het klantcontactcentrum, met Keycloak voor inloggen en een BRP-testvoorziening</td><td>__KISS_VERSION__</td><td>__KISS_STATE__</td></tr>
+      <tr data-profile="zac"><td>ZAC (Dimpact)</td><td>Zaakafhandeling binnen PodiumD: werkvoorraad, taken (CMMN), documenten, met Solr, OPA en PABC</td><td>5.8.0</td><td><span class="state ok">Draait</span></td></tr>
       <tr data-profile="gzac"><td>GZAC (Valtimo)</td><td>Zaakafhandeling: dossiers, taken en processen (BPMN)</td><td>13.49.1</td><td><span class="state ok">Draait</span></td></tr>
       <tr><td>Open Notificaties</td><td>Meldingen tussen componenten bij wijzigingen</td><td>1.17.0</td><td><span class="state ok">Draait</span></td></tr>
     </tbody>
@@ -254,8 +257,9 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <tr><td>KISS</td><td><code>kcc</code></td><td>Klantcontactmedewerker</td></tr>
       <tr><td>KISS</td><td><code>redacteur</code></td><td>Klantcontactmedewerker en redacteur nieuws/werkinstructies</td></tr>
       <tr><td>KISS</td><td><code>beheerder</code></td><td>Alle rollen, inclusief beheer van KISS</td></tr>
-      <tr><td>GZAC</td><td><code>behandelaar</code></td><td>Zaakbehandelaar</td></tr>
-      <tr><td>GZAC</td><td><code>beheerder</code></td><td>Beheer en inrichting van GZAC</td></tr>
+      <tr><td>ZAC en GZAC</td><td><code>behandelaar</code></td><td>Zaakbehandelaar (team Meldingen)</td></tr>
+      <tr><td>ZAC</td><td><code>coordinator</code></td><td>Coördinator openbare ruimte</td></tr>
+      <tr><td>ZAC en GZAC</td><td><code>beheerder</code></td><td>Beheer en inrichting</td></tr>
       <tr><td>Beheerschermen en Mailpit</td><td><code>admin</code></td><td>Functioneel beheer</td></tr>
     </tbody>
   </table>

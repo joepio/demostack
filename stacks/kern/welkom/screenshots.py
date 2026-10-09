@@ -90,6 +90,18 @@ with sync_playwright() as p:
         shot(pg, "kcc-3")
         pg.close()
 
+    def behandelaar_zac():
+        pg = new()
+        pg.goto(f"https://zac.{D}/")
+        pg.wait_for_timeout(3000)
+        pg.fill("#username", "behandelaar"); pg.fill("#password", PW); pg.click("#kc-login")
+        pg.wait_for_timeout(6000)
+        pg.goto(f"https://zac.{D}/zaken/werkvoorraad"); pg.wait_for_timeout(5000)
+        shot(pg, "behandelaar-zac")
+        pg.goto(f"https://zac.{D}/zaken/ZAAK-2026-0000000001"); pg.wait_for_timeout(6000)
+        shot(pg, "behandelaar-zac-2")
+        pg.close()
+
     def behandelaar():
         pg = new()
         pg.goto(f"https://gzac.{D}/")
@@ -172,6 +184,6 @@ with sync_playwright() as p:
         ctx.close()
         pg.close()
 
-    for fn in (inwoner, kcc, behandelaar, beheer, ontwikkelaar):
+    for fn in (inwoner, kcc, behandelaar_zac, behandelaar, beheer, ontwikkelaar):
         safe(fn)
     b.close()

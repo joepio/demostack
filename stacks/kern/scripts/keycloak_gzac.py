@@ -21,8 +21,10 @@ G = f"https://gzac.{D}"
 if not client("gzac-console"):
     call("POST", f"{R}/clients", json={
         "clientId": "gzac-console", "name": "GZAC", "publicClient": True, "standardFlowEnabled": True,
-        "directAccessGrantsEnabled": False, "rootUrl": G, "baseUrl": "/", "redirectUris": [f"{G}/*"],
+        "directAccessGrantsEnabled": True, "rootUrl": G, "baseUrl": "/", "redirectUris": [f"{G}/*"],
         "webOrigins": [G], "attributes": {"post.logout.redirect.uris": f"{G}/*", "pkce.code.challenge.method": "S256"}})
+# Direct grant nodig voor de rechtenwachter (scripts/gzac_permissions_watch.py)
+call("PUT", f"{R}/clients/{client('gzac-console')['id']}", json={**client("gzac-console"), "directAccessGrantsEnabled": True})
 if not client("gzac-m2m"):
     call("POST", f"{R}/clients", json={
         "clientId": "gzac-m2m", "name": "GZAC backend", "publicClient": False, "secret": os.environ["GZAC_M2M_SECRET"],

@@ -10,6 +10,6 @@ else
   STATE='<span class="state soon">Wordt ingericht</span>'; VER="-"
 fi
 ACTIVE=",${COMPOSE_PROFILES:-},"; OFF=""
-for p in kcc gzac; do case "$ACTIVE" in *",$p,"*) ;; *) OFF="$OFF $p";; esac; done
+for p in kcc gzac zac; do case "$ACTIVE" in *",$p,"*) ;; *) OFF="$OFF $p";; esac; done
 sed -e "s#__OFF__#${OFF# }#" -e "s#__BASE__#$BASE_DOMAIN#g" -e "s#__KISS_LINK__#$LINK#" -e "s#__KISS_STATE__#$STATE#" -e "s#__KISS_VERSION__#$VER#" \
   index.template.html > public/index.html

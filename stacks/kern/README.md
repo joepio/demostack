@@ -10,6 +10,7 @@ Een melding van een inwoner, van formulier tot klantcontact.
 | Open Klant | 2.19.1 | `klant.<domein>` |
 | Objecten / Objecttypen | 3.6.2 / 3.4.2 | `objecten.<domein>`, `objecttypen.<domein>` |
 | KISS | 3.2.0 | `kiss.<domein>` |
+| ZAC (Dimpact), met Solr, OPA, PABC en Gotenberg | 5.8.0 | `zac.<domein>`, `pabc.<domein>` |
 | GZAC (Valtimo), demo-casus evenementenvergunning | 13.49.1 | `gzac.<domein>` |
 | Open Notificaties | 1.17.0 | `notificaties.<domein>` |
 | Keycloak | 26.7.5 | `keycloak.<domein>` |
@@ -28,13 +29,14 @@ Werkplekken aan en uit (de registers draaien altijd):
     ./scripts/stack.sh status
     ./scripts/stack.sh uit gzac        # of: aan kcc, alleen gzac
 
-Profielen: `kcc` (KISS, Elasticsearch, BRP-mock) en `gzac` (GZAC). De welkomstpagina toont wat uit staat.
+Profielen: `kcc` (KISS, Elasticsearch, BRP-mock), `gzac` (GZAC) en `zac` (ZAC met Solr, OPA, PABC, documentconversie). De welkomstpagina toont wat uit staat.
 
-Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur` en `beheerder` in KISS; `behandelaar` en `beheerder` in GZAC. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`.
+Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur` en `beheerder` in KISS; `behandelaar`, `coordinator` en `beheerder` in ZAC; `behandelaar` en `beheerder` in GZAC. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`.
 
 ## Demodata
 
-- Catalogus "Demogemeente" met zaaktype MOR "Melding openbare ruimte" (`scripts/seed_openzaak.py`).
+- Catalogus "Demogemeente" met zaaktype MOR "Melding openbare ruimte" (`scripts/seed_openzaak.py`). Het zaaktype voldoet aan de inrichtingseisen van ZAC (statustypen Intake t/m Afgerond, roltypen Initiator en Behandelaar, informatieobjecttype e-mail).
+- ZAC: functionele rollen en groepen in Keycloak (`scripts/keycloak_zac.py`), autorisaties in PABC (`config/pabc-dataset.json`), zaakafhandelparameters voor MOR (`scripts/zac_inrichten.py`).
 - Formulier "Melding openbare ruimte", registreert als zaak (`scripts/seed_openforms.py`).
 - KISS-objecttypen en -inhoud: afdelingen, teams, medewerkers, veelgestelde vragen (`scripts/seed_kiss_objecttypes.py`, `scripts/seed_kiss_objecten.py`), nieuws, werkinstructies, links en afhandelopties (`scripts/seed_kiss.sql.tmpl`).
 - Testinwoner Suzanne Moulin, BSN 999993653, met een lopende melding (`scripts/seed_testpersoon.py`).
@@ -58,4 +60,6 @@ Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur
 - Open Klant aan Open Formulieren.
 - Kennisartikelen (producten en diensten) in KISS: het objecttype bestaat, inhoud nog niet.
 - DigiD/eHerkenning: het formulier is anoniem.
-- GZAC is nog niet gekoppeld aan Open Zaak: het draait met de eigen demo-casus. De melding openbare ruimte als casus in GZAC volgt na Open Notificaties.
+- GZAC is nog niet gekoppeld aan Open Zaak: het draait met de eigen demo-casus.
+- ZAC: zaken die Open Formulieren direct in Open Zaak aanmaakt verschijnen in de werkvoorraad, maar zonder ZAC-takenmodel (CMMN). Dat start alleen als ZAC de zaak zelf aanmaakt, bijvoorbeeld via een productaanvraag in Objecten.
+- GZAC zet bij elke start de rechten terug; `gzac-permissions` herstelt ze automatisch.
