@@ -17,10 +17,12 @@ def shot(pg, name):
 
 
 def django_login(pg, host, next_path="/admin/"):
-    pg.goto(f"https://{host}.{D}/admin/login/?next={next_path}")
-    pg.fill("input[name=auth-username]", "admin")
-    pg.fill("input[name=auth-password]", PW)
-    pg.press("input[name=auth-password]", "Enter")
+    """Inloggen in een beheerscherm via Keycloak (single sign-on) als 'demo'."""
+    prefix = "/auth/oidc/authenticate/" if host == "formulieren" else "/oidc/authenticate/"
+    pg.goto(f"https://{host}.{D}{prefix}?next={next_path}")
+    pg.wait_for_timeout(2000)
+    if pg.locator("#kc-login").count():
+        pg.fill("#username", "demo"); pg.fill("#password", PW); pg.click("#kc-login")
     pg.wait_for_load_state("networkidle")
 
 
@@ -54,21 +56,26 @@ with sync_playwright() as p:
         if weiger.count():
             weiger.first.click()
         shot(pg, "inwoner-1")
-        pg.locator("button[type=submit], .openforms-button--primary").first.click()
-        pg.wait_for_load_state("networkidle")
-        pg.wait_for_timeout(1500)
+        pg.get_by_text("DigiD").first.click(); pg.wait_for_timeout(3000)
+        pg.fill("#username", "suzanne"); pg.fill("#password", PW); pg.click("#kc-login"); pg.wait_for_timeout(5000)
+        start = pg.get_by_role("button", name="Melding starten")
+        if start.count():
+            start.first.click(); pg.wait_for_timeout(3000)
+        kaart = pg.locator(".leaflet-container").first
+        bb = kaart.bounding_box()
+        if bb:
+            kaart.click(position={"x": bb["width"] * 0.5, "y": bb["height"] * 0.55}); pg.wait_for_timeout(1000)
         sel = pg.get_by_label("Waar gaat uw melding over?")
         if sel.count():
-            sel.first.click(); pg.wait_for_timeout(500)
-            opt = pg.get_by_text("Losliggende stoeptegel")
-            if opt.count(): opt.first.click()
-            pg.keyboard.press("Escape")
-        for label, val in [("Waar is het? (straat en huisnummer of omschrijving)", "Dorpsstraat 12, Demostad"),
-                           ("Omschrijving", "De stoeptegel voor nummer 12 steekt 3 cm uit."),
+            sel.first.click(); pg.wait_for_timeout(400)
+            pg.get_by_text("Losliggende stoeptegel").first.click(); pg.keyboard.press("Escape")
+        for label, val in [("Adres of omschrijving van de plek", "Dorpsstraat 12, Demostad"),
+                           ("Wat is er aan de hand?", "De stoeptegel voor nummer 12 steekt 3 cm uit."),
                            ("Uw achternaam", "Moulin"), ("Uw e-mailadres", "s.moulin@example.com")]:
             loc = pg.get_by_label(label, exact=True)
             if loc.count():
                 loc.first.fill(val)
+        pg.evaluate("window.scrollTo(0, 200)")
         shot(pg, "inwoner-2")
         pg.close()
 

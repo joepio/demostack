@@ -12,7 +12,8 @@ with sync_playwright() as p:
     for conf in configs:
         if conf["zaaktype"]["identificatie"] != "MOR" or not conf["zaaktype"].get("nuGeldig"):
             continue
-        if conf.get("valide"):
+        koppel = conf.get("betrokkeneKoppelingen") or {}
+        if conf.get("valide") and koppel.get("brpKoppelen") and koppel.get("kvkKoppelen"):
             print("MOR is al ingericht in ZAC"); continue
         zt = conf["zaaktype"]["uuid"]
         conf = r.get(f"{Z}/rest/zaakafhandelparameters/{zt}").json()
@@ -20,6 +21,8 @@ with sync_playwright() as p:
         resultaten = r.get(f"{Z}/rest/zaakafhandelparameters/resultaattypes/{zt}").json()
         conf["caseDefinition"] = cd
         conf["defaultGroepId"] = "team-meldingen"
+        # Toont de melder (BRP) en bedrijven (KvK) bij de zaak
+        conf["betrokkeneKoppelingen"] = {"brpKoppelen": True, "kvkKoppelen": True}
         conf["zaakNietOntvankelijkResultaattype"] = next(x for x in resultaten if x["naam"] == "Niet ontvankelijk")
         conf["einddatumGeplandWaarschuwing"] = 3
         conf["uiterlijkeEinddatumAfdoeningWaarschuwing"] = 3
