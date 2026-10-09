@@ -1,0 +1,386 @@
+# Demogemeente, stack "kern": Open Formulieren, Open Zaak, Open Klant, Objecten, Objecttypen.
+# Demo-omgeving, niet voor productie. Poorten alleen op 127.0.0.1; Caddy op de host doet HTTPS.
+name: kern
+
+x-common: &common
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+x-base-env: &base-env
+  DB_HOST: db
+  IS_HTTPS: "yes"
+  DISABLE_2FA: "yes"
+  TZ: Europe/Amsterdam
+  OTEL_SDK_DISABLED: "true"
+  UWSGI_PROCESSES: "2"
+  UWSGI_THREADS: "4"
+  CELERY_WORKER_CONCURRENCY: "2"
+  EMAIL_HOST: mailpit
+  EMAIL_PORT: "1025"
+  DJANGO_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+  SENDFILE_BACKEND: django_sendfile.backends.simple
+
+x-openzaak-env: &openzaak-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: openzaak.conf.docker
+  SECRET_KEY: ${OZ_SECRET_KEY}
+  DB_NAME: openzaak
+  DB_USER: openzaak
+  DB_PASSWORD: ${OZ_DB_PASSWORD}
+  SITE_DOMAIN: zaken.${BASE_DOMAIN}
+  ALLOWED_HOSTS: zaken.${BASE_DOMAIN},openzaak,localhost
+  CSRF_TRUSTED_ORIGINS: https://zaken.${BASE_DOMAIN}
+  CORS_ALLOW_ALL_ORIGINS: "True"
+  CACHE_DEFAULT: redis:6379/0
+  CACHE_AXES: redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/1
+  CELERY_WORKER_NAME: celery@openzaak
+  OPENZAAK_SUPERUSER_USERNAME: admin
+  OPENZAAK_SUPERUSER_EMAIL: admin@demogemeente.local
+  DEFAULT_FROM_EMAIL: zaken@demogemeente.local
+  NOTIFICATIONS_DISABLED: "true"
+
+x-openklant-env: &openklant-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: openklant.conf.docker
+  SECRET_KEY: ${OK_SECRET_KEY}
+  DB_NAME: openklant
+  DB_USER: openklant
+  DB_PASSWORD: ${OK_DB_PASSWORD}
+  ALLOWED_HOSTS: klant.${BASE_DOMAIN},openklant,localhost
+  CSRF_TRUSTED_ORIGINS: https://klant.${BASE_DOMAIN}
+  CACHE_DEFAULT: redis:6379/2
+  CACHE_AXES: redis:6379/2
+  CELERY_BROKER_URL: redis://redis:6379/3
+  CELERY_RESULT_BACKEND: redis://redis:6379/3
+  CELERY_WORKER_NAME: celery@openklant
+  DEFAULT_FROM_EMAIL: klant@demogemeente.local
+  NOTIFICATIONS_DISABLED: "true"
+
+x-objects-env: &objects-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: objects.conf.docker
+  SECRET_KEY: ${OBJ_SECRET_KEY}
+  DB_NAME: objects
+  DB_USER: objects
+  DB_PASSWORD: ${OBJ_DB_PASSWORD}
+  ALLOWED_HOSTS: objecten.${BASE_DOMAIN},objects,localhost
+  CSRF_TRUSTED_ORIGINS: https://objecten.${BASE_DOMAIN}
+  CACHE_DEFAULT: redis:6379/4
+  CACHE_AXES: redis:6379/4
+  CELERY_BROKER_URL: redis://redis:6379/5
+  CELERY_RESULT_BACKEND: redis://redis:6379/5
+  CELERY_WORKER_NAME: celery@objects
+  DEFAULT_FROM_EMAIL: objecten@demogemeente.local
+  NOTIFICATIONS_DISABLED: "true"
+
+x-objecttypes-env: &objecttypes-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: objecttypes.conf.docker
+  SECRET_KEY: ${OT_SECRET_KEY}
+  DB_NAME: objecttypes
+  DB_USER: objecttypes
+  DB_PASSWORD: ${OT_DB_PASSWORD}
+  ALLOWED_HOSTS: objecttypen.${BASE_DOMAIN},objecttypes,localhost
+  CSRF_TRUSTED_ORIGINS: https://objecttypen.${BASE_DOMAIN}
+  CACHE_DEFAULT: redis:6379/6
+  CACHE_AXES: redis:6379/6
+  DEFAULT_FROM_EMAIL: objecttypen@demogemeente.local
+
+x-openforms-env: &openforms-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: openforms.conf.docker
+  SECRET_KEY: ${OF_SECRET_KEY}
+  DB_NAME: openforms
+  DB_USER: openforms
+  DB_PASSWORD: ${OF_DB_PASSWORD}
+  BASE_URL: https://formulieren.${BASE_DOMAIN}
+  ALLOWED_HOSTS: formulieren.${BASE_DOMAIN},openforms,localhost
+  CSRF_TRUSTED_ORIGINS: https://formulieren.${BASE_DOMAIN}
+  CORS_ALLOW_ALL_ORIGINS: "true"
+  CACHE_DEFAULT: redis:6379/7
+  CACHE_AXES: redis:6379/7
+  CACHE_PORTALOCKER: redis:6379/7
+  CELERY_BROKER_URL: redis://redis:6379/8
+  CELERY_RESULT_BACKEND: redis://redis:6379/8
+  CELERY_WORKER_NAME: celery@openforms
+  DEFAULT_FROM_EMAIL: formulieren@demogemeente.local
+  SHOW_ENVIRONMENT: "yes"
+  ENVIRONMENT_LABEL: Demogemeente
+  ENVIRONMENT_BACKGROUND_COLOR: "#1d63ed"
+  ENVIRONMENT_FOREGROUND_COLOR: white
+  OPENFORMS_LOCATION_CLIENT: openforms.contrib.bag.client.BAGClient
+
+x-kiss-env: &kiss-env
+  ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+  OIDC_AUTHORITY: https://keycloak.${BASE_DOMAIN}/realms/demogemeente
+  OIDC_CLIENT_ID: kiss
+  OIDC_CLIENT_SECRET: ${KISS_OIDC_SECRET}
+  OIDC_MEDEWERKER_IDENTIFICATIE_CLAIM: email
+  OIDC_MEDEWERKER_IDENTIFICATIE_TRUNCATE: "24"
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: kiss
+  POSTGRES_USER: kiss
+  POSTGRES_PASSWORD: ${KISS_DB_PASSWORD}
+  ORGANISATIE_IDS: "002220647"
+  REGISTERS__0__IS_DEFAULT: "true"
+  REGISTERS__0__REGISTRY_VERSION: OpenKlant2
+  REGISTERS__0__KLANTINTERACTIE_BASE_URL: https://klant.${BASE_DOMAIN}/klantinteracties
+  REGISTERS__0__KLANTINTERACTIE_TOKEN: ${OK_TOKEN_KISS}
+  REGISTERS__0__ZAAKSYSTEEM_ZAKEN_BASE_URL: https://zaken.${BASE_DOMAIN}/zaken/api/v1
+  REGISTERS__0__ZAAKSYSTEEM_CATALOGI_BASE_URL: https://zaken.${BASE_DOMAIN}/catalogi/api/v1
+  REGISTERS__0__ZAAKSYSTEEM_DOCUMENTEN_BASE_URL: https://zaken.${BASE_DOMAIN}/documenten/api/v1
+  REGISTERS__0__ZAAKSYSTEEM_API_CLIENT_ID: kiss
+  REGISTERS__0__ZAAKSYSTEEM_API_KEY: ${KISS_ZGW_SECRET}
+  REGISTERS__0__ZAAKSYSTEEM_DEEPLINK_URL: https://zaken.${BASE_DOMAIN}/admin/zaken/zaak/?q=
+  REGISTERS__0__ZAAKSYSTEEM_DEEPLINK_PROPERTY: identificatie
+  AFDELINGEN_BASE_URL: https://objecten.${BASE_DOMAIN}
+  MEDEWERKER_OBJECTEN_BASE_URL: &objecten https://objecten.${BASE_DOMAIN}/api/v2
+  AFDELINGEN_OBJECT_TYPE_URL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${KISS_OT_AFDELING}
+  AFDELINGEN_TOKEN: &objtoken ${OBJ_TOKEN_KISS}
+  GROEPEN_BASE_URL: https://objecten.${BASE_DOMAIN}
+  GROEPEN_OBJECT_TYPE_URL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${KISS_OT_GROEP}
+  GROEPEN_TOKEN: *objtoken
+  MEDEWERKER_OBJECT_TYPE_URL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${KISS_OT_MEDEWERKER}
+  MEDEWERKER_OBJECTEN_TOKEN: *objtoken
+  VAC_OBJECTEN_BASE_URL: *objecten
+  VAC_OBJECT_TYPE_URL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${KISS_OT_VAC}
+  VAC_OBJECT_TYPE_VERSION: "1"
+  VAC_OBJECTEN_TOKEN: *objtoken
+  SDG_OBJECTEN_BASE_URL: *objecten
+  SDG_OBJECT_TYPE_URL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${KISS_OT_KENNISARTIKEL}
+  SDG_OBJECTEN_TOKEN: *objtoken
+  USE_VACS: "true"
+  HAAL_CENTRAAL_BASE_URL: http://personen-mock:5010/haalcentraal/api
+  HAAL_CENTRAAL_API_KEY: demo
+  KVK_BASE_URL: https://api.kvk.nl/test/api
+  # Openbare testsleutel van de KvK, zie developers.kvk.nl
+  KVK_API_KEY: l7xx1f2691f2520d487b902f4e0b57a0b197
+  ELASTIC_BASE_URL: http://elasticsearch:9200
+  ELASTIC_USERNAME: elastic
+  ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+  EMAIL_HOST: mailpit
+  EMAIL_PORT: "1025"
+  EMAIL_ENABLE_SSL: "false"
+  FEEDBACK_EMAIL_FROM: kiss@demogemeente.local
+  FEEDBACK_EMAIL_TO: beheer@demogemeente.local
+  MANAGEMENTINFORMATIE_API_KEY: ${KISS_MI_KEY}
+
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    restart: unless-stopped
+    command: postgres -c max_connections=300
+    environment:
+      POSTGRES_PASSWORD: ${PG_SUPER_PASSWORD}
+      OZ_DB_PASSWORD: ${OZ_DB_PASSWORD}
+      OK_DB_PASSWORD: ${OK_DB_PASSWORD}
+      OBJ_DB_PASSWORD: ${OBJ_DB_PASSWORD}
+      OT_DB_PASSWORD: ${OT_DB_PASSWORD}
+      OF_DB_PASSWORD: ${OF_DB_PASSWORD}
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  nginx:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d:ro
+    ports:
+      - 127.0.0.1:8101:8101
+      - 127.0.0.1:8102:8102
+      - 127.0.0.1:8103:8103
+      - 127.0.0.1:8104:8104
+      - 127.0.0.1:8105:8105
+
+  mailpit:
+    image: axllent/mailpit:v1.31.4
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8106:8025
+
+  # Open Zaak
+  openzaak:
+    <<: *common
+    image: openzaak/open-zaak:1.30.0
+    environment: *openzaak-env
+    volumes:
+      - oz-media:/app/media
+      - oz-private-media:/app/private-media
+  openzaak-celery:
+    <<: *common
+    image: openzaak/open-zaak:1.30.0
+    command: /celery_worker.sh
+    environment: *openzaak-env
+    volumes:
+      - oz-media:/app/media
+      - oz-private-media:/app/private-media
+  openzaak-beat:
+    <<: *common
+    image: openzaak/open-zaak:1.30.0
+    command: /celery_beat.sh
+    environment: *openzaak-env
+
+  # Open Klant
+  openklant:
+    <<: *common
+    image: maykinmedia/open-klant:2.19.1
+    environment: *openklant-env
+    volumes:
+      - ok-media:/app/media
+      - ok-private-media:/app/private_media
+  openklant-celery:
+    <<: *common
+    image: maykinmedia/open-klant:2.19.1
+    command: /celery_worker.sh
+    environment: *openklant-env
+
+  # Objecten
+  objects:
+    <<: *common
+    image: maykinmedia/objects-api:3.6.2
+    environment: *objects-env
+    volumes:
+      - obj-media:/app/media
+  objects-celery:
+    <<: *common
+    image: maykinmedia/objects-api:3.6.2
+    command: /celery_worker.sh
+    environment: *objects-env
+
+  # Objecttypen
+  objecttypes:
+    <<: *common
+    image: maykinmedia/objecttypes-api:3.4.2
+    environment: *objecttypes-env
+
+  # Open Formulieren
+  openforms:
+    <<: *common
+    image: openformulieren/open-forms:4.0.2
+    environment: *openforms-env
+    volumes: &of-volumes
+      - of-media:/app/media
+      - of-private-media:/app/private_media
+      - of-log:/app/log
+  openforms-celery:
+    <<: *common
+    image: openformulieren/open-forms:4.0.2
+    command: /celery_worker.sh
+    environment: *openforms-env
+    volumes: *of-volumes
+  openforms-beat:
+    <<: *common
+    image: openformulieren/open-forms:4.0.2
+    command: /celery_beat.sh
+    environment: *openforms-env
+
+  # ---------- KCC: KISS met Keycloak, Elasticsearch en BRP-mock ----------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.5
+    restart: unless-stopped
+    command: ["start", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_HOSTNAME: https://keycloak.${BASE_DOMAIN}
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      JAVA_OPTS_KC_HEAP: "-Xms256m -Xmx512m"
+    volumes:
+      - ./config/generated/keycloak:/opt/keycloak/data/import:ro
+    ports:
+      - 127.0.0.1:8107:8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.3
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - es:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE 'green|yellow'"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+
+  personen-mock:
+    image: ghcr.io/brp-api/personen-mock:2.7.0-latest
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Release
+      ASPNETCORE_URLS: http://+:5010
+
+  kiss:
+    image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:3.2.0
+    restart: unless-stopped
+    environment: *kiss-env
+    ports:
+      - 127.0.0.1:8108:8080
+    depends_on:
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+  # Eenmalige sync naar Elasticsearch: docker compose run --rm kiss-sync-vac (en -smoelenboek)
+  kiss-sync-vac:
+    image: ghcr.io/klantinteractie-servicesysteem/kiss-elastic-sync:3.2.0
+    profiles: [jobs]
+    command: ["vac"]
+    environment: *kiss-env
+  kiss-sync-smoelenboek:
+    image: ghcr.io/klantinteractie-servicesysteem/kiss-elastic-sync:3.2.0
+    profiles: [jobs]
+    command: ["smoelenboek"]
+    environment: *kiss-env
+
+volumes:
+  db:
+  es:
+  redis:
+  oz-media:
+  oz-private-media:
+  ok-media:
+  ok-private-media:
+  obj-media:
+  of-media:
+  of-private-media:
+  of-log:

@@ -1,0 +1,35 @@
+sites_config_enable: true
+sites_config:
+  items:
+  - domain: objecten.${BASE_DOMAIN}
+    name: Objecten demogemeente
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+  - identifier: objecttypes-api
+    label: Objecttypen API
+    api_root: https://objecttypen.${BASE_DOMAIN}/api/v2/
+    api_connection_check_path: objecttypes
+    api_type: orc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OT_TOKEN_OBJECTS}
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: openforms
+      token: ${OBJ_TOKEN_OPENFORMS}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Open Formulieren
+      administration: Demo
+      is_superuser: true
+    - identifier: kiss
+      token: ${OBJ_TOKEN_KISS}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: KISS
+      administration: Demo
+      is_superuser: true

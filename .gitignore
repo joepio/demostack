@@ -1,0 +1,4 @@
+# Instantie-specifiek: secrets, gegenereerde config en build-output
+.env
+stacks/*/config/generated/
+stacks/*/welkom/public/

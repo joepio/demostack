@@ -1,0 +1,23 @@
+-- Demo-inhoud voor de KISS-werkplek (idempotent)
+INSERT INTO "Gespreksresultaten" ("Id","DateCreated","Definitie") VALUES
+ (gen_random_uuid(), now(), 'Vraag beantwoord'),
+ (gen_random_uuid(), now(), 'Doorverbonden'),
+ (gen_random_uuid(), now(), 'Terugbelverzoek'),
+ (gen_random_uuid(), now(), 'Verwezen naar website')
+ON CONFLICT ("Definitie") DO NOTHING;
+
+INSERT INTO "Berichten" ("DateCreated","PublicatieDatum","Titel","Inhoud","IsBelangrijk","Type")
+SELECT now(), now(), t, i, b, ty FROM (VALUES
+ ('Storing straatverlichting Dorpsstraat', '<p>Sinds maandag is de straatverlichting in de Dorpsstraat uitgevallen. De netbeheerder is ingeschakeld. Meldingen hierover hoeven niet als nieuwe zaak te worden aangemaakt.</p>', true, 'Nieuws'),
+ ('Nieuw: meldingen openbare ruimte via het formulier', '<p>Inwoners kunnen meldingen over de openbare ruimte nu online doen. Elke melding wordt direct een zaak in Open Zaak. Verwijs bellers gerust naar het formulier.</p>', false, 'Nieuws'),
+ ('Werkinstructie: status van een melding opzoeken', '<p>Zoek de inwoner op via Personen (BSN of naam en geboortedatum). Op het tabblad Zaken zie je alle lopende meldingen met hun status. Koppel de zaak aan het contactmoment bij het afronden.</p>', false, 'Werkinstructie')
+) AS v(t,i,b,ty)
+WHERE NOT EXISTS (SELECT 1 FROM "Berichten" WHERE "Titel" = v.t);
+
+INSERT INTO "Links" ("DateCreated","Titel","Url","Categorie")
+SELECT now(), t, u, c FROM (VALUES
+ ('Melding openbare ruimte (formulier)', 'https://formulieren.${BASE_DOMAIN}/melding-openbare-ruimte', 'Formulieren'),
+ ('Zaken in Open Zaak', 'https://zaken.${BASE_DOMAIN}/admin/zaken/zaak/', 'Systemen'),
+ ('Demogemeente startpagina', 'https://${BASE_DOMAIN}/', 'Systemen')
+) AS v(t,u,c)
+WHERE NOT EXISTS (SELECT 1 FROM "Links" WHERE "Titel" = v.t);

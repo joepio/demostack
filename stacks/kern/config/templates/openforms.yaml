@@ -1,0 +1,60 @@
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+  - identifier: objecttypen
+    label: Objecttypen API
+    api_root: https://objecttypen.${BASE_DOMAIN}/api/v2/
+    api_type: orc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OT_TOKEN_OPENFORMS}
+  - identifier: objecten
+    label: Objecten API
+    api_root: https://objecten.${BASE_DOMAIN}/api/v2/
+    api_type: orc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OBJ_TOKEN_OPENFORMS}
+  - identifier: zaken
+    label: Zaken API
+    api_root: https://zaken.${BASE_DOMAIN}/zaken/api/v1/
+    api_type: zrc
+    auth_type: zgw
+    client_id: openforms
+    secret: ${OZ_OPENFORMS_SECRET}
+  - identifier: documenten
+    label: Documenten API
+    api_root: https://zaken.${BASE_DOMAIN}/documenten/api/v1/
+    api_type: drc
+    auth_type: zgw
+    client_id: openforms
+    secret: ${OZ_OPENFORMS_SECRET}
+  - identifier: catalogi
+    label: Catalogi API
+    api_root: https://zaken.${BASE_DOMAIN}/catalogi/api/v1/
+    api_type: ztc
+    auth_type: zgw
+    client_id: openforms
+    secret: ${OZ_OPENFORMS_SECRET}
+objects_api_config_enable: true
+objects_api:
+  groups:
+  - name: Demogemeente
+    identifier: demogemeente
+    objects_service_identifier: objecten
+    objecttypes_service_identifier: objecttypen
+    documenten_service_identifier: documenten
+    catalogi_service_identifier: catalogi
+    organisatie_rsin: "002220647"
+zgw_api_config_enable: true
+zgw_api:
+  groups:
+  - name: Demogemeente
+    identifier: demogemeente
+    zaken_service_identifier: zaken
+    documenten_service_identifier: documenten
+    catalogi_service_identifier: catalogi
+    organisatie_rsin: "002220647"
+    zaak_vertrouwelijkheidaanduiding: zaakvertrouwelijk
+    doc_vertrouwelijkheidaanduiding: openbaar
+    auteur: Demogemeente

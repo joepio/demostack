@@ -1,0 +1,29 @@
+sites_config_enable: true
+sites_config:
+  items:
+    - domain: zaken.${BASE_DOMAIN}
+      name: Open Zaak demogemeente
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: openforms
+      secret: ${OZ_OPENFORMS_SECRET}
+    - identifier: demo
+      secret: ${OZ_DEMO_SECRET}
+    - identifier: kiss
+      secret: ${KISS_ZGW_SECRET}
+vng_api_common_applicaties_config_enable: true
+vng_api_common_applicaties:
+  items:
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a01
+      client_ids: [openforms]
+      label: Open Formulieren
+      heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a02
+      client_ids: [demo]
+      label: Demo-beheer
+      heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a03
+      client_ids: [kiss]
+      label: KISS
+      heeft_alle_autorisaties: true

@@ -1,0 +1,24 @@
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: objects-api
+      token: ${OT_TOKEN_OBJECTS}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Objecten API
+      administration: Demo
+    - identifier: openforms
+      token: ${OT_TOKEN_OPENFORMS}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Open Formulieren
+      administration: Demo
+    - identifier: seed
+      token: ${OT_TOKEN_SEED}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Seed-scripts
+      administration: Demo

@@ -1,0 +1,18 @@
+objecttypes_config_enable: true
+objecttypes:
+  items:
+    - uuid: ${KISS_OT_AFDELING}
+      name: Afdeling
+      service_identifier: objecttypes-api
+    - uuid: ${KISS_OT_GROEP}
+      name: Groep
+      service_identifier: objecttypes-api
+    - uuid: ${KISS_OT_MEDEWERKER}
+      name: Medewerker
+      service_identifier: objecttypes-api
+    - uuid: ${KISS_OT_VAC}
+      name: VAC
+      service_identifier: objecttypes-api
+    - uuid: ${KISS_OT_KENNISARTIKEL}
+      name: Kennisartikel
+      service_identifier: objecttypes-api
