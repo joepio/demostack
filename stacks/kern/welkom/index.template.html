@@ -175,7 +175,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <div class="links">
         <a class="btn" data-profile="zac" data-shot="behandelaar-zac.jpg" href="https://zac.__BASE__/zaken/werkvoorraad">ZAC <small>Dimpact / PodiumD</small></a>
         <a class="btn" data-profile="gzac" data-shot="behandelaar-1.jpg" href="https://gzac.__BASE__/">GZAC <small>Valtimo</small></a>
-        <a class="btn" data-shot="behandelaar-oz.jpg" href="https://zaken.__BASE__/admin/zaken/zaak/">Zaken in Open Zaak <small>register</small></a>
+        <a class="btn" data-shot="behandelaar-oz.jpg" href="https://zaken.__BASE__/oidc/authenticate/?next=/admin/zaken/zaak/">Zaken in Open Zaak <small>register</small></a>
       </div>
       </div>
     </section>
@@ -196,11 +196,11 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <h3>Inrichting</h3>
       <p>Formulieren bouwen, zaaktypen en catalogi beheren, objecttypen en API-koppelingen instellen.</p>
       <div class="links">
-        <a class="btn" data-shot="beheer-1.jpg" href="https://formulieren.__BASE__/admin/">Open Formulieren <small>formulieren</small></a>
-        <a class="btn" data-shot="beheer-3.jpg" href="https://zaken.__BASE__/admin/">Open Zaak <small>zaaktypen, catalogi</small></a>
-        <a class="btn" data-shot="beheer-openklant.jpg" href="https://klant.__BASE__/admin/">Open Klant <small>klantcontacten</small></a>
-        <a class="btn" data-shot="beheer-objecten.jpg" href="https://objecten.__BASE__/admin/">Objecten <small>registraties</small></a>
-        <a class="btn" data-shot="beheer-objecttypen.jpg" href="https://objecttypen.__BASE__/admin/">Objecttypen <small>schema's</small></a>
+        <a class="btn" data-shot="beheer-1.jpg" href="https://formulieren.__BASE__/auth/oidc/authenticate/?next=%2Fadmin%2F">Open Formulieren <small>formulieren</small></a>
+        <a class="btn" data-shot="beheer-3.jpg" href="https://zaken.__BASE__/oidc/authenticate/?next=/admin/">Open Zaak <small>zaaktypen, catalogi</small></a>
+        <a class="btn" data-shot="beheer-openklant.jpg" href="https://klant.__BASE__/oidc/authenticate/?next=/admin/">Open Klant <small>klantcontacten</small></a>
+        <a class="btn" data-shot="beheer-objecten.jpg" href="https://objecten.__BASE__/oidc/authenticate/?next=/admin/">Objecten <small>registraties</small></a>
+        <a class="btn" data-shot="beheer-objecttypen.jpg" href="https://objecttypen.__BASE__/oidc/authenticate/?next=/admin/">Objecttypen <small>schema's</small></a>
       </div>
       </div>
     </section>
@@ -223,7 +223,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
         <a class="btn" data-shot="ontwikkelaar-1.jpg" href="https://zaken.__BASE__/zaken/api/v1/schema/">Zaken API <small>OAS</small></a>
         <a class="btn" data-shot="ontwikkelaar-catalogi.jpg" href="https://zaken.__BASE__/catalogi/api/v1/schema/">Catalogi API <small>OAS</small></a>
         <a class="btn" data-shot="ontwikkelaar-2.jpg" href="https://klant.__BASE__/klantinteracties/api/v1/schema/">Klantinteracties API <small>OAS</small></a>
-        <a class="btn" data-shot="ontwikkelaar-notificaties.jpg" href="https://notificaties.__BASE__/admin/datamodel/notificatie/">Open Notificaties <small>berichtenverkeer</small></a>
+        <a class="btn" data-shot="ontwikkelaar-notificaties.jpg" href="https://notificaties.__BASE__/oidc/authenticate/?next=/admin/datamodel/notificatie/">Open Notificaties <small>berichtenverkeer</small></a>
         <a class="btn" data-shot="ontwikkelaar-mailpit.jpg" href="https://mail.__BASE__/">Mailpit <small>uitgaande mail</small></a>
       </div>
       </div>
@@ -249,18 +249,17 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
   </div>
 
   <h2>Inloggen en testgegevens</h2>
-  <p class="sub">Het wachtwoord krijg je via Ontola; het is voor alle accounts hetzelfde. Gebruik in deze omgeving nooit echte persoonsgegevens.</p>
+  <p class="sub">Eén keer inloggen is genoeg: alle onderdelen gebruiken dezelfde inlog (Keycloak), ook de beheerschermen. Het wachtwoord krijg je via Ontola. Gebruik in deze omgeving nooit echte persoonsgegevens.</p>
   <div class="tbl">
   <table>
-    <thead><tr><th>Waar</th><th>Gebruiker</th><th>Rol</th></tr></thead>
+    <thead><tr><th>Account</th><th>Wat je ermee kunt</th></tr></thead>
     <tbody>
-      <tr><td>KISS</td><td><code>kcc</code></td><td>Klantcontactmedewerker</td></tr>
-      <tr><td>KISS</td><td><code>redacteur</code></td><td>Klantcontactmedewerker en redacteur nieuws/werkinstructies</td></tr>
-      <tr><td>KISS</td><td><code>beheerder</code></td><td>Alle rollen, inclusief beheer van KISS</td></tr>
-      <tr><td>ZAC en GZAC</td><td><code>behandelaar</code></td><td>Zaakbehandelaar (team Meldingen)</td></tr>
-      <tr><td>ZAC</td><td><code>coordinator</code></td><td>Coördinator openbare ruimte</td></tr>
-      <tr><td>ZAC en GZAC</td><td><code>beheerder</code></td><td>Beheer en inrichting</td></tr>
-      <tr><td>Beheerschermen en Mailpit</td><td><code>admin</code></td><td>Functioneel beheer</td></tr>
+      <tr><td><code>demo</code></td><td><strong>Alles</strong>: KCC, zaakbehandelaar en beheer in KISS, ZAC, GZAC en alle beheerschermen. Begin hiermee.</td></tr>
+      <tr><td><code>kcc</code></td><td>Alleen klantcontactmedewerker in KISS</td></tr>
+      <tr><td><code>redacteur</code></td><td>KISS, plus nieuws en werkinstructies beheren</td></tr>
+      <tr><td><code>behandelaar</code></td><td>Zaakbehandelaar (team Meldingen) in ZAC en GZAC</td></tr>
+      <tr><td><code>coordinator</code></td><td>Coördinator openbare ruimte in ZAC</td></tr>
+      <tr><td><code>beheerder</code></td><td>Inrichting van KISS, ZAC, GZAC en de beheerschermen</td></tr>
     </tbody>
   </table>
   </div>
