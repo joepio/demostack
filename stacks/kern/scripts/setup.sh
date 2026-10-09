@@ -26,7 +26,10 @@ if [ ! -f .env ]; then
   } > .env
   echo "Nieuwe .env aangemaakt."
 fi
+grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac" >> .env
 set -a; . ./.env; set +a
+# Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
+WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac
 setenv() { if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 q() { grep -v -E '^\{"|Container|^$' || true; }
 
@@ -91,4 +94,6 @@ docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts
 
 KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
 ./welkom/screenshots.sh || echo "Screenshots mislukt; de welkomstpagina werkt ook zonder."
+sed -i "s/^COMPOSE_PROFILES=.*/COMPOSE_PROFILES=$WANTED_PROFILES/" .env
+./scripts/stack.sh toepassen
 echo "Klaar. Welkomstpagina: https://$BASE_DOMAIN/ (Caddy-config: scripts/caddyfile.sh)"

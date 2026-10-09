@@ -16,9 +16,9 @@ x-base-env: &base-env
   DISABLE_2FA: "yes"
   TZ: Europe/Amsterdam
   OTEL_SDK_DISABLED: "true"
-  UWSGI_PROCESSES: "2"
-  UWSGI_THREADS: "4"
-  CELERY_WORKER_CONCURRENCY: "2"
+  UWSGI_PROCESSES: "1"
+  UWSGI_THREADS: "8"
+  CELERY_WORKER_CONCURRENCY: "1"
   EMAIL_HOST: mailpit
   EMAIL_PORT: "1025"
   DJANGO_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
@@ -363,6 +363,7 @@ services:
         condition: service_healthy
 
   elasticsearch:
+    profiles: [kcc]
     image: docker.elastic.co/elasticsearch/elasticsearch:8.19.3
     restart: unless-stopped
     environment:
@@ -380,6 +381,7 @@ services:
       retries: 20
 
   personen-mock:
+    profiles: [kcc]
     image: ghcr.io/brp-api/personen-mock:2.7.0-latest
     restart: unless-stopped
     environment:
@@ -387,6 +389,7 @@ services:
       ASPNETCORE_URLS: http://+:5010
 
   kiss:
+    profiles: [kcc]
     image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:3.2.0
     restart: unless-stopped
     environment: *kiss-env
@@ -412,6 +415,7 @@ services:
 
   # ---------- Zaakafhandeling: GZAC (Valtimo) met de demo-casus evenementenvergunning ----------
   gzac-backend:
+    profiles: [gzac]
     image: ritense/gzac-evenementenvergunning-demo-backend:13.49.1
     restart: unless-stopped
     mem_limit: 2g
@@ -447,6 +451,7 @@ services:
 
   # De nginx in dit image stuurt /api door naar http://gzac-backend:8080
   gzac:
+    profiles: [gzac]
     image: ritense/gzac-evenementenvergunning-demo-frontend:13.49.1
     restart: unless-stopped
     environment:
