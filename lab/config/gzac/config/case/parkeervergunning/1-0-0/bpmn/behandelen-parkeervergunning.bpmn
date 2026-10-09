@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Behandelen van een aanvraag parkeervergunning bewoners (Gemeente Voorbeeldstad, demo).
+     De zaak in Open Zaak maakt GZAC bij het aanmaken van de case (zaaktype-koppeling met
+     "createWithDossier", zgw/zaak-type-link/). De servicetaken krijgen hun ZGW-actie via
+     een proceskoppeling naar de plugin Zaken API (process-link/). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_parkeervergunning" targetNamespace="http://voorbeeldstad.example/bpmn">
+  <bpmn:process id="behandelen-parkeervergunning" name="Behandelen parkeervergunning bewoners" isExecutable="true" camunda:candidateStarterGroups="ROLE_USER,ROLE_ADMIN">
+    <bpmn:startEvent id="start" name="Aanvraag ontvangen">
+      <bpmn:outgoing>f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="rol-initiator" name="Initiator vastleggen in Open Zaak" camunda:expression="${true}">
+      <bpmn:incoming>f1</bpmn:incoming>
+      <bpmn:outgoing>f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="status-ontvangen" name="Zet zaakstatus: Ontvangen" camunda:expression="${true}">
+      <bpmn:incoming>f2</bpmn:incoming>
+      <bpmn:outgoing>f3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="splits">
+      <bpmn:incoming>f3</bpmn:incoming>
+      <bpmn:outgoing>f4</bpmn:outgoing>
+      <bpmn:outgoing>f5</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="kentekenbewijs-aanleveren" name="Kentekenbewijs aanleveren (burger, via portaal)">
+      <bpmn:incoming>f4</bpmn:incoming>
+      <bpmn:outgoing>f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="einde-portaaltaak">
+      <bpmn:incoming>f6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="status-in-behandeling" name="Zet zaakstatus: In behandeling" camunda:expression="${true}">
+      <bpmn:incoming>f5</bpmn:incoming>
+      <bpmn:outgoing>f5b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="beoordelen-aanvraag" name="Aanvraag beoordelen" camunda:candidateGroups="ROLE_USER">
+      <bpmn:incoming>f5b</bpmn:incoming>
+      <bpmn:outgoing>f7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="status-afgehandeld" name="Zet zaakstatus: Afgehandeld" camunda:expression="${true}">
+      <bpmn:incoming>f7</bpmn:incoming>
+      <bpmn:outgoing>f8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="einde">
+      <bpmn:incoming>f8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f1" sourceRef="start" targetRef="rol-initiator"/>
+    <bpmn:sequenceFlow id="f2" sourceRef="rol-initiator" targetRef="status-ontvangen"/>
+    <bpmn:sequenceFlow id="f3" sourceRef="status-ontvangen" targetRef="splits"/>
+    <bpmn:sequenceFlow id="f4" sourceRef="splits" targetRef="kentekenbewijs-aanleveren"/>
+    <bpmn:sequenceFlow id="f5" sourceRef="splits" targetRef="status-in-behandeling"/>
+    <bpmn:sequenceFlow id="f5b" sourceRef="status-in-behandeling" targetRef="beoordelen-aanvraag"/>
+    <bpmn:sequenceFlow id="f6" sourceRef="kentekenbewijs-aanleveren" targetRef="einde-portaaltaak"/>
+    <bpmn:sequenceFlow id="f7" sourceRef="beoordelen-aanvraag" targetRef="status-afgehandeld"/>
+    <bpmn:sequenceFlow id="f8" sourceRef="status-afgehandeld" targetRef="einde"/>
+  </bpmn:process>
+</bpmn:definitions>

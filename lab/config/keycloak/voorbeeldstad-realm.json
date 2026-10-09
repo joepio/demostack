@@ -1,0 +1,201 @@
+{
+  "realm": "voorbeeldstad",
+  "displayName": "DigiD-simulatie Gemeente Voorbeeldstad",
+  "displayNameHtml": "<b>DigiD-simulatie</b> Gemeente Voorbeeldstad (alleen fictieve testpersonen)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "nl",
+    "en"
+  ],
+  "defaultLocale": "nl",
+  "accessTokenLifespan": 900,
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"unmanagedAttributePolicy\": \"ENABLED\", \"attributes\": [{\"name\": \"username\", \"displayName\": \"${username}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"multivalued\": false}, {\"name\": \"email\", \"displayName\": \"${email}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"multivalued\": false}, {\"name\": \"firstName\", \"displayName\": \"${firstName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"multivalued\": false}, {\"name\": \"lastName\", \"displayName\": \"${lastName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"multivalued\": false}, {\"name\": \"bsn\", \"displayName\": \"BSN\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"multivalued\": false}], \"groups\": []}"
+          ]
+        }
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "mijnservices",
+      "name": "MijnServices (inwonersportaal)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:*",
+        "http://127.0.0.1:*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "bsn",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "bsn",
+            "claim.name": "bsn",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "betrouwbaarheidsniveau",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "config": {
+            "claim.name": "loa",
+            "claim.value": "urn:etoegang:core:assurance-class:loa2plus",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-burgerportaal",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "burgerportaal",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "burgerportaal",
+      "name": "Burgerportaal (plug-in)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_PORTAAL_CLIENT_SECRET}",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "999990627",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Stephan",
+      "lastName": "Janssen",
+      "email": "999990627@inwoner.voorbeeldstad.example",
+      "attributes": {
+        "bsn": [
+          "999990627"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DIGID_SIM_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "999997609",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Eleonora",
+      "lastName": "de Crooy",
+      "email": "999997609@inwoner.voorbeeldstad.example",
+      "attributes": {
+        "bsn": [
+          "999997609"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DIGID_SIM_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "999993409",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Thea",
+      "lastName": "Kouwenhoven",
+      "email": "999993409@inwoner.voorbeeldstad.example",
+      "attributes": {
+        "bsn": [
+          "999993409"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DIGID_SIM_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "999995406",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Paula",
+      "lastName": "Prins",
+      "email": "999995406@inwoner.voorbeeldstad.example",
+      "attributes": {
+        "bsn": [
+          "999995406"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DIGID_SIM_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "999991991",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jeroen",
+      "lastName": "Altena",
+      "email": "999991991@inwoner.voorbeeldstad.example",
+      "attributes": {
+        "bsn": [
+          "999991991"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DIGID_SIM_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

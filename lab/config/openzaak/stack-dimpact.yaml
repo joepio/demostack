@@ -1,0 +1,80 @@
+# Open Zaak, aanvulling voor stack "dimpact" (na config/openzaak/data.yaml).
+# JWT-secrets van de PodiumD-afnemers en de Objecten API op zijn eigen hostnaam
+# (Open Zaak haalt zaakobject-URL's op om ze te controleren).
+#
+# Applicaties: Open Formulieren en Open Inwoner krijgen autorisaties per zaaktype
+# (stacks/dimpact/seed.py, de zaaktypen bestaan pas na de seed). De medewerkers- en
+# beheertoepassingen krijgen hier "alle autorisaties", zoals in een standaard
+# PodiumD-installatie: KISS en ITA zoeken zaken van elke klant, Open Archiefbeheer
+# vernietigt zaken, Open Beheer beheert de catalogus en OMC leest elke zaak waarover
+# het een bericht stuurt.
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: objecten-api-dimpact
+      label: Objecten API (los, PodiumD)
+      api_root: http://objecten.local:8000/api/v2/
+      api_connection_check_path: objects
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OBJECTEN_OPENZAAK_HEADER
+
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: open-formulieren
+      secret:
+        value_from:
+          env: ZGW_OPENFORMULIEREN_SECRET
+    - identifier: open-inwoner
+      secret:
+        value_from:
+          env: ZGW_OPENINWONER_SECRET
+    - identifier: kiss
+      secret:
+        value_from:
+          env: ZGW_KISS_SECRET
+    - identifier: ita
+      secret:
+        value_from:
+          env: ZGW_ITA_SECRET
+    - identifier: omc
+      secret:
+        value_from:
+          env: ZGW_OMC_SECRET
+    - identifier: open-archiefbeheer
+      secret:
+        value_from:
+          env: ZGW_OPENARCHIEFBEHEER_SECRET
+    - identifier: open-beheer
+      secret:
+        value_from:
+          env: ZGW_OPENBEHEER_SECRET
+
+vng_api_common_applicaties_config_enable: true
+vng_api_common_applicaties:
+  items:
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4d01
+      client_ids: [kiss]
+      label: KISS (klantcontact, zaken zoeken)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4d02
+      client_ids: [ita]
+      label: ITA (interne taken, zaakgegevens)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4d03
+      client_ids: [omc]
+      label: NotifyNL OMC (berichten aan inwoners)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4d04
+      client_ids: [open-archiefbeheer]
+      label: Open Archiefbeheer (vernietigingslijsten)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4d05
+      client_ids: [open-beheer]
+      label: Open Beheer (catalogusbeheer)
+      heeft_alle_autorisaties: true

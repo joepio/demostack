@@ -1,0 +1,168 @@
+# Open Inwoner 2.4.3: django-setup-configuration (stack dimpact).
+# Gelijk aan data.yaml (stack maykin, 2.4.5), maar met losse Objecten- en
+# Objecttypen-API's zoals PodiumD, en de poort van deze stack. Deze versie kent zes stappen: OIDC, services, Open Zaak, klantensysteem,
+# gebruikers en sites. De rest (CMS-pagina's, BRP, taken uit Open Object,
+# siteconfiguratie, actor voor Mijn vragen) zet config/openinwoner/configureer.py.
+
+# DigiD via OpenID Connect: Keycloak (realm voorbeeldstad) als DigiD-simulatie. De
+# browser gaat naar localhost:8080, de server praat met keycloak.local:8080.
+oidc_db_config_enable: true
+oidc_db_config_admin_auth:
+  providers:
+    - identifier: keycloak-digid-simulatie
+      oidc_use_nonce: true
+      oidc_nonce_size: 32
+      oidc_state_size: 32
+      endpoint_config:
+        oidc_op_authorization_endpoint: http://localhost:8080/realms/voorbeeldstad/protocol/openid-connect/auth
+        oidc_op_token_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/token
+        oidc_op_user_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/userinfo
+        oidc_op_jwks_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/certs
+        oidc_op_logout_endpoint: http://localhost:8080/realms/voorbeeldstad/protocol/openid-connect/logout
+  items:
+    - identifier: oidc-digid
+      enabled: true
+      oidc_provider_identifier: keycloak-digid-simulatie
+      oidc_rp_client_id: openinwoner
+      oidc_rp_client_secret:
+        value_from:
+          env: KEYCLOAK_OPENINWONER_CLIENT_SECRET
+      oidc_rp_sign_algo: RS256
+      oidc_rp_scopes_list:
+        - openid
+      userinfo_claims_source: id_token
+      options:
+        identity_settings:
+          bsn_claim_path:
+            - bsn
+        loa_settings:
+          claim_path:
+            - loa
+          default: urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract
+          value_mapping: []
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: zaken-api
+      label: Open Zaak - Zaken API
+      api_root: http://openzaak.local:8000/zaken/api/v1/
+      api_connection_check_path: zaken
+      api_type: zrc
+      auth_type: zgw
+      client_id: open-inwoner
+      secret:
+        value_from:
+          env: ZGW_OPENINWONER_SECRET
+      user_id: open-inwoner
+      user_representation: Open Inwoner
+    - identifier: documenten-api
+      label: Open Zaak - Documenten API
+      api_root: http://openzaak.local:8000/documenten/api/v1/
+      api_connection_check_path: enkelvoudiginformatieobjecten
+      api_type: drc
+      auth_type: zgw
+      client_id: open-inwoner
+      secret:
+        value_from:
+          env: ZGW_OPENINWONER_SECRET
+      user_id: open-inwoner
+      user_representation: Open Inwoner
+    - identifier: catalogi-api
+      label: Open Zaak - Catalogi API
+      api_root: http://openzaak.local:8000/catalogi/api/v1/
+      api_connection_check_path: zaaktypen
+      api_type: ztc
+      auth_type: zgw
+      client_id: open-inwoner
+      secret:
+        value_from:
+          env: ZGW_OPENINWONER_SECRET
+      user_id: open-inwoner
+      user_representation: Open Inwoner
+    - identifier: klantinteracties-api
+      label: Open Klant - Klantinteracties API
+      api_root: http://openklant.local:8000/klantinteracties/api/v1/
+      api_connection_check_path: partijen
+      api_type: kc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OPENKLANT_OPENINWONER_HEADER
+      # De Open Klant 2-client van Open Inwoner leest het token uit "secret"
+      secret:
+        value_from:
+          env: OPENKLANT_OPENINWONER_TOKEN
+    - identifier: objecten-api
+      label: Objecten API
+      api_root: http://objecten.local:8000/api/v2/
+      api_connection_check_path: objects
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OPENOBJECT_OPENINWONER_HEADER
+    - identifier: objecttypen-api
+      label: Objecttypen API
+      api_root: http://objecttypen.local:8000/api/v2/
+      api_connection_check_path: objecttypes
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OPENOBJECT_OPENINWONER_HEADER
+    - identifier: brp-personen
+      label: BRP API Personen 2 (BRP-mock via tools/brp_vertaler.py)
+      api_root: http://brp-api.local:8080/haalcentraal/api/brp/
+      api_type: orc
+      auth_type: no_auth
+
+openzaak_config_enable: true
+openzaak_config:
+  # Wmo-zaken zijn vertrouwelijk en horen wel in het portaal van de inwoner zelf; het
+  # vertrouwelijke gespreksverslag van burger C (een document) niet.
+  zaak_max_confidentiality: vertrouwelijk
+  document_max_confidentiality: zaakvertrouwelijk
+  max_upload_size: 20
+  skip_notification_statustype_informeren: false
+  reformat_esuite_zaak_identificatie: false
+  derive_zaak_titel_from: zaaktype_omschrijving
+  order_statuses_by_date_set: true
+  title_text: Hier vindt u uw lopende en afgeronde aanvragen bij de gemeente.
+  enable_categories_filtering_with_zaken: false
+  action_required_deadline_days: 15
+  zaken_filter_enabled: true
+  allowed_file_extensions:
+    - .pdf
+    - .jpg
+    - .png
+  api_groups:
+    - zaken_api_identifier: zaken-api
+      documenten_api_identifier: documenten-api
+      catalogi_api_identifier: catalogi-api
+      fetch_eherkenning_zaken_with_rsin: false
+
+klantensysteem_config_enable: true
+klantensysteem_config:
+  primary_backend: openklant2
+  register_contact_via_api: true
+  register_contact_email: kcc@voorbeeldstad.example
+  send_email_confirmation: false
+  openklant2_config:
+    service_identifier: klantinteracties-api
+    # Tijdelijke waarde: configureer.py zoekt of maakt de echte actor in Open Klant
+    mijn_vragen_actor: 00000000-0000-4000-8000-000000000000
+    # code uit Referentielijsten (tabel KANAAL); Open Klant controleert die
+    mijn_vragen_kanaal: webformulier
+    mijn_vragen_organisatie_naam: Gemeente Voorbeeldstad
+    interne_taak_gevraagde_handeling: Vraag beantwoorden
+    interne_taak_toelichting: Vraag gesteld via Mijn Voorbeeldstad (Open Inwoner)
+
+sites_config_enable: true
+sites_config:
+  items:
+    - domain: localhost:8103
+      name: Mijn Voorbeeldstad (Open Inwoner)

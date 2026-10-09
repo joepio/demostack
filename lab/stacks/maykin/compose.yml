@@ -1,0 +1,327 @@
+# Stack "maykin": de componenten van Maykin Media bovenop stacks/kern/compose.yml.
+#   Open VTB 0.2.0           Verzoeken, Taken, Berichten (takenbron voor portalen)
+#   Open Formulieren 4.0.1   e-formulieren met DigiD, BRP-prefill en registratie in Open Zaak
+#   Open Inwoner 2.4.5       inwonersportaal (Mijn aanvragen, taken, profiel, vragen)
+#                            met Elasticsearch 9.0.3 als zoekmachine
+# Plus aanvullingen op de kern: extra setup-configuration voor Open Zaak, Open
+# Notificaties, Open Object en Open Klant (tokens, objecttype "Externe taak"), en de
+# Keycloak-clients voor Open Formulieren en Open Inwoner.
+#
+# Afspraken: netwerkalias <component>.local, vaste tags (IMAGE_<NAAM>), paden relatief
+# aan de root van de repository, hostpoorten 8100-8149, Redis-databases 12-31.
+
+x-django-env: &django-env
+  IS_HTTPS: "no"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+  DB_CONN_MAX_AGE: "0"
+  DB_POOL_ENABLED: "False"
+  DISABLE_2FA: "true"
+  OTEL_SDK_DISABLED: "true"
+  LOG_STDOUT: "yes"
+  LOG_REQUESTS: "no"
+  UWSGI_PROCESSES: ${UWSGI_PROCESSES:-2}
+  UWSGI_THREADS: ${UWSGI_THREADS:-4}
+  CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-2}
+  CELERY_LOGLEVEL: INFO
+  ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+  GEMEENTE_NAAM: ${GEMEENTE_NAAM:-Gemeente Voorbeeldstad}
+  GEMEENTE_RSIN: ${GEMEENTE_RSIN:-999990007}
+  TZ: Europe/Amsterdam
+
+x-healthcheck: &django-healthcheck
+  test: ["CMD", "python", "-c", "import requests,sys; sys.exit(requests.head('http://localhost:8000/admin/', timeout=4).status_code not in (200, 302))"]
+  interval: 10s
+  timeout: 5s
+  retries: 40
+  start_period: 60s
+
+# setup-configuration van de kern, gevolgd door de aanvulling van deze stack
+x-init-met-aanvulling: &init-met-aanvulling
+  - bash
+  - -c
+  - /setup_configuration.sh && OTEL_SDK_DISABLED=True python src/manage.py setup_configuration --yaml-file /app/setup_configuration_stack/data.yaml
+
+services:
+  # ------------------------------------------------- aanvullingen op de kern
+  openzaak-init:
+    command: *init-met-aanvulling
+    environment:
+      ZGW_OPENFORMULIEREN_SECRET: ${ZGW_OPENFORMULIEREN_SECRET:?zie .env}
+      ZGW_OPENINWONER_SECRET: ${ZGW_OPENINWONER_SECRET:?zie .env}
+      ZGW_OPENVTB_SECRET: ${ZGW_OPENVTB_SECRET:?zie .env}
+    volumes:
+      - ./config/openzaak/stack-maykin.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  opennotificaties-init:
+    command: *init-met-aanvulling
+    environment:
+      ZGW_OPENVTB_SECRET: ${ZGW_OPENVTB_SECRET:?zie .env}
+    volumes:
+      - ./config/opennotificaties/stack-maykin.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  openobject-init:
+    command: *init-met-aanvulling
+    environment:
+      OPENOBJECT_OPENFORMULIEREN_TOKEN: ${OPENOBJECT_OPENFORMULIEREN_TOKEN:?zie .env}
+      OPENOBJECT_OPENINWONER_TOKEN: ${OPENOBJECT_OPENINWONER_TOKEN:?zie .env}
+    volumes:
+      - ./config/openobject/stack-maykin.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  openklant-init:
+    command: *init-met-aanvulling
+    environment:
+      OPENKLANT_OPENINWONER_TOKEN: ${OPENKLANT_OPENINWONER_TOKEN:?zie .env}
+    volumes:
+      - ./config/openklant/stack-maykin.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  # Keycloak-clients (DigiD-simulatie) voor Open Formulieren en Open Inwoner
+  keycloak-clients:
+    image: ${IMAGE_KEYCLOAK:-keycloak/keycloak:26.4.7}
+    entrypoint: ["bash", "/config/extra-clients.sh"]
+    command:
+      - "openformulieren=Open Formulieren=KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET=http://localhost:${PORT_OPENFORMULIEREN:-8102}/*,http://127.0.0.1:${PORT_OPENFORMULIEREN:-8102}/*,http://openformulieren.local:8000/*"
+      - "openinwoner=Open Inwoner=KEYCLOAK_OPENINWONER_CLIENT_SECRET=http://localhost:${PORT_OPENINWONER:-8103}/*,http://127.0.0.1:${PORT_OPENINWONER:-8103}/*,http://openinwoner.local:8000/*"
+    environment:
+      KC_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      KC_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET: ${KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET:?zie .env}
+      KEYCLOAK_OPENINWONER_CLIENT_SECRET: ${KEYCLOAK_OPENINWONER_CLIENT_SECRET:?zie .env}
+    volumes:
+      - ./config/keycloak/extra-clients.sh:/config/extra-clients.sh:ro
+    depends_on:
+      keycloak: {condition: service_healthy}
+
+  # BRP API Personen 2 in officieel formaat, vertaald uit de GBA-variant-mock
+  # (tools/brp_vertaler.py). Open Inwoner en Open Formulieren vragen de BRP hier.
+  brp-api:
+    image: openzaak/open-zaak:1.29.0
+    networks:
+      default:
+        aliases: [brp-api.local]
+    entrypoint: ["python", "/tools/brp_vertaler.py"]
+    environment:
+      BRP_BRON: http://brp-mock.local:80
+    volumes:
+      - ./tools:/tools:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------- Open VTB
+  openvtb-init:
+    image: ${IMAGE_OPENVTB:-maykinmedia/open-vtb:0.2.0}
+    command: ["bash", "-c", "/setup_configuration.sh && python src/manage.py shell < /app/setup_configuration/tokens.py"]
+    environment: &openvtb-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: openvtb.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENVTB:?zie .env}
+      DB_NAME: openvtb
+      DB_USER: openvtb
+      # openvtb.local is de canonieke naam: Open VTB bouwt next-links uit de Host-header
+      ALLOWED_HOSTS: openvtb.local,openvtb,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENVTB:-8101}
+      SITE_DOMAIN: openvtb.local:8000
+      CACHE_DEFAULT: redis:6379/12
+      CACHE_AXES: redis:6379/12
+      CELERY_BROKER_URL: redis://redis:6379/13
+      CELERY_RESULT_BACKEND: redis://redis:6379/13
+      CELERY_WORKER_NAME: celery@openvtb
+      ENABLE_CLOUD_EVENTS: "True"
+      NOTIFICATIONS_SOURCE: urn:nld:voorbeeldstad:openvtb
+      LOG_NOTIFICATIONS_IN_DB: "yes"
+      ZGW_OPENVTB_SECRET: ${ZGW_OPENVTB_SECRET:?zie .env}
+      OPENVTB_BEHEER_TOKEN: ${OPENVTB_BEHEER_TOKEN:?zie .env}
+      OPENVTB_PORTAAL_TOKEN: ${OPENVTB_PORTAAL_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openvtb:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openvtb:
+    image: ${IMAGE_OPENVTB:-maykinmedia/open-vtb:0.2.0}
+    networks:
+      default:
+        aliases: [openvtb.local]
+    environment: *openvtb-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENVTB:-8101}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openvtb-init: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openvtb-celery:
+    image: ${IMAGE_OPENVTB:-maykinmedia/open-vtb:0.2.0}
+    command: /celery_worker.sh
+    environment: *openvtb-env
+    depends_on:
+      openvtb: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ------------------------------------------------------- Open Formulieren
+  openformulieren-init:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:4.0.1}
+    command: ["bash", "-c", "/setup_configuration.sh && python src/manage.py shell < /app/setup_configuration/configureer.py"]
+    environment: &openformulieren-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: openforms.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENFORMULIEREN:?zie .env}
+      DB_NAME: openformulieren
+      DB_USER: openformulieren
+      ALLOWED_HOSTS: openformulieren.local,openformulieren,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENFORMULIEREN:-8102},http://127.0.0.1:${PORT_OPENFORMULIEREN:-8102}
+      BASE_URL: http://localhost:${PORT_OPENFORMULIEREN:-8102}
+      # Ook de eigen browser-origin: Open Formulieren staat redirects (next=) alleen toe
+      # naar ALLOWED_HOSTS zonder poort of naar origins uit de CORS-instellingen.
+      CORS_ALLOWED_ORIGINS: http://localhost:${PORT_OPENFORMULIEREN:-8102},http://127.0.0.1:${PORT_OPENFORMULIEREN:-8102},http://localhost:${PORT_OPENINWONER:-8103},http://openformulieren.local:8000
+      CACHE_DEFAULT: redis:6379/14
+      CACHE_AXES: redis:6379/14
+      CACHE_OIDC: redis:6379/14
+      CACHE_PORTALOCKER: redis:6379/14
+      CELERY_BROKER_URL: redis://redis:6379/15
+      CELERY_RESULT_BACKEND: redis://redis:6379/15
+      ZGW_OPENFORMULIEREN_SECRET: ${ZGW_OPENFORMULIEREN_SECRET:?zie .env}
+      OPENOBJECT_OPENFORMULIEREN_HEADER: Token ${OPENOBJECT_OPENFORMULIEREN_TOKEN:?zie .env}
+      KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET: ${KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET:?zie .env}
+      OPENFORMULIEREN_BEHEER_TOKEN: ${OPENFORMULIEREN_BEHEER_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openformulieren:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openformulieren:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:4.0.1}
+    networks:
+      default:
+        aliases: [openformulieren.local]
+    environment: *openformulieren-env
+    volumes: &openformulieren-volumes
+      - openformulieren-media:/app/media
+      - openformulieren-private-media:/app/private_media
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENFORMULIEREN:-8102}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openformulieren-init: {condition: service_completed_successfully}
+      keycloak-clients: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openformulieren-celery:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:4.0.1}
+    command: /celery_worker.sh
+    environment: *openformulieren-env
+    volumes: *openformulieren-volumes
+    depends_on:
+      openformulieren: {condition: service_healthy}
+    restart: unless-stopped
+
+  openformulieren-celery-beat:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:4.0.1}
+    command: /celery_beat.sh
+    environment: *openformulieren-env
+    depends_on:
+      openformulieren: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ----------------------------------------------------------- Open Inwoner
+  elasticsearch:
+    image: ${IMAGE_ELASTICSEARCH:-elasticsearch:9.0.3}
+    networks:
+      default:
+        aliases: [elasticsearch.local]
+    environment:
+      discovery.type: single-node
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+      ES_JAVA_OPTS: -Xms384m -Xmx384m
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?zie .env}
+      xpack.security.enabled: "true"
+      xpack.ml.enabled: "false"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -u elastic:$$ELASTIC_PASSWORD http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  openinwoner-init:
+    image: ${IMAGE_OPENINWONER:-maykinmedia/open-inwoner:2.4.5}
+    command: ["bash", "-c", "/setup_configuration.sh && python src/manage.py shell < /app/setup_configuration/configureer.py"]
+    environment: &openinwoner-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: open_inwoner.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENINWONER:?zie .env}
+      DB_NAME: openinwoner
+      DB_USER: openinwoner
+      ALLOWED_HOSTS: openinwoner.local,openinwoner,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENINWONER:-8103},http://127.0.0.1:${PORT_OPENINWONER:-8103}
+      CACHE_DEFAULT: redis:6379/16
+      CACHE_AXES: redis:6379/16
+      CACHE_OIDC: redis:6379/16
+      CACHE_PORTALOCKER: redis:6379/16
+      CELERY_BROKER_URL: redis://redis:6379/17
+      CELERY_RESULT_BACKEND: redis://redis:6379/17
+      ES_HOST: http://elasticsearch.local:9200
+      ES_USERNAME: elastic
+      ES_PASSWORD: ${ELASTIC_PASSWORD:?zie .env}
+      EMAIL_HOST: localhost
+      OIDC_FRONTEND_LOGOUT_WITH_HINTS: "true"
+      ALLOW_CUSTOM_JS: "False"
+      ZGW_OPENINWONER_SECRET: ${ZGW_OPENINWONER_SECRET:?zie .env}
+      OPENKLANT_OPENINWONER_TOKEN: ${OPENKLANT_OPENINWONER_TOKEN:?zie .env}
+      OPENKLANT_OPENINWONER_HEADER: Token ${OPENKLANT_OPENINWONER_TOKEN:?zie .env}
+      OPENOBJECT_OPENINWONER_HEADER: Token ${OPENOBJECT_OPENINWONER_TOKEN:?zie .env}
+      KEYCLOAK_OPENINWONER_CLIENT_SECRET: ${KEYCLOAK_OPENINWONER_CLIENT_SECRET:?zie .env}
+    volumes:
+      - ./config/openinwoner:/app/setup_configuration:ro
+      - openinwoner-media:/app/media
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      elasticsearch: {condition: service_healthy}
+      openklant: {condition: service_healthy}
+
+  openinwoner:
+    image: ${IMAGE_OPENINWONER:-maykinmedia/open-inwoner:2.4.5}
+    networks:
+      default:
+        aliases: [openinwoner.local]
+    environment: *openinwoner-env
+    volumes: &openinwoner-volumes
+      - openinwoner-media:/app/media
+      - openinwoner-private-media:/app/private_media
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENINWONER:-8103}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openinwoner-init: {condition: service_completed_successfully}
+      keycloak-clients: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openinwoner-celery:
+    image: ${IMAGE_OPENINWONER:-maykinmedia/open-inwoner:2.4.5}
+    command: /celery_worker.sh
+    environment: *openinwoner-env
+    volumes: *openinwoner-volumes
+    depends_on:
+      openinwoner: {condition: service_healthy}
+    restart: unless-stopped
+
+volumes:
+  openformulieren-media:
+  openformulieren-private-media:
+  openinwoner-media:
+  openinwoner-private-media:
+  elasticsearch-data:

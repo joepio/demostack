@@ -1,0 +1,22 @@
+{
+  "$id": "parkeervergunning.schema",
+  "type": "object",
+  "title": "Parkeervergunning bewoners",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "required": ["aanvrager", "kenteken", "zone"],
+  "properties": {
+    "aanvrager": {
+      "type": "object",
+      "required": ["bsn"],
+      "properties": {
+        "bsn": {"type": "string", "pattern": "^[0-9]{9}$"},
+        "naam": {"type": "string"}
+      }
+    },
+    "kenteken": {"type": "string"},
+    "zone": {"type": "string"},
+    "toelichting": {"type": "string"},
+    "kentekenbewijs": {"type": "object"},
+    "besluit": {"type": "string", "enum": ["toekennen", "afwijzen"]}
+  }
+}

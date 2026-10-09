@@ -1,0 +1,142 @@
+# Open Archiefbeheer 2.0 (stack dimpact): vernietigingslijsten op de zaken in Open Zaak.
+# Zaken komen uit Open Zaak (applicatie met alle autorisaties, config/openzaak/
+# stack-dimpact.yaml); de selectielijst uit de lokale VNG Selectielijst. Bij vernietiging
+# ruimt Open Archiefbeheer ook gekoppelde gegevens in Open Klant en de Objecten API op
+# (externe registers).
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: zaken-api
+      label: Open Zaak - Zaken API
+      api_root: http://openzaak.local:8000/zaken/api/v1/
+      api_connection_check_path: zaken
+      api_type: zrc
+      auth_type: zgw
+      client_id: open-archiefbeheer
+      secret:
+        value_from:
+          env: ZGW_OPENARCHIEFBEHEER_SECRET
+    - identifier: documenten-api
+      label: Open Zaak - Documenten API
+      api_root: http://openzaak.local:8000/documenten/api/v1/
+      api_connection_check_path: enkelvoudiginformatieobjecten
+      api_type: drc
+      auth_type: zgw
+      client_id: open-archiefbeheer
+      secret:
+        value_from:
+          env: ZGW_OPENARCHIEFBEHEER_SECRET
+    - identifier: catalogi-api
+      label: Open Zaak - Catalogi API
+      api_root: http://openzaak.local:8000/catalogi/api/v1/
+      api_connection_check_path: zaaktypen
+      api_type: ztc
+      auth_type: zgw
+      client_id: open-archiefbeheer
+      secret:
+        value_from:
+          env: ZGW_OPENARCHIEFBEHEER_SECRET
+    - identifier: besluiten-api
+      label: Open Zaak - Besluiten API
+      api_root: http://openzaak.local:8000/besluiten/api/v1/
+      api_connection_check_path: besluiten
+      api_type: brc
+      auth_type: zgw
+      client_id: open-archiefbeheer
+      secret:
+        value_from:
+          env: ZGW_OPENARCHIEFBEHEER_SECRET
+    - identifier: selectielijst-api
+      label: VNG Selectielijst (lokaal)
+      api_root: http://selectielijst.local:8000/api/v1/
+      api_connection_check_path: procestypen
+      api_type: orc
+      auth_type: no_auth
+    - identifier: openklant-klantinteracties
+      label: Open Klant - Klantinteracties API
+      api_root: http://openklant.local:8000/klantinteracties/api/v1/
+      api_connection_check_path: partijen
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OPENKLANT_OPENARCHIEFBEHEER_HEADER
+    - identifier: objecten-api
+      label: Objecten API
+      api_root: http://objecten.local:8000/api/v2/
+      api_connection_check_path: objects
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OBJECTEN_BEHEER_HEADER
+
+api_configuration_enabled: true
+api_configuration:
+  selectielijst_service_identifier: selectielijst-api
+
+external_registers_enabled: true
+external_registers:
+  openklant:
+    enabled: true
+    services_identifiers:
+      - openklant-klantinteracties
+  objecten:
+    enabled: true
+    services_identifiers:
+      - objecten-api
+
+# Medewerkers loggen in via Keycloak-realm "podiumd" (config/keycloak-podiumd/). De
+# browser gaat naar localhost:8080, de server praat met keycloak.local:8080. De rollen
+# van de client komen in de claim "roles"; rol "Superuser" geeft beheerrechten.
+oidc_db_config_enable: true
+oidc_db_config_admin_auth:
+  providers:
+    - identifier: keycloak-podiumd
+      oidc_use_nonce: true
+      oidc_nonce_size: 32
+      oidc_state_size: 32
+      endpoint_config:
+        oidc_op_authorization_endpoint: http://localhost:8080/realms/podiumd/protocol/openid-connect/auth
+        oidc_op_token_endpoint: http://keycloak.local:8080/realms/podiumd/protocol/openid-connect/token
+        oidc_op_user_endpoint: http://keycloak.local:8080/realms/podiumd/protocol/openid-connect/userinfo
+        oidc_op_jwks_endpoint: http://keycloak.local:8080/realms/podiumd/protocol/openid-connect/certs
+        oidc_op_logout_endpoint: http://localhost:8080/realms/podiumd/protocol/openid-connect/logout
+  items:
+    - identifier: admin-oidc
+      enabled: true
+      oidc_provider_identifier: keycloak-podiumd
+      oidc_rp_client_id: openarchiefbeheer
+      oidc_rp_client_secret:
+        value_from:
+          env: KEYCLOAK_OPENARCHIEFBEHEER_CLIENT_SECRET
+      oidc_rp_sign_algo: RS256
+      oidc_rp_scopes_list:
+        - openid
+        - email
+        - profile
+      userinfo_claims_source: id_token
+      options:
+        user_settings:
+          claim_mappings:
+            username:
+              - preferred_username
+            first_name:
+              - given_name
+            last_name:
+              - family_name
+            email:
+              - email
+          username_case_sensitive: false
+        groups_settings:
+          claim_mapping:
+            - roles
+          sync: true
+          sync_pattern: '*'
+          default_groups: []
+          make_users_staff: true
+          superuser_group_names:
+            - Superuser

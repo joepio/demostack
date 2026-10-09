@@ -1,0 +1,73 @@
+[
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000001",
+    "title": "Open Zaak (authenticatie, client gzac)",
+    "pluginDefinitionKey": "openzaak",
+    "properties": {"clientId": "gzac", "clientSecret": "${GZAC_ZGW_CLIENT_SECRET}"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000002",
+    "title": "Zaken API (Open Zaak)",
+    "pluginDefinitionKey": "zakenapi",
+    "properties": {"url": "http://openzaak.local:8000/zaken/api/v1/",
+                   "authenticationPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000001"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000003",
+    "title": "Catalogi API (Open Zaak)",
+    "pluginDefinitionKey": "catalogiapi",
+    "properties": {"url": "http://openzaak.local:8000/catalogi/api/v1/",
+                   "authenticationPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000001"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000004",
+    "title": "Documenten API (Open Zaak)",
+    "pluginDefinitionKey": "documentenapi",
+    "properties": {"url": "http://openzaak.local:8000/documenten/api/v1/",
+                   "bronorganisatie": "${GZAC_RSIN}",
+                   "apiVersion": "1.4.2",
+                   "authenticationPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000001"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000005",
+    "title": "Notificaties API (authenticatie, client gzac)",
+    "pluginDefinitionKey": "notificatiesapiauthentication",
+    "properties": {"clientId": "gzac", "clientSecret": "${GZAC_ZGW_CLIENT_SECRET}"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000006",
+    "title": "Notificaties API (Open Notificaties)",
+    "pluginDefinitionKey": "notificatiesapi",
+    "properties": {"url": "http://opennotificaties.local:8000/api/v1/",
+                   "callbackUrl": "http://gzac-backend.local:8000/api/v1/notificatiesapi/callback",
+                   "authenticationPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000005"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000007",
+    "title": "Open Object (token gzac)",
+    "pluginDefinitionKey": "objecttokenauthentication",
+    "properties": {"token": "${GZAC_OBJECTEN_TOKEN}"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000008",
+    "title": "Objecten API (Open Object)",
+    "pluginDefinitionKey": "objectenapi",
+    "properties": {"url": "http://openobject.local:8000/api/v2/",
+                   "authenticationPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000007"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-000000000009",
+    "title": "Objecttypen API (Open Object)",
+    "pluginDefinitionKey": "objecttypenapi",
+    "properties": {"url": "http://openobject.local:8000/api/v2/",
+                   "authenticationPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000007"}
+  },
+  {
+    "id": "4a0d6c10-0000-4000-8000-00000000000a",
+    "title": "Portaaltaak (taken voor de burger, Objecten API)",
+    "pluginDefinitionKey": "portaaltaak",
+    "properties": {"notificatiesApiPluginConfiguration": "4a0d6c10-0000-4000-8000-000000000006",
+                   "objectManagementConfigurationId": "4a0d6c10-0000-4000-8000-0000000000b1",
+                   "completeTaakProcess": "process-completed-portaaltaak"}
+  }
+]

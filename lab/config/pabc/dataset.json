@@ -1,0 +1,154 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Platform-Autorisatie-Beheer-Component/PABC-API/refs/heads/main/PABC.MigrationService/dataset.schema.json",
+  "applications": [
+    {
+      "id": "a444b160-c4e6-566d-b727-d4bacb7a0ef5",
+      "name": "zaakafhandelcomponent"
+    }
+  ],
+  "applicationRoles": [
+    {
+      "id": "0581fdd8-9008-5adc-833c-2756567b5709",
+      "applicationId": "a444b160-c4e6-566d-b727-d4bacb7a0ef5",
+      "name": "raadpleger"
+    },
+    {
+      "id": "477bb6a4-2176-5c13-adf9-f0afa29f354b",
+      "applicationId": "a444b160-c4e6-566d-b727-d4bacb7a0ef5",
+      "name": "behandelaar"
+    },
+    {
+      "id": "f2dd2205-2b01-590b-ae94-70bee45c69a2",
+      "applicationId": "a444b160-c4e6-566d-b727-d4bacb7a0ef5",
+      "name": "coordinator"
+    },
+    {
+      "id": "8926e8f7-3d66-5f5e-bcfb-0653c3b22150",
+      "applicationId": "a444b160-c4e6-566d-b727-d4bacb7a0ef5",
+      "name": "recordmanager"
+    },
+    {
+      "id": "a8168716-0f36-5782-ba79-45b2cd27d2fd",
+      "applicationId": "a444b160-c4e6-566d-b727-d4bacb7a0ef5",
+      "name": "beheerder"
+    }
+  ],
+  "functionalRoles": [
+    {
+      "id": "74d308f0-464b-5ff9-a93a-e8c75de7a02d",
+      "name": "Team Vergunningen"
+    },
+    {
+      "id": "2d410db1-a933-592d-ad1e-69cc332f57ee",
+      "name": "Team Buitendienst"
+    },
+    {
+      "id": "c6c23032-6411-57db-bbf6-93040cdc755f",
+      "name": "Team Wmo"
+    },
+    {
+      "id": "9f74cfa3-1960-5655-8015-b9b4177784ad",
+      "name": "Klantcontactcentrum"
+    },
+    {
+      "id": "de07ac87-cf76-55d7-8ae3-c1e1e6975408",
+      "name": "Archief"
+    },
+    {
+      "id": "86ee7c96-196a-55da-ab23-60ef1ac23c96",
+      "name": "Functioneel beheer"
+    }
+  ],
+  "entityTypes": [
+    {
+      "id": "0667fac1-13f5-5ced-9bcb-26324e9486b4",
+      "entityTypeId": "VBS-OMGVERG",
+      "type": "zaaktype",
+      "name": "Omgevingsvergunning aanvragen",
+      "description": null,
+      "uri": null
+    },
+    {
+      "id": "8ae2a122-55f7-509a-9c31-29806222c9e8",
+      "entityTypeId": "VBS-MOR",
+      "type": "zaaktype",
+      "name": "Melding openbare ruimte",
+      "description": null,
+      "uri": null
+    },
+    {
+      "id": "bc247bf2-767b-53b2-b835-6efdce570229",
+      "entityTypeId": "VBS-WMO",
+      "type": "zaaktype",
+      "name": "Wmo-maatwerkvoorziening aanvragen",
+      "description": null,
+      "uri": null
+    },
+    {
+      "id": "cfea3d19-2bf6-593f-9b92-1d8551cc6ae0",
+      "entityTypeId": "VBS-PARKVERG",
+      "type": "zaaktype",
+      "name": "Parkeervergunning bewoners aanvragen",
+      "description": null,
+      "uri": null
+    }
+  ],
+  "domains": [
+    {
+      "id": "02b9ca93-c241-5ce6-92d6-663b36025935",
+      "name": "Leefomgeving",
+      "description": "Domein leefomgeving van Gemeente Voorbeeldstad",
+      "entityTypeIds": [
+        "0667fac1-13f5-5ced-9bcb-26324e9486b4",
+        "8ae2a122-55f7-509a-9c31-29806222c9e8",
+        "cfea3d19-2bf6-593f-9b92-1d8551cc6ae0"
+      ]
+    },
+    {
+      "id": "4d00c5f8-f172-5fd8-aac0-393e159b4a76",
+      "name": "Sociaal domein",
+      "description": "Domein sociaal domein van Gemeente Voorbeeldstad",
+      "entityTypeIds": [
+        "bc247bf2-767b-53b2-b835-6efdce570229"
+      ]
+    }
+  ],
+  "mappings": [
+    {
+      "id": "a9b1d819-1ae9-5d24-8985-19b18b226e3d",
+      "functionalRoleId": "74d308f0-464b-5ff9-a93a-e8c75de7a02d",
+      "applicationRoleId": "477bb6a4-2176-5c13-adf9-f0afa29f354b",
+      "domainId": "02b9ca93-c241-5ce6-92d6-663b36025935"
+    },
+    {
+      "id": "eafffecb-2c67-5151-beda-6e3f2065007b",
+      "functionalRoleId": "2d410db1-a933-592d-ad1e-69cc332f57ee",
+      "applicationRoleId": "477bb6a4-2176-5c13-adf9-f0afa29f354b",
+      "domainId": "02b9ca93-c241-5ce6-92d6-663b36025935"
+    },
+    {
+      "id": "54b84f99-f36d-5f71-92e4-93903bbeaf8a",
+      "functionalRoleId": "c6c23032-6411-57db-bbf6-93040cdc755f",
+      "applicationRoleId": "477bb6a4-2176-5c13-adf9-f0afa29f354b",
+      "domainId": "4d00c5f8-f172-5fd8-aac0-393e159b4a76"
+    },
+    {
+      "id": "500bcc9f-4ea8-52c9-9dcb-222a21a55a29",
+      "functionalRoleId": "9f74cfa3-1960-5655-8015-b9b4177784ad",
+      "applicationRoleId": "0581fdd8-9008-5adc-833c-2756567b5709",
+      "isAllEntityTypes": true
+    },
+    {
+      "id": "7ed6f82b-25cf-579d-a0a1-e6dc3ff22f1e",
+      "functionalRoleId": "de07ac87-cf76-55d7-8ae3-c1e1e6975408",
+      "applicationRoleId": "8926e8f7-3d66-5f5e-bcfb-0653c3b22150",
+      "isAllEntityTypes": true
+    },
+    {
+      "id": "5469c8b6-fbbf-54d4-88ca-fc62a458ecf0",
+      "functionalRoleId": "86ee7c96-196a-55da-ab23-60ef1ac23c96",
+      "applicationRoleId": "a8168716-0f36-5782-ba79-45b2cd27d2fd",
+      "isAllEntityTypes": true
+    }
+  ]
+}

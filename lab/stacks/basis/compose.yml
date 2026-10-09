@@ -1,0 +1,154 @@
+# Basis van de demogemeente: gedeelde infrastructuur die elke stack nodig heeft
+# (Postgres, Redis, Keycloak als DigiD-simulatie, BRP-mock, notificatie-sink) en de
+# hulpcontainers voor seed en tests. scripts/stack.sh zet dit bestand altijd vooraan.
+#
+# Alle relatieve paden in alle compose-bestanden zijn relatief aan de root van de
+# repository (scripts/stack.sh geeft --project-directory mee).
+
+x-tools-image: &tools-image openzaak/open-zaak:1.29.0
+
+services:
+  postgres:
+    image: ${IMAGE_POSTGRES:-postgis/postgis:17-3.5-alpine}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?zie .env}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+      # Extra databases voor de stack (stack.env), zie config/postgres/10-databases.sh
+      DB_EXTRA: ${DB_EXTRA:-}
+    command: postgres -c max_connections=400 -c shared_buffers=256MB
+    volumes:
+      - ./config/postgres:/docker-entrypoint-initdb.d:ro
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_POSTGRES:-55432}:5432"
+    healthcheck:
+      # via TCP: tijdens de eerste initialisatie (initdb plus scripts) luistert de tijdelijke
+      # server alleen op de socket en herstart daarna; zo telt die fase niet als gezond
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  redis:
+    image: ${IMAGE_REDIS:-redis:8.10.2-alpine}
+    command: ["redis-server", "--appendonly", "yes", "--databases", "32"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # DigiD-simulatie: Keycloak-realm "voorbeeldstad" met fictieve inwoners
+  # (gebruikersnaam = test-BSN, claim "bsn" in het token).
+  keycloak:
+    image: ${IMAGE_KEYCLOAK:-keycloak/keycloak:26.4.7}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [keycloak.local]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${DB_APP_PASSWORD}
+      KC_HOSTNAME: http://localhost:${PORT_KEYCLOAK:-8080}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=50 -Xms128m -Xmx512m"
+      KEYCLOAK_PORTAAL_CLIENT_SECRET: ${KEYCLOAK_PORTAAL_CLIENT_SECRET:?zie .env}
+      DIGID_SIM_WACHTWOORD: ${DIGID_SIM_WACHTWOORD:?zie .env}
+    volumes:
+      - ./config/keycloak:/opt/keycloak/data/import:ro
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_KEYCLOAK:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  # Haal Centraal BRP bevragen (personen) mock met de RvIG-testpersonen,
+  # gefilterd op test-BSN's (config/brp/test-data.json).
+  brp-mock:
+    image: ${IMAGE_BRP:-iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [brp-mock.local]
+    volumes:
+      - ./config/brp:/app/Data:ro
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_BRP:-8010}:80"
+    restart: unless-stopped
+
+  # Ontvangt notificaties van Open Notificaties, zodat je de keten kunt zien.
+  notificatie-sink:
+    image: *tools-image
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [notificatie-sink.local]
+    entrypoint: ["python", "/tools/notificatie_sink.py"]
+    environment:
+      NOTIFICATIE_SINK_TOKEN: ${NOTIFICATIE_SINK_TOKEN:?zie .env}
+    volumes:
+      - ./tools:/tools:ro
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_NOTIFICATIE_SINK:-8090}:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Hulpcontainer voor seed en tests (draait binnen het netwerk, zodat alle URL's
+  # de interne hostnamen gebruiken). Start alleen via "run" (scripts/stack.sh).
+  tools:
+    image: *tools-image
+    profiles: ["tools"]
+    entrypoint: ["python"]
+    # als de gebruiker van de host, zodat results/ van die gebruiker blijft
+    user: "${DEMO_UID:-1000}:${DEMO_GID:-1000}"
+    working_dir: /demogemeente
+    env_file: ./.env
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      DEMO_STACK: ${DEMO_STACK:-kern}
+    volumes:
+      - ./:/demogemeente:ro
+      - ./results:/demogemeente/results
+
+  # Voert Arazzo-aansluitprofielen uit met Redocly Respect (tests/respect), binnen het
+  # netwerk. @redocly/cli staat in tests/respect/node_modules (scripts/stack.sh
+  # installeert het op de host), zodat deze container geen internet nodig heeft.
+  respect:
+    image: node:22.22.0-alpine
+    profiles: ["tools"]
+    entrypoint: ["node"]
+    user: "${DEMO_UID:-1000}:${DEMO_GID:-1000}"
+    working_dir: /demogemeente
+    environment:
+      NO_COLOR: "1"
+    volumes:
+      - ./:/demogemeente:ro
+      - ./results:/demogemeente/results
+
+volumes:
+  postgres-data:
+  redis-data:

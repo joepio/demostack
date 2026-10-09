@@ -1,0 +1,41 @@
+# Open Zaak: aanvulling voor stack g4 (setup-configuration, na config/openzaak/data.yaml).
+# JWT-clients van Open Formulieren, Open VTB, NL Portal, GZAC en IKO. De autorisaties van
+# open-formulieren, nl-portal en iko per zaaktype zet stacks/g4/seed.py (de zaaktypen bestaan
+# pas na de seed); GZAC is de zaakafhandelcomponent en krijgt alle autorisaties.
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: open-formulieren
+      secret:
+        value_from:
+          env: ZGW_OPENFORMULIEREN_SECRET
+    - identifier: open-vtb
+      secret:
+        value_from:
+          env: ZGW_OPENVTB_SECRET
+    - identifier: nl-portal
+      secret:
+        value_from:
+          env: ZGW_NLPORTAL_SECRET
+    - identifier: gzac
+      secret:
+        value_from:
+          env: ZGW_GZAC_SECRET
+    - identifier: iko
+      secret:
+        value_from:
+          env: ZGW_IKO_SECRET
+
+vng_api_common_applicaties_config_enable: true
+vng_api_common_applicaties:
+  items:
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b21
+      client_ids:
+        - open-vtb
+      label: Open VTB (publiceert notificaties)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b41
+      client_ids:
+        - gzac
+      label: GZAC (zaakafhandelcomponent)
+      heeft_alle_autorisaties: true

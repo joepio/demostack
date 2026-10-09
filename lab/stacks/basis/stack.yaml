@@ -1,0 +1,49 @@
+# Gedeelde onderdelen van elke stack: wordt door tests/ samengevoegd met
+# stacks/<naam>/stack.yaml (lijsten worden aangevuld, de stack mag sleutels overschrijven).
+#
+# Een component:
+#   id:        korte naam, ook gebruikt in check-id's (gezondheid/<id>, rook/<id>/...)
+#   naam:      leesbare naam
+#   rol:       infra | register | proces | portaal | burger-api | medewerker | integratie
+#   services:  docker compose-services die moeten draaien (healthy als er een healthcheck is)
+#   health:    optioneel: url (vanuit het docker-netwerk) en toegestane statuscodes
+#   seed:      optioneel: false als de gedeelde seed dit component niet vult
+naam: basis
+
+testburgers:
+  # RvIG-testpersonen met geseede zaken (seed/data.py)
+  A: "999990627"   # Stephan Janssen: VBS-2026-000101, -000102
+  B: "999997609"   # Eleonora de Crooy: VBS-2026-000103, -000104
+  C: "999993409"   # Thea Kouwenhoven: VBS-2026-000105 met een vertrouwelijk verslag
+
+componenten:
+  - id: postgres
+    naam: Postgres/PostGIS
+    rol: infra
+    services: [postgres]
+  - id: redis
+    naam: Redis
+    rol: infra
+    services: [redis]
+  - id: keycloak
+    naam: Keycloak (DigiD-simulatie)
+    rol: infra
+    services: [keycloak]
+    health:
+      url: http://keycloak.local:8080/realms/voorbeeldstad/.well-known/openid-configuration
+      status: [200]
+  - id: brp-mock
+    naam: BRP-mock (Haal Centraal BRP personen)
+    rol: infra
+    services: [brp-mock]
+    health:
+      # alleen POST is een echte vraag; GET bewijst dat de API luistert
+      url: http://brp-mock.local:80/haalcentraal/api/brp/personen
+      status: [200, 400, 404, 405]
+  - id: notificatie-sink
+    naam: Notificatie-sink
+    rol: infra
+    services: [notificatie-sink]
+    health:
+      url: http://notificatie-sink.local:8080/health
+      status: [200]

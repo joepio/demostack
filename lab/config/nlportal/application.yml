@@ -1,0 +1,118 @@
+# NL Portal backend (voorbeeld-app van nl-portal-backend-libraries 3.0.4), stack g4.
+# Vult config/application.yml uit de app aan (SPRING_CONFIG_ADDITIONAL_LOCATION).
+# Geheimen komen uit omgevingsvariabelen. Interne adressen: *.local in het docker-netwerk.
+server:
+    # 8080 is in deze container de doorgifte naar Keycloak (sidecar keycloak-doorgifte):
+    # tokens hebben als issuer http://localhost:8080/realms/voorbeeldstad.
+    port: 8000
+
+spring:
+    security:
+        oauth2:
+            resourceserver:
+                jwt:
+                    issuer-uri: http://localhost:8080/realms/voorbeeldstad
+    datasource:
+        url: jdbc:postgresql://postgres:5432/nlportal
+        username: nlportal
+        password: ${DB_APP_PASSWORD}
+    graphql:
+        schema:
+            introspection:
+                enabled: true
+
+nl-portal:
+    authentication:
+        keycloak:
+            resource: nlportal-m2m
+            audience: nlportal-m2m
+            credentials:
+                secret: ${KEYCLOAK_NLPORTAL_M2M_SECRET}
+    security:
+        cors:
+            -   path: "/**"
+                config:
+                    allowedHeaders: "*"
+                    allowedOrigins: "http://localhost:${PORT_NLPORTAL:8203},http://127.0.0.1:${PORT_NLPORTAL:8203}"
+                    allowedMethods: "*"
+    config:
+        besluitenapi:
+            enabled: true
+            properties:
+                url: http://openzaak.local:8000
+                clientId: nl-portal
+                secret: ${ZGW_NLPORTAL_SECRET}
+        catalogiapi:
+            enabled: true
+            properties:
+                url: http://openzaak.local:8000
+                clientId: nl-portal
+                secret: ${ZGW_NLPORTAL_SECRET}
+        documentenapis:
+            enabled: true
+            properties:
+                default-document-api: openzaak
+                configurations:
+                    openzaak:
+                        url: http://openzaak.local:8000/documenten/api/v1
+                        clientId: nl-portal
+                        secret: ${ZGW_NLPORTAL_SECRET}
+                        rsin: "${GEMEENTE_RSIN:999990007}"
+                        documentTypeUrl: http://openzaak.local:8000/catalogi/api/v1/informatieobjecttypen/00000000-0000-0000-0000-000000000000
+                    dummydoc: null
+        zakenapi:
+            enabled: true
+            properties:
+                url: http://openzaak.local:8000
+                clientId: nl-portal
+                secret: ${ZGW_NLPORTAL_SECRET}
+                zaak-documenten-config:
+                    # Wat de burger mag zien: tot en met zaakvertrouwelijk (zoals Open Inwoner
+                    # in de andere stacks), alleen definitieve documenten
+                    vertrouwelijkheidsaanduiding-whitelist:
+                        - openbaar
+                        - beperkt_openbaar
+                        - intern
+                        - zaakvertrouwelijk
+                    status-whitelist:
+                        - definitief
+                        - gearchiveerd
+        objectenapi:
+            enabled: true
+            properties:
+                url: http://openobject.local:8000
+                token: ${OPENOBJECT_NLPORTAL_TOKEN}
+        openklant2:
+            enabled: true
+            properties:
+                klantinteracties-api-url: http://openklant.local:8000/klantinteracties/api/v1
+                token: ${OPENKLANT_NLPORTAL_TOKEN}
+        haalcentraal2:
+            enabled: true
+            properties:
+                brp-api-url: http://brp-api.local:8080/haalcentraal/api/brp/
+                bewoning-api-url: http://brp-api.local:8080/haalcentraal/api/bewoning/
+        haalcentraal:
+            hr:
+                enabled: false
+        taak:
+            enabled: true
+            properties:
+                object-type-url: http://openobject.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+        berichten:
+            enabled: true
+            properties:
+                bericht-object-type-url: http://openobject.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+        openproduct:
+            enabled: false
+        product:
+            enabled: false
+        dmn:
+            enabled: false
+        prefill:
+            enabled: false
+        payment:
+            direct:
+                enabled: false
+            ogone:
+                enabled: false

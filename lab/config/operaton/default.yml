@@ -1,0 +1,47 @@
+# Operaton Run 2.1.5 (stack vcg): procesengine van Gemeente Voorbeeldstad.
+# Vervangt /operaton/configuration/default.yml van het image. Waarden met ${...} komen
+# uit de omgeving van de container (Spring Boot-placeholders).
+#
+# - Database: eigen database "operaton" in de gedeelde Postgres.
+# - Beheerder: ${ADMIN_USERNAME} met ${ADMIN_PASSWORD} (Cockpit, Tasklist, Admin).
+# - REST-API (/engine-rest) alleen met basic auth; de procesworker (tools/operaton_worker.py)
+#   en de seed gebruiken de beheerder.
+# - Processen in resources/ worden bij het starten gedeployd (alleen gewijzigde).
+operaton.bpm:
+  admin-user:
+    id: ${OPERATON_ADMIN_USERNAME}
+    password: ${OPERATON_ADMIN_PASSWORD}
+    first-name: Beheerder
+    last-name: Voorbeeldstad
+  filter:
+    create: Alle taken
+  authorization.enabled: true
+  default-serialization-format: application/json
+  generic-properties.properties:
+    history-time-to-live: P180D
+    # gebruikersnamen zoals in Keycloak-realm vcg (a.vermeulen); standaard staat
+    # Operaton alleen letters en cijfers toe
+    user-resource-whitelist-pattern: "[a-zA-Z0-9._-]+"
+    group-resource-whitelist-pattern: "[a-zA-Z0-9._-]+"
+  run:
+    auth.enabled: true
+    cors:
+      enabled: false
+    rest:
+      disable-wadl: true
+    deployment:
+      deploy-changed-only: true
+    example:
+      enabled: false
+
+spring.datasource:
+  url: jdbc:postgresql://postgres:5432/operaton
+  driver-class-name: org.postgresql.Driver
+  username: operaton
+  password: ${DB_APP_PASSWORD}
+
+spring.web.resources:
+  static-locations: NULL
+
+logging.level:
+  org.operaton: WARN

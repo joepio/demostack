@@ -1,0 +1,14 @@
+# Open Klant, aanvulling voor stack "maykin": token voor Open Inwoner (Mijn vragen,
+# contactmomenten, klantcontact registreren).
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: open-inwoner
+      token:
+        value_from:
+          env: OPENKLANT_OPENINWONER_TOKEN
+      contact_person: Open Inwoner
+      email: inwonerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Inwoner
+      administration: Demogemeente

@@ -1,0 +1,8 @@
+{
+  "name": "demogemeente-respect",
+  "private": true,
+  "description": "Redocly Respect voor de aansluitprofielen in de gedeelde testsuite",
+  "dependencies": {
+    "@redocly/cli": "2.57.0"
+  }
+}

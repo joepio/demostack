@@ -1,0 +1,877 @@
+# Stack "dimpact": wat PodiumD 4.9.3 draait (Helm-chart podiumd 4.9.3, values.yaml),
+# als compose-opzet bovenop stacks/kern/compose.yml.
+#
+#   Registers   Open Zaak 1.29.3, Open Notificaties 1.16.2, Open Klant 2.15.0,
+#               Referentielijsten 0.7.4 (kern, met de PodiumD-versies uit stack.env),
+#               Objecten API 3.6.2 en Objecttypen API 3.4.2 (los, in plaats van Open
+#               Object 4.1 uit de kern). Geen Open Product: PodiumD heeft het niet.
+#   Burgers     Open Formulieren 3.5.8, Open Inwoner 2.4.3 (met Elasticsearch)
+#   Medewerkers KISS 3.1.3, ITA 3.3.2 (web en poller), PABC 1.1.1,
+#               Open Archiefbeheer 2.0.0, Open Beheer 0.9.1
+#   Overig      NotifyNL OMC 1.17.19 (met een Notify-mock), ClamAV 1.5.4, Mailpit
+#               (SMTP-opvang voor ITA en Open Archiefbeheer)
+#
+# KISS, ITA en PABC staan alleen op ghcr.io, dat hier niet bereikbaar is: die bouwt
+# stacks/dimpact/bouw.sh uit de broncode op dezelfde tag (scripts/stack.sh up doet dat
+# automatisch). ZAC draait niet in deze stack, zie stacks/dimpact/README.md.
+#
+# Medewerkers loggen in via Keycloak-realm "podiumd" (config/keycloak-podiumd/), net
+# als in PodiumD; inwoners via de DigiD-simulatie in realm "voorbeeldstad".
+#
+# Afspraken: netwerkalias <component>.local, vaste tags, paden relatief aan de root van
+# de repository, hostpoorten 8150-8199, Redis-databases 12-31.
+
+x-django-env: &django-env
+  IS_HTTPS: "no"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+  DB_CONN_MAX_AGE: "0"
+  DB_POOL_ENABLED: "False"
+  DISABLE_2FA: "true"
+  TWO_FACTOR_FORCE_OTP_ADMIN: "False"
+  TWO_FACTOR_PATCH_ADMIN: "False"
+  OTEL_SDK_DISABLED: "true"
+  LOG_STDOUT: "yes"
+  LOG_REQUESTS: "no"
+  UWSGI_PROCESSES: ${UWSGI_PROCESSES:-2}
+  UWSGI_THREADS: ${UWSGI_THREADS:-4}
+  CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-2}
+  CELERY_LOGLEVEL: INFO
+  ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+  GEMEENTE_NAAM: ${GEMEENTE_NAAM:-Gemeente Voorbeeldstad}
+  GEMEENTE_RSIN: ${GEMEENTE_RSIN:-999990007}
+  TZ: Europe/Amsterdam
+  EMAIL_HOST: mailpit.local
+  EMAIL_PORT: "1025"
+  DEFAULT_FROM_EMAIL: noreply@voorbeeldstad.example
+
+x-healthcheck: &django-healthcheck
+  test: ["CMD", "python", "-c", "import requests,sys; sys.exit(requests.head('http://localhost:8000/admin/', timeout=4).status_code not in (200, 302))"]
+  interval: 10s
+  timeout: 5s
+  retries: 40
+  start_period: 60s
+
+# setup-configuration van de kern, gevolgd door de aanvulling van deze stack
+x-init-met-aanvulling: &init-met-aanvulling
+  - bash
+  - -c
+  - /setup_configuration.sh && OTEL_SDK_DISABLED=True python src/manage.py setup_configuration --yaml-file /app/setup_configuration_stack/data.yaml
+
+x-dotnet-healthcheck: &dotnet-healthcheck
+  # de .NET-images hebben geen curl of wget; busybox nc wel
+  # (KISS en ITA: /healthz, PABC: /health; HEALTH_PATH per service). De sleep houdt de
+  # invoer open: busybox nc sluit anders de verbinding voordat PABC antwoordt.
+  test: ["CMD-SHELL", "(printf \"GET $${HEALTH_PATH:-/healthz} HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\"; sleep 2) | nc -w 3 127.0.0.1 8080 | head -1 | grep -q 'HTTP/1.1 200'"]
+  interval: 10s
+  timeout: 5s
+  retries: 30
+  start_period: 20s
+
+services:
+  # ======================================================= kern: aanpassingen
+  # PodiumD heeft geen Open Product en gebruikt losse Objecten- en Objecttypen-API's
+  openobject-init: {profiles: [uit]}
+  openobject: {profiles: [uit]}
+  openobject-celery: {profiles: [uit]}
+  openproduct-init: {profiles: [uit]}
+  openproduct: {profiles: [uit]}
+  openproduct-celery: {profiles: [uit]}
+
+  openzaak-init:
+    command: *init-met-aanvulling
+    environment:
+      ZGW_OPENFORMULIEREN_SECRET: ${ZGW_OPENFORMULIEREN_SECRET:?zie .env}
+      ZGW_OPENINWONER_SECRET: ${ZGW_OPENINWONER_SECRET:?zie .env}
+      ZGW_KISS_SECRET: ${ZGW_KISS_SECRET:?zie .env}
+      ZGW_ITA_SECRET: ${ZGW_ITA_SECRET:?zie .env}
+      ZGW_OMC_SECRET: ${ZGW_OMC_SECRET:?zie .env}
+      ZGW_OPENARCHIEFBEHEER_SECRET: ${ZGW_OPENARCHIEFBEHEER_SECRET:?zie .env}
+      ZGW_OPENBEHEER_SECRET: ${ZGW_OPENBEHEER_SECRET:?zie .env}
+      OBJECTEN_OPENZAAK_HEADER: Token ${OPENOBJECT_OPENZAAK_TOKEN:?zie .env}
+    volumes:
+      - ./config/openzaak/stack-dimpact.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  opennotificaties-init:
+    command: *init-met-aanvulling
+    environment:
+      ZGW_OMC_SECRET: ${ZGW_OMC_SECRET:?zie .env}
+    volumes:
+      - ./config/opennotificaties/stack-dimpact.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  openklant-init:
+    command: *init-met-aanvulling
+    environment:
+      OPENKLANT_OPENINWONER_TOKEN: ${OPENKLANT_OPENINWONER_TOKEN:?zie .env}
+      OPENKLANT_KISS_TOKEN: ${OPENKLANT_KISS_TOKEN:?zie .env}
+      OPENKLANT_ITA_TOKEN: ${OPENKLANT_ITA_TOKEN:?zie .env}
+      OPENKLANT_OMC_TOKEN: ${OPENKLANT_OMC_TOKEN:?zie .env}
+      OPENKLANT_OPENARCHIEFBEHEER_TOKEN: ${OPENKLANT_OPENARCHIEFBEHEER_TOKEN:?zie .env}
+    volumes:
+      - ./config/openklant/stack-dimpact.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  # Seed en tests: Objecten en Objecttypen staan op eigen hostnamen
+  tools:
+    environment:
+      URL_OPENOBJECT: http://objecten.local:8000
+      URL_OBJECTTYPEN: http://objecttypen.local:8000
+
+  # ============================================================== Keycloak
+  # Ook https op keycloak.local:8443 (demo-CA uit stacks/dimpact/bouw.sh): KISS en ITA
+  # weigeren een OIDC-authority over http. De browser blijft http://localhost:8080 gebruiken.
+  keycloak:
+    environment:
+      KC_HTTPS_CERTIFICATE_FILE: /tls/keycloak.crt
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /tls/keycloak.key
+      KC_HTTPS_PORT: "8443"
+      # de healthcheck van de basis praat http met de beheerpoort 9000
+      KC_HTTP_MANAGEMENT_SCHEME: http
+    volumes:
+      - ./stacks/dimpact/.tls/keycloak.crt:/tls/keycloak.crt:ro
+      - ./stacks/dimpact/.tls/keycloak.key:/tls/keycloak.key:ro
+
+  # DigiD-simulatie (realm voorbeeldstad): clients voor Open Formulieren en Open Inwoner
+  keycloak-clients:
+    image: ${IMAGE_KEYCLOAK:-keycloak/keycloak:26.4.7}
+    entrypoint: ["bash", "/config/extra-clients.sh"]
+    command:
+      - "openformulieren=Open Formulieren=KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET=http://localhost:${PORT_OPENFORMULIEREN:-8102}/*,http://127.0.0.1:${PORT_OPENFORMULIEREN:-8102}/*,http://openformulieren.local:8000/*"
+      - "openinwoner=Open Inwoner=KEYCLOAK_OPENINWONER_CLIENT_SECRET=http://localhost:${PORT_OPENINWONER:-8103}/*,http://127.0.0.1:${PORT_OPENINWONER:-8103}/*,http://openinwoner.local:8000/*"
+    environment:
+      KC_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      KC_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET: ${KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET:?zie .env}
+      KEYCLOAK_OPENINWONER_CLIENT_SECRET: ${KEYCLOAK_OPENINWONER_CLIENT_SECRET:?zie .env}
+    volumes:
+      - ./config/keycloak/extra-clients.sh:/config/extra-clients.sh:ro
+    depends_on:
+      keycloak: {condition: service_healthy}
+
+  # Medewerkers (realm podiumd): KISS, ITA, PABC, Open Archiefbeheer, Open Beheer
+  keycloak-podiumd:
+    image: ${IMAGE_KEYCLOAK:-keycloak/keycloak:26.4.7}
+    entrypoint: ["bash", "/config/realm.sh"]
+    environment:
+      KC_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      KC_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      MEDEWERKER_WACHTWOORD: ${MEDEWERKER_WACHTWOORD:?zie .env}
+      KEYCLOAK_KISS_CLIENT_SECRET: ${KEYCLOAK_KISS_CLIENT_SECRET:?zie .env}
+      KEYCLOAK_ITA_CLIENT_SECRET: ${KEYCLOAK_ITA_CLIENT_SECRET:?zie .env}
+      KEYCLOAK_PABC_CLIENT_SECRET: ${KEYCLOAK_PABC_CLIENT_SECRET:?zie .env}
+      KEYCLOAK_OPENARCHIEFBEHEER_CLIENT_SECRET: ${KEYCLOAK_OPENARCHIEFBEHEER_CLIENT_SECRET:?zie .env}
+      KEYCLOAK_OPENBEHEER_CLIENT_SECRET: ${KEYCLOAK_OPENBEHEER_CLIENT_SECRET:?zie .env}
+      PORT_KISS: ${PORT_KISS:-8156}
+      PORT_ITA: ${PORT_ITA:-8157}
+      PORT_PABC: ${PORT_PABC:-8158}
+      PORT_OPENARCHIEFBEHEER: ${PORT_OPENARCHIEFBEHEER:-8154}
+      PORT_OPENBEHEER: ${PORT_OPENBEHEER:-8155}
+    volumes:
+      - ./config/keycloak-podiumd:/config:ro
+    depends_on:
+      keycloak: {condition: service_healthy}
+
+  # BRP API Personen 2 in officieel formaat, vertaald uit de GBA-variant-mock
+  # (tools/brp_vertaler.py). PodiumD draait hier de officiele personen-mock van ghcr.io.
+  brp-api:
+    image: openzaak/open-zaak:1.29.0
+    networks:
+      default:
+        aliases: [brp-api.local]
+    entrypoint: ["python", "/tools/brp_vertaler.py"]
+    environment:
+      BRP_BRON: http://brp-mock.local:80
+    volumes:
+      - ./tools:/tools:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # SMTP-opvang: ITA, Open Archiefbeheer en Open Inwoner sturen hier hun mail heen
+  mailpit:
+    image: ${IMAGE_MAILPIT:-axllent/mailpit:v1.31.4}
+    networks:
+      default:
+        aliases: [mailpit.local]
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_MAILPIT:-8160}:8025"
+    restart: unless-stopped
+
+  # ======================================================= Objecttypen API
+  objecttypen-init:
+    image: ${IMAGE_OBJECTTYPEN:-maykinmedia/objecttypes-api:3.4.2}
+    command: /setup_configuration.sh
+    environment: &objecttypen-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: objecttypes.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OBJECTTYPEN:?zie .env}
+      DB_NAME: objecttypen
+      DB_USER: objecttypen
+      ALLOWED_HOSTS: objecttypen.local,objecttypen,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OBJECTTYPEN:-8151}
+      SITE_DOMAIN: objecttypen.local:8000
+      CACHE_DEFAULT: redis:6379/18
+      CACHE_AXES: redis:6379/18
+      OBJECTTYPE_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OBJECTTYPE_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      OBJECTTYPE_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      OPENOBJECT_BEHEER_TOKEN: ${OPENOBJECT_BEHEER_TOKEN:?zie .env}
+      OPENOBJECT_PORTAAL_TOKEN: ${OPENOBJECT_PORTAAL_TOKEN:?zie .env}
+      OPENOBJECT_OPENFORMULIEREN_TOKEN: ${OPENOBJECT_OPENFORMULIEREN_TOKEN:?zie .env}
+      OPENOBJECT_OPENINWONER_TOKEN: ${OPENOBJECT_OPENINWONER_TOKEN:?zie .env}
+      OBJECTTYPEN_OBJECTEN_TOKEN: ${OBJECTTYPEN_OBJECTEN_TOKEN:?zie .env}
+      OBJECTEN_PODIUMD_TOKEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/objecttypen:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  objecttypen:
+    image: ${IMAGE_OBJECTTYPEN:-maykinmedia/objecttypes-api:3.4.2}
+    networks:
+      default:
+        aliases: [objecttypen.local]
+    environment: *objecttypen-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OBJECTTYPEN:-8151}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      objecttypen-init: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  # ========================================================== Objecten API
+  objecten-init:
+    image: ${IMAGE_OBJECTEN:-maykinmedia/objects-api:3.6.2}
+    command: /setup_configuration.sh
+    environment: &objecten-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: objects.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OBJECTEN:?zie .env}
+      DB_NAME: objecten
+      DB_USER: objecten
+      ALLOWED_HOSTS: objecten.local,objecten,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OBJECTEN:-8150}
+      SITE_DOMAIN: objecten.local:8000
+      CACHE_DEFAULT: redis:6379/12
+      CACHE_AXES: redis:6379/12
+      CELERY_BROKER_URL: redis://redis:6379/13
+      CELERY_RESULT_BACKEND: redis://redis:6379/13
+      OBJECTS_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OBJECTS_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      OBJECTS_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      ZGW_OPENOBJECT_SECRET: ${ZGW_OPENOBJECT_SECRET:?zie .env}
+      OBJECTTYPEN_OBJECTEN_HEADER: Token ${OBJECTTYPEN_OBJECTEN_TOKEN:?zie .env}
+      OPENOBJECT_BEHEER_TOKEN: ${OPENOBJECT_BEHEER_TOKEN:?zie .env}
+      OPENOBJECT_PORTAAL_TOKEN: ${OPENOBJECT_PORTAAL_TOKEN:?zie .env}
+      OPENOBJECT_OPENZAAK_TOKEN: ${OPENOBJECT_OPENZAAK_TOKEN:?zie .env}
+      OPENOBJECT_OPENFORMULIEREN_TOKEN: ${OPENOBJECT_OPENFORMULIEREN_TOKEN:?zie .env}
+      OPENOBJECT_OPENINWONER_TOKEN: ${OPENOBJECT_OPENINWONER_TOKEN:?zie .env}
+      OBJECTEN_PODIUMD_TOKEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/objecten:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  objecten:
+    image: ${IMAGE_OBJECTEN:-maykinmedia/objects-api:3.6.2}
+    networks:
+      default:
+        aliases: [objecten.local]
+    environment: *objecten-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OBJECTEN:-8150}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      objecten-init: {condition: service_completed_successfully}
+      objecttypen: {condition: service_healthy}
+    restart: unless-stopped
+
+  objecten-celery:
+    image: ${IMAGE_OBJECTEN:-maykinmedia/objects-api:3.6.2}
+    command: /celery_worker.sh
+    environment: *objecten-env
+    depends_on:
+      objecten: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ====================================================== Open Formulieren
+  openformulieren-init:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:3.5.8}
+    command: ["bash", "-c", "/setup_configuration.sh && python src/manage.py shell < /app/setup_configuration/configureer.py"]
+    environment: &openformulieren-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: openforms.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENFORMULIEREN:?zie .env}
+      DB_NAME: openformulieren
+      DB_USER: openformulieren
+      ALLOWED_HOSTS: openformulieren.local,openformulieren,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENFORMULIEREN:-8102},http://127.0.0.1:${PORT_OPENFORMULIEREN:-8102}
+      BASE_URL: http://localhost:${PORT_OPENFORMULIEREN:-8102}
+      CORS_ALLOWED_ORIGINS: http://localhost:${PORT_OPENFORMULIEREN:-8102},http://127.0.0.1:${PORT_OPENFORMULIEREN:-8102},http://localhost:${PORT_OPENINWONER:-8103},http://openformulieren.local:8000
+      CACHE_DEFAULT: redis:6379/14
+      CACHE_AXES: redis:6379/14
+      CACHE_OIDC: redis:6379/14
+      CACHE_PORTALOCKER: redis:6379/14
+      CELERY_BROKER_URL: redis://redis:6379/15
+      CELERY_RESULT_BACKEND: redis://redis:6379/15
+      ZGW_OPENFORMULIEREN_SECRET: ${ZGW_OPENFORMULIEREN_SECRET:?zie .env}
+      OPENOBJECT_OPENFORMULIEREN_HEADER: Token ${OPENOBJECT_OPENFORMULIEREN_TOKEN:?zie .env}
+      KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET: ${KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET:?zie .env}
+      OPENFORMULIEREN_BEHEER_TOKEN: ${OPENFORMULIEREN_BEHEER_TOKEN:?zie .env}
+      OPENINWONER_PUBLIEK: http://localhost:${PORT_OPENINWONER:-8103}/
+      # Virusscan van uploads met ClamAV, zoals in PodiumD
+      CLAMAV_HOST: clamav.local
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openformulieren:/app/setup_configuration:ro
+      - ./config/openformulieren/data-dimpact.yaml:/app/setup_configuration/data.yaml:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openformulieren:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:3.5.8}
+    networks:
+      default:
+        aliases: [openformulieren.local]
+    environment: *openformulieren-env
+    volumes: &openformulieren-volumes
+      - openformulieren-media:/app/media
+      - openformulieren-private-media:/app/private_media
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENFORMULIEREN:-8102}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openformulieren-init: {condition: service_completed_successfully}
+      keycloak-clients: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openformulieren-celery:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:3.5.8}
+    command: /celery_worker.sh
+    environment: *openformulieren-env
+    volumes: *openformulieren-volumes
+    depends_on:
+      openformulieren: {condition: service_healthy}
+    restart: unless-stopped
+
+  openformulieren-celery-beat:
+    image: ${IMAGE_OPENFORMULIEREN:-openformulieren/open-forms:3.5.8}
+    command: /celery_beat.sh
+    environment: *openformulieren-env
+    depends_on:
+      openformulieren: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ClamAV met meegeleverde virusdefinities. freshclam kan hier niet bijwerken
+  # (database.clamav.net is niet bereikbaar); clamd draait op de definities uit het image.
+  clamav:
+    image: ${IMAGE_CLAMAV:-clamav/clamav:1.5.4}
+    networks:
+      default:
+        aliases: [clamav.local]
+    environment:
+      CLAMAV_NO_FRESHCLAMD: "true"
+      CLAMAV_NO_MILTERD: "true"
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 90s
+    restart: unless-stopped
+
+  # =========================================================== Open Inwoner
+  elasticsearch:
+    image: ${IMAGE_ELASTICSEARCH:-elasticsearch:9.0.3}
+    networks:
+      default:
+        aliases: [elasticsearch.local]
+    environment:
+      discovery.type: single-node
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+      ES_JAVA_OPTS: -Xms384m -Xmx384m
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?zie .env}
+      xpack.security.enabled: "true"
+      xpack.ml.enabled: "false"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -u elastic:$$ELASTIC_PASSWORD http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  openinwoner-init:
+    image: ${IMAGE_OPENINWONER:-maykinmedia/open-inwoner:2.4.3}
+    command: ["bash", "-c", "/setup_configuration.sh && python src/manage.py shell < /app/setup_configuration/configureer.py"]
+    environment: &openinwoner-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: open_inwoner.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENINWONER:?zie .env}
+      DB_NAME: openinwoner
+      DB_USER: openinwoner
+      ALLOWED_HOSTS: openinwoner.local,openinwoner,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENINWONER:-8103},http://127.0.0.1:${PORT_OPENINWONER:-8103}
+      CACHE_DEFAULT: redis:6379/16
+      CACHE_AXES: redis:6379/16
+      CACHE_OIDC: redis:6379/16
+      CACHE_PORTALOCKER: redis:6379/16
+      CELERY_BROKER_URL: redis://redis:6379/17
+      CELERY_RESULT_BACKEND: redis://redis:6379/17
+      ES_HOST: http://elasticsearch.local:9200
+      ES_USERNAME: elastic
+      ES_PASSWORD: ${ELASTIC_PASSWORD:?zie .env}
+      OIDC_FRONTEND_LOGOUT_WITH_HINTS: "true"
+      ALLOW_CUSTOM_JS: "False"
+      ZGW_OPENINWONER_SECRET: ${ZGW_OPENINWONER_SECRET:?zie .env}
+      OPENKLANT_OPENINWONER_TOKEN: ${OPENKLANT_OPENINWONER_TOKEN:?zie .env}
+      OPENKLANT_OPENINWONER_HEADER: Token ${OPENKLANT_OPENINWONER_TOKEN:?zie .env}
+      OPENOBJECT_OPENINWONER_HEADER: Token ${OPENOBJECT_OPENINWONER_TOKEN:?zie .env}
+      KEYCLOAK_OPENINWONER_CLIENT_SECRET: ${KEYCLOAK_OPENINWONER_CLIENT_SECRET:?zie .env}
+      # Losse Objecttypen API (configureer.py)
+      OIP_OBJECTTYPEN_SERVICE: objecttypen-api
+    volumes:
+      - ./config/openinwoner:/app/setup_configuration:ro
+      - ./config/openinwoner/data-dimpact.yaml:/app/setup_configuration/data.yaml:ro
+      - openinwoner-media:/app/media
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      elasticsearch: {condition: service_healthy}
+      openklant: {condition: service_healthy}
+
+  openinwoner:
+    image: ${IMAGE_OPENINWONER:-maykinmedia/open-inwoner:2.4.3}
+    networks:
+      default:
+        aliases: [openinwoner.local]
+    environment: *openinwoner-env
+    volumes: &openinwoner-volumes
+      - openinwoner-media:/app/media
+      - openinwoner-private-media:/app/private_media
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENINWONER:-8103}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openinwoner-init: {condition: service_completed_successfully}
+      keycloak-clients: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openinwoner-celery:
+    image: ${IMAGE_OPENINWONER:-maykinmedia/open-inwoner:2.4.3}
+    command: /celery_worker.sh
+    environment: *openinwoner-env
+    volumes: *openinwoner-volumes
+    depends_on:
+      openinwoner: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ===================================================== Open Archiefbeheer
+  openarchiefbeheer-init:
+    image: ${IMAGE_OPENARCHIEFBEHEER:-maykinmedia/open-archiefbeheer:2.0.0}
+    # het eigen setup_configuration.sh wacht op migraties van de webcontainer; hier
+    # migreert de init zelf, zodat de webcontainer pas na de configuratie start
+    command: ["sh", "-c", "python src/manage.py migrate && python src/manage.py setup_configuration --yaml-file /app/setup_configuration/data.yaml && python src/manage.py shell < /tools/beheerder.py"]
+    environment: &openarchiefbeheer-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: openarchiefbeheer.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENARCHIEFBEHEER:?zie .env}
+      DB_NAME: openarchiefbeheer
+      DB_USER: openarchiefbeheer
+      ALLOWED_HOSTS: openarchiefbeheer.local,openarchiefbeheer,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENARCHIEFBEHEER:-8154}
+      CORS_ALLOWED_ORIGINS: http://localhost:${PORT_OPENARCHIEFBEHEER:-8154}
+      CSRF_COOKIE_SAMESITE: Lax
+      CSRF_COOKIE_SECURE: "False"
+      SESSION_COOKIE_SAMESITE: Lax
+      SESSION_COOKIE_SECURE: "False"
+      CACHE_DEFAULT: redis:6379/19
+      CACHE_AXES: redis:6379/19
+      CELERY_BROKER_URL: redis://redis:6379/20
+      CELERY_RESULT_BACKEND: redis://redis:6379/20
+      OAB_API_URL: http://localhost:${PORT_OPENARCHIEFBEHEER:-8154}
+      OAB_API_PATH: /api/v1
+      OAB_ZAAK_URL_TEMPLATE: http://localhost:${PORT_OPENZAAK:-8001}/admin/zaken/zaak/?identificatie={identificatie}
+      ZGW_OPENARCHIEFBEHEER_SECRET: ${ZGW_OPENARCHIEFBEHEER_SECRET:?zie .env}
+      OPENKLANT_OPENARCHIEFBEHEER_HEADER: Token ${OPENKLANT_OPENARCHIEFBEHEER_TOKEN:?zie .env}
+      OBJECTEN_BEHEER_HEADER: Token ${OPENOBJECT_BEHEER_TOKEN:?zie .env}
+      KEYCLOAK_OPENARCHIEFBEHEER_CLIENT_SECRET: ${KEYCLOAK_OPENARCHIEFBEHEER_CLIENT_SECRET:?zie .env}
+      REQUESTS_READ_TIMEOUT: "30"
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openarchiefbeheer:/app/setup_configuration:ro
+      - ./tools:/tools:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openarchiefbeheer:
+    image: ${IMAGE_OPENARCHIEFBEHEER:-maykinmedia/open-archiefbeheer:2.0.0}
+    networks:
+      default:
+        aliases: [openarchiefbeheer.local]
+    environment: *openarchiefbeheer-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENARCHIEFBEHEER:-8154}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openarchiefbeheer-init: {condition: service_completed_successfully}
+      keycloak-podiumd: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openarchiefbeheer-celery:
+    image: ${IMAGE_OPENARCHIEFBEHEER:-maykinmedia/open-archiefbeheer:2.0.0}
+    command: /celery_worker.sh
+    environment: *openarchiefbeheer-env
+    depends_on:
+      openarchiefbeheer: {condition: service_healthy}
+    restart: unless-stopped
+
+  openarchiefbeheer-celery-beat:
+    image: ${IMAGE_OPENARCHIEFBEHEER:-maykinmedia/open-archiefbeheer:2.0.0}
+    command: /celery_beat.sh
+    environment: *openarchiefbeheer-env
+    depends_on:
+      openarchiefbeheer: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ============================================================ Open Beheer
+  openbeheer-init:
+    image: ${IMAGE_OPENBEHEER:-maykinmedia/open-beheer:0.9.1}
+    command: ["sh", "-c", "python src/manage.py migrate && python src/manage.py setup_configuration --yaml-file /app/setup_configuration/data.yaml && python src/manage.py shell < /tools/beheerder.py"]
+    environment: &openbeheer-env
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: openbeheer.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENBEHEER:?zie .env}
+      DB_NAME: openbeheer
+      DB_USER: openbeheer
+      ALLOWED_HOSTS: openbeheer.local,openbeheer,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENBEHEER:-8155}
+      CSRF_COOKIE_SAMESITE: Lax
+      CSRF_COOKIE_SECURE: "False"
+      SESSION_COOKIE_SAMESITE: Lax
+      SESSION_COOKIE_SECURE: "False"
+      CACHE_DEFAULT: redis:6379/21
+      CACHE_AXES: redis:6379/21
+      MYKN_API_URL: http://localhost:${PORT_OPENBEHEER:-8155}
+      MYKN_API_PATH: /api/v1
+      OPEN_ZAAK_ADMIN_BASE_URL: http://localhost:${PORT_OPENZAAK:-8001}/admin/
+      ZGW_OPENBEHEER_SECRET: ${ZGW_OPENBEHEER_SECRET:?zie .env}
+      OBJECTTYPEN_BEHEER_HEADER: Token ${OPENOBJECT_BEHEER_TOKEN:?zie .env}
+      KEYCLOAK_OPENBEHEER_CLIENT_SECRET: ${KEYCLOAK_OPENBEHEER_CLIENT_SECRET:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openbeheer:/app/setup_configuration:ro
+      - ./tools:/tools:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openbeheer:
+    image: ${IMAGE_OPENBEHEER:-maykinmedia/open-beheer:0.9.1}
+    networks:
+      default:
+        aliases: [openbeheer.local]
+    environment: *openbeheer-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENBEHEER:-8155}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openbeheer-init: {condition: service_completed_successfully}
+      keycloak-podiumd: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  # ================================================================== PABC
+  # Platform Autorisatie Beheer Component: welke medewerkersgroep welke rol heeft op
+  # welke zaaktypen (ZAC vraagt dit op). Dataset: config/pabc/dataset.json.
+  pabc-migrations:
+    image: demogemeente/pabc-migrations:1.1.1
+    environment: &pabc-env
+      ConnectionStrings__Pabc: Host=postgres;Database=pabc;Username=pabc;Password=${DB_APP_PASSWORD}
+      JSON_DATASET_PATH: /config/dataset.json
+    volumes:
+      - ./config/pabc:/config:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  pabc:
+    image: demogemeente/pabc-api:1.1.1
+    networks:
+      default:
+        aliases: [pabc.local]
+    environment:
+      ConnectionStrings__Pabc: Host=postgres;Database=pabc;Username=pabc;Password=${DB_APP_PASSWORD}
+      API_KEY__0: ${PABC_API_KEY:?zie .env}
+      HEALTH_PATH: /health
+      Oidc__Authority: http://keycloak.local:8080/realms/podiumd
+      Oidc__ClientId: pabc
+      Oidc__ClientSecret: ${KEYCLOAK_PABC_CLIENT_SECRET:?zie .env}
+      Oidc__RequireHttps: "false"
+      Oidc__FunctioneelBeheerderRole: PABC-Functioneel-Beheerder
+      Oidc__RoleClaimType: roles
+      KeycloakAdmin__ClientId: pabc
+      KeycloakAdmin__ClientSecret: ${KEYCLOAK_PABC_CLIENT_SECRET:?zie .env}
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_PABC:-8158}:8080"
+    healthcheck: *dotnet-healthcheck
+    depends_on:
+      pabc-migrations: {condition: service_completed_successfully}
+      keycloak-podiumd: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  # ================================================================== KISS
+  kiss:
+    image: demogemeente/kiss:3.1.3
+    volumes:
+      - ./stacks/dimpact/.tls/ca.crt:/tls/ca.crt:ro
+    networks:
+      default:
+        aliases: [kiss.local]
+    environment:
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: kiss
+      POSTGRES_USER: kiss
+      POSTGRES_PASSWORD: ${DB_APP_PASSWORD}
+      OIDC_AUTHORITY: https://keycloak.local:8443/realms/podiumd
+      SSL_CERT_FILE: /tls/ca.crt
+      OIDC_CLIENT_ID: kiss
+      OIDC_CLIENT_SECRET: ${KEYCLOAK_KISS_CLIENT_SECRET:?zie .env}
+      OIDC_KLANTCONTACTMEDEWERKER_ROLE: Klantcontactmedewerker
+      OIDC_REDACTEUR_ROLE: Redacteur
+      OIDC_KENNISBANK_ROLE: Kennisbank
+      OIDC_BEHEERDER_ROLE: Beheerder
+      OIDC_MEDEWERKER_IDENTIFICATIE_CLAIM: preferred_username
+      OIDC_MEDEWERKER_IDENTIFICATIE_TRUNCATE: ""
+      ORGANISATIE_IDS: ${GEMEENTE_RSIN:-999990007}
+      MANAGEMENTINFORMATIE_API_KEY: ${KISS_MANAGEMENTINFORMATIE_API_KEY:?zie .env}
+      HAAL_CENTRAAL_BASE_URL: http://brp-api.local:8080/haalcentraal/api
+      HAAL_CENTRAAL_API_KEY: niet-nodig-voor-de-mock
+      KVK_BASE_URL: http://kvk.niet-beschikbaar.local/api
+      KVK_API_KEY: niet-beschikbaar
+      ELASTIC_BASE_URL: http://elasticsearch.local:9200
+      ELASTIC_USERNAME: elastic
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?zie .env}
+      EMAIL_HOST: mailpit.local
+      EMAIL_PORT: "1025"
+      EMAIL_USERNAME: kiss
+      EMAIL_PASSWORD: kiss
+      EMAIL_ENABLE_SSL: "false"
+      FEEDBACK_EMAIL_FROM: kiss@voorbeeldstad.example
+      FEEDBACK_EMAIL_TO: kennisbank@voorbeeldstad.example
+      AFDELINGEN_BASE_URL: http://objecten.local:8000
+      AFDELINGEN_OBJECT_TYPE_URL: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+      AFDELINGEN_TOKEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      GROEPEN_BASE_URL: http://objecten.local:8000
+      GROEPEN_OBJECT_TYPE_URL: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+      GROEPEN_TOKEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      MEDEWERKER_OBJECTEN_BASE_URL: http://objecten.local:8000
+      MEDEWERKER_OBJECTEN_TOKEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      MEDEWERKER_OBJECT_TYPE_URL: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c3
+      USE_VACS: "false"
+      USE_MEDEWERKEREMAIL: "true"
+      REGISTERS__0__IS_DEFAULT: "true"
+      REGISTERS__0__REGISTRY_VERSION: OpenKlant2
+      REGISTERS__0__KLANTINTERACTIE_BASE_URL: http://openklant.local:8000/klantinteracties/api/v1
+      REGISTERS__0__KLANTINTERACTIE_TOKEN: ${OPENKLANT_KISS_TOKEN:?zie .env}
+      REGISTERS__0__ZAAKSYSTEEM_ZAKEN_BASE_URL: http://openzaak.local:8000/zaken/api/v1
+      REGISTERS__0__ZAAKSYSTEEM_CATALOGI_BASE_URL: http://openzaak.local:8000/catalogi/api/v1
+      REGISTERS__0__ZAAKSYSTEEM_DOCUMENTEN_BASE_URL: http://openzaak.local:8000/documenten/api/v1
+      REGISTERS__0__ZAAKSYSTEEM_API_CLIENT_ID: kiss
+      REGISTERS__0__ZAAKSYSTEEM_API_KEY: ${ZGW_KISS_SECRET:?zie .env}
+      REGISTERS__0__ZAAKSYSTEEM_DEEPLINK_URL: http://localhost:${PORT_OPENZAAK:-8001}/admin/zaken/zaak/?identificatie=
+      REGISTERS__0__ZAAKSYSTEEM_DEEPLINK_PROPERTY: identificatie
+      REGISTERS__0__ZAAKSYSTEEM_USE_EXPERIMENTAL_QUERIES: "true"
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_KISS:-8156}:8080"
+    healthcheck: *dotnet-healthcheck
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak-podiumd: {condition: service_completed_successfully}
+      openklant: {condition: service_healthy}
+      objecten: {condition: service_healthy}
+    restart: unless-stopped
+
+  # =================================================================== ITA
+  ita:
+    image: demogemeente/ita-web:3.3.2
+    volumes:
+      - ./stacks/dimpact/.tls/ca.crt:/tls/ca.crt:ro
+    networks:
+      default:
+        aliases: [ita.local]
+    environment: &ita-env
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=ita;Username=ita;Password=${DB_APP_PASSWORD}
+      OpenKlantApi__BaseUrl: http://openklant.local:8000/klantinteracties/api/v1/
+      OpenKlantApi__ApiKey: ${OPENKLANT_ITA_TOKEN:?zie .env}
+      ObjectApi__BaseUrl: http://objecten.local:8000/api/v2/
+      ObjectApi__ApiKey: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      ZaakSysteem__BaseUrl: http://openzaak.local:8000
+      ZaakSysteem__ClientId: ita
+      ZaakSysteem__Key: ${ZGW_ITA_SECRET:?zie .env}
+      OIDC_AUTHORITY: https://keycloak.local:8443/realms/podiumd
+      SSL_CERT_FILE: /tls/ca.crt
+      OIDC_CLIENT_ID: ita
+      OIDC_CLIENT_SECRET: ${KEYCLOAK_ITA_CLIENT_SECRET:?zie .env}
+      OIDC_ITA_SYSTEM_ACCESS_ROLE: ITA-Toegang
+      OIDC_FUNCTIONEEL_BEHEERDER_ROLE: ITA-Functioneel-Beheerder
+      OIDC_NAME_CLAIM_TYPE: name
+      OIDC_ROLE_CLAIM_TYPE: roles
+      OIDC_OBJECTREGISTER_MEDEWERKER_ID_CLAIM_TYPE: preferred_username
+      OIDC_EMAIL_CLAIM_TYPE: email
+      Email__SmtpSettings__Host: mailpit.local
+      Email__SmtpSettings__Port: "1025"
+      Email__SmtpSettings__Username: ita
+      Email__SmtpSettings__Password: ita
+      Email__SmtpSettings__FromEmail: ita@voorbeeldstad.example
+      Email__SmtpSettings__EnableSsl: "false"
+      Ita__BaseUrl: http://localhost:${PORT_ITA:-8157}
+      pollerMessage: "Poller uitgevoerd om:"
+      LogBoekOptions__Type: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c4
+      LogBoekOptions__TypeVersion: "1"
+      AfdelingOptions__Type: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+      AfdelingOptions__TypeVersion: "1"
+      GroepOptions__Type: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+      GroepOptions__TypeVersion: "1"
+      MedewerkerOptions__Type: http://objecttypen.local:8000/api/v2/objecttypes/7c1d4a0e-5a7b-4c1e-8f00-0000000000c3
+      MedewerkerOptions__TypeVersion: "1"
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_ITA:-8157}:8080"
+    healthcheck: *dotnet-healthcheck
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak-podiumd: {condition: service_completed_successfully}
+      openklant: {condition: service_healthy}
+      objecten: {condition: service_healthy}
+    restart: unless-stopped
+
+  # In PodiumD een CronJob (elke 15 minuten); hier een lus met dezelfde poller.
+  ita-poller:
+    image: demogemeente/ita-poller:3.3.2
+    volumes:
+      - ./stacks/dimpact/.tls/ca.crt:/tls/ca.crt:ro
+    entrypoint: ["sh", "-c", "while true; do dotnet InterneTaakAfhandeling.Poller.dll; sleep $${POLLER_INTERVAL:-300}; done"]
+    environment:
+      <<: *ita-env
+      POLLER_MODE: nieuwe-internetaak-notificatie
+      POLLER_INTERVAL: "120"
+    depends_on:
+      ita: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ==================================================== NotifyNL OMC
+  # Output Management Component: luistert naar Open Notificaties en stuurt burgers
+  # een bericht via NotifyNL. NotifyNL is een externe dienst; hier vangt
+  # tools/notify_mock.py de berichten op, zodat de keten testbaar is.
+  omc:
+    image: ${IMAGE_OMC:-worthnl/notifynl-omc:1.17.19}
+    networks:
+      default:
+        aliases: [omc.local]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      OMC_AUTH_JWT_SECRET: ${OMC_AUTH_JWT_SECRET:?zie .env}
+      OMC_AUTH_JWT_ISSUER: open-notificaties
+      OMC_AUTH_JWT_AUDIENCE: omc
+      OMC_AUTH_JWT_EXPIRESINMIN: "60"
+      OMC_AUTH_JWT_USERID: open-notificaties
+      OMC_AUTH_JWT_USERNAME: Open Notificaties
+      OMC_FEATURE_WORKFLOW_VERSION: "2"
+      OMC_CONTEXT_PATH: ""
+      # Actor van OMC in Open Klant (voor geregistreerde contactmomenten); vaste demo-UUID
+      OMC_ACTOR_ID: 1b7d1a40-0000-4000-8000-0000000000a0
+      ZGW_AUTH_JWT_SECRET: ${ZGW_OMC_SECRET:?zie .env}
+      ZGW_AUTH_JWT_ISSUER: omc
+      ZGW_AUTH_JWT_AUDIENCE: ""
+      ZGW_AUTH_JWT_EXPIRESINMIN: "60"
+      ZGW_AUTH_JWT_USERID: omc
+      ZGW_AUTH_JWT_USERNAME: NotifyNL OMC
+      ZGW_AUTH_KEY_OPENKLANT: ${OPENKLANT_OMC_TOKEN:?zie .env}
+      ZGW_AUTH_KEY_OBJECTEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      ZGW_AUTH_KEY_OBJECTTYPEN: ${OBJECTEN_PODIUMD_TOKEN:?zie .env}
+      ZGW_ENDPOINT_OPENNOTIFICATIES: http://opennotificaties.local:8000/api/v1
+      ZGW_ENDPOINT_OPENZAAK: http://openzaak.local:8000/zaken/api/v1
+      ZGW_ENDPOINT_OPENKLANT: http://openklant.local:8000/klantinteracties/api/v1
+      ZGW_ENDPOINT_BESLUITEN: http://openzaak.local:8000/besluiten/api/v1
+      ZGW_ENDPOINT_OBJECTEN: http://objecten.local:8000/api/v2
+      ZGW_ENDPOINT_OBJECTTYPEN: http://objecttypen.local:8000/api/v2
+      ZGW_ENDPOINT_CONTACTMOMENTEN: http://openklant.local:8000/klantinteracties/api/v1
+      ZGW_WHITELIST_ZAAKCREATE_IDS: "*"
+      ZGW_WHITELIST_ZAAKUPDATE_IDS: "*"
+      ZGW_WHITELIST_ZAAKCLOSE_IDS: "*"
+      ZGW_WHITELIST_TASKASSIGNED_IDS: "*"
+      ZGW_WHITELIST_DECISIONMADE_IDS: "*"
+      ZGW_WHITELIST_MESSAGE_ALLOWED: "true"
+      ZGW_VARIABLE_OBJECTTYPE_TASKOBJECTTYPE_UUID: 7c1d4a0e-5a7b-4c1e-8f00-0000000000b1
+      ZGW_VARIABLE_OBJECTTYPE_MESSAGEOBJECTTYPE_UUID: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c5
+      ZGW_VARIABLE_OBJECTTYPE_MESSAGEOBJECTTYPE_VERSION: "1"
+      ZGW_VARIABLE_OBJECTTYPE_DECISIONINFOOBJECTTYPE_UUIDS: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c6
+      ZGW_VARIABLE_OBJECTTYPE_KTOOBJECTTYPE_UUID: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c7
+      NOTIFY_API_BASEURL: http://notify-mock.local:8080
+      NOTIFY_API_KEY: ${NOTIFY_API_KEY:?zie .env}
+      NOTIFY_TEMPLATEID_EMAIL_ZAAKCREATE: 1b7d1a40-0000-4000-8000-000000000001
+      NOTIFY_TEMPLATEID_EMAIL_ZAAKUPDATE: 1b7d1a40-0000-4000-8000-000000000002
+      NOTIFY_TEMPLATEID_EMAIL_ZAAKCLOSE: 1b7d1a40-0000-4000-8000-000000000003
+      NOTIFY_TEMPLATEID_EMAIL_TASKASSIGNED: 1b7d1a40-0000-4000-8000-000000000004
+      NOTIFY_TEMPLATEID_EMAIL_MESSAGERECEIVED: 1b7d1a40-0000-4000-8000-000000000005
+      NOTIFY_TEMPLATEID_SMS_ZAAKCREATE: 1b7d1a40-0000-4000-8000-000000000011
+      NOTIFY_TEMPLATEID_SMS_ZAAKUPDATE: 1b7d1a40-0000-4000-8000-000000000012
+      NOTIFY_TEMPLATEID_SMS_ZAAKCLOSE: 1b7d1a40-0000-4000-8000-000000000013
+      NOTIFY_TEMPLATEID_SMS_TASKASSIGNED: 1b7d1a40-0000-4000-8000-000000000014
+      NOTIFY_TEMPLATEID_SMS_MESSAGERECEIVED: 1b7d1a40-0000-4000-8000-000000000015
+      NOTIFY_TEMPLATEID_DECISIONMADE: 1b7d1a40-0000-4000-8000-000000000021
+      BRP_BASEURL: ""
+      KTO_URL: "-"
+      KTO_AUTH_JWT_CLIENTID: "-"
+      KTO_AUTH_JWT_SECRET: "-"
+      KTO_AUTH_JWT_ISSUER: "-"
+      KTO_AUTH_JWT_SCOPE: "-"
+      SENTRY_DSN: ""
+      SENTRY_ENVIRONMENT: demogemeente
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OMC:-8159}:8080"
+    depends_on:
+      notify-mock: {condition: service_healthy}
+      opennotificaties: {condition: service_healthy}
+    restart: unless-stopped
+
+  # Vervangt de NotifyNL-dienst (GOV.UK Notify-API): bewaart wat OMC wil versturen
+  notify-mock:
+    image: openzaak/open-zaak:1.29.0
+    networks:
+      default:
+        aliases: [notify-mock.local]
+    entrypoint: ["python", "/tools/notify_mock.py"]
+    volumes:
+      - ./tools:/tools:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  openformulieren-media:
+  openformulieren-private-media:
+  openinwoner-media:
+  openinwoner-private-media:
+  elasticsearch-data:

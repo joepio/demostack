@@ -1,0 +1,8 @@
+{
+    "key": "parkeervergunning",
+    "name": "Parkeervergunning bewoners",
+    "versionTag": "1.0.0",
+    "final": true,
+    "canHaveAssignee": true,
+    "autoAssignTasks": false
+}

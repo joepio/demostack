@@ -1,0 +1,23 @@
+# Open Klant: aanvulling voor stack g4. Tokens van NL Portal (klantcontacten van de
+# ingelogde burger) en GZAC (Klantinteracties API-plugin).
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: nl-portal
+      token:
+        value_from:
+          env: OPENKLANT_NLPORTAL_TOKEN
+      contact_person: NL Portal
+      email: portaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: NL Portal
+      administration: Demogemeente
+    - identifier: gzac
+      token:
+        value_from:
+          env: OPENKLANT_GZAC_TOKEN
+      contact_person: GZAC
+      email: zaakafhandeling@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: GZAC
+      administration: Demogemeente

@@ -1,0 +1,27 @@
+# Open Notificaties: aanvulling voor stack vcg. Open Organisatie publiceert op kanaal
+# "medewerkers"; de notificatie-sink abonneert zich daarop, zodat de keten zichtbaar is.
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: open-organisatie
+      secret:
+        value_from:
+          env: ZGW_OPENORGANISATIE_SECRET
+
+notifications_kanalen_config_enable: true
+notifications_kanalen_config:
+  items:
+    - naam: medewerkers
+      documentatie_link: http://openorganisatie.local:8000/ref/kanalen/
+      filters: []
+
+notifications_abonnementen_config_enable: true
+notifications_abonnementen_config:
+  items:
+    - uuid: 5d1c0f0e-2b8e-4f7a-9c11-000000000101
+      callback_url: http://notificatie-sink.local:8080/callback
+      auth:
+        value_from:
+          env: NOTIFICATIE_SINK_AUTH
+      kanalen:
+        - naam: medewerkers

@@ -1,0 +1,152 @@
+# Objecten API 3.6 (los van de Objecttypen API, zoals PodiumD 4.9.3).
+# Zelfde objecttype-UUID's en tokens als Open Object in de kern (config/openobject/),
+# zodat seed en tests in beide opzetten werken. De objecttypen zelf staan in de
+# Objecttypen API (objecttypen.local); de seed maakt ze daar met deze UUID's aan.
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: objecttypen-api
+      label: Objecttypen API
+      api_root: http://objecttypen.local:8000/api/v2/
+      api_connection_check_path: objecttypes
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OBJECTTYPEN_OBJECTEN_HEADER
+    - identifier: notificaties-api
+      label: Open Notificaties
+      api_root: http://opennotificaties.local:8000/api/v1/
+      api_connection_check_path: kanaal
+      api_type: nrc
+      auth_type: zgw
+      client_id: open-object
+      secret:
+        value_from:
+          env: ZGW_OPENOBJECT_SECRET
+      user_id: objecten
+      user_representation: Objecten API
+
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notificaties-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 2
+  notification_delivery_retry_backoff_max: 30
+
+objecttypes_config_enable: true
+objecttypes:
+  items:
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+      name: Melding openbare ruimte
+      service_identifier: objecttypen-api
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a2
+      name: Parkeervergunning
+      service_identifier: objecttypen-api
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000b1
+      name: Externe taak
+      service_identifier: objecttypen-api
+    # PodiumD-objecttypen voor KISS en ITA (afdelingen, groepen, medewerkers)
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+      name: Afdeling
+      service_identifier: objecttypen-api
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+      name: Groep
+      service_identifier: objecttypen-api
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c3
+      name: Medewerker
+      service_identifier: objecttypen-api
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c4
+      name: Activiteitenlog (ITA)
+      service_identifier: objecttypen-api
+
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: demogemeente-beheer
+      token:
+        value_from:
+          env: OPENOBJECT_BEHEER_TOKEN
+      contact_person: Beheerder Demogemeente
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Seed-scripts
+      administration: Demogemeente
+      is_superuser: true
+    - identifier: burgerportaal
+      token:
+        value_from:
+          env: OPENOBJECT_PORTAAL_TOKEN
+      contact_person: Burgerportaal (plug-in)
+      email: burgerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Burgerportaal
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a2
+          mode: read_only
+    - identifier: open-zaak
+      token:
+        value_from:
+          env: OPENOBJECT_OPENZAAK_TOKEN
+      contact_person: Open Zaak
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Zaak
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a2
+          mode: read_only
+    - identifier: open-formulieren
+      token:
+        value_from:
+          env: OPENOBJECT_OPENFORMULIEREN_TOKEN
+      contact_person: Open Formulieren
+      email: formulieren@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Formulieren
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+          mode: read_and_write
+    # Open Inwoner leest alle externe taken en filtert zelf op BSN: dit token geeft dus
+    # leesrecht op de taken van alle inwoners (zelfde zwakke plek als in stack maykin).
+    - identifier: open-inwoner
+      token:
+        value_from:
+          env: OPENOBJECT_OPENINWONER_TOKEN
+      contact_person: Open Inwoner
+      email: inwonerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Inwoner
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000b1
+          mode: read_only
+    # KISS, ITA en OMC lezen afdelingen, groepen en medewerkers; ITA schrijft zijn logboek
+    - identifier: podiumd-medewerkers
+      token:
+        value_from:
+          env: OBJECTEN_PODIUMD_TOKEN
+      contact_person: KISS, ITA en OMC
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: PodiumD-medewerkerapplicaties
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c3
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c4
+          mode: read_and_write
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000b1
+          mode: read_and_write

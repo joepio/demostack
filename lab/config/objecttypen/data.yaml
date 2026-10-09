@@ -1,0 +1,62 @@
+# Objecttypen API 3.4 (los, zoals PodiumD). Setup-configuration kent hier alleen tokens;
+# de objecttypen zelf (met vaste UUID's) en hun JSON-schema's maakt de seed via de API.
+# Alle afnemers lezen de typen met hetzelfde token als bij de Objecten API, zodat hun
+# configuratie per service gelijk blijft.
+
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: demogemeente-beheer
+      token:
+        value_from:
+          env: OPENOBJECT_BEHEER_TOKEN
+      contact_person: Beheerder Demogemeente
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Seed-scripts
+      administration: Demogemeente
+    - identifier: objecten-api
+      token:
+        value_from:
+          env: OBJECTTYPEN_OBJECTEN_TOKEN
+      contact_person: Objecten API
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Objecten API
+      administration: Demogemeente
+    - identifier: open-formulieren
+      token:
+        value_from:
+          env: OPENOBJECT_OPENFORMULIEREN_TOKEN
+      contact_person: Open Formulieren
+      email: formulieren@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Formulieren
+      administration: Demogemeente
+    - identifier: open-inwoner
+      token:
+        value_from:
+          env: OPENOBJECT_OPENINWONER_TOKEN
+      contact_person: Open Inwoner
+      email: inwonerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Inwoner
+      administration: Demogemeente
+    - identifier: burgerportaal
+      token:
+        value_from:
+          env: OPENOBJECT_PORTAAL_TOKEN
+      contact_person: Burgerportaal (plug-in)
+      email: burgerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Burgerportaal
+      administration: Demogemeente
+    - identifier: podiumd-medewerkers
+      token:
+        value_from:
+          env: OBJECTEN_PODIUMD_TOKEN
+      contact_person: KISS, ITA, OMC en Open Beheer
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: PodiumD-medewerkerapplicaties
+      administration: Demogemeente

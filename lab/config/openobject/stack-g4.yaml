@@ -1,0 +1,61 @@
+# Open Object: aanvulling voor stack g4.
+# Objecttypen:
+#   c1 Taak         taak in het formaat "taak v2" dat NL Portal 3.0 leest
+#   c2 Bericht      bericht aan de burger (NL Portal, "Mijn berichten")
+#   c3 Portaaltaak  taak zoals de Portaaltaak-plugin van GZAC 13 hem schrijft (v1)
+# De JSON-schema's (objecttype-versies) zet stacks/g4/seed.py.
+objecttypes_config_enable: true
+objecttypes:
+  items:
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+      name: Taak
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+      name: Bericht
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c3
+      name: Portaaltaak
+
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: open-formulieren
+      token:
+        value_from:
+          env: OPENOBJECT_OPENFORMULIEREN_TOKEN
+      contact_person: Open Formulieren
+      email: formulieren@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Formulieren
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+          mode: read_and_write
+    - identifier: nl-portal
+      token:
+        value_from:
+          env: OPENOBJECT_NLPORTAL_TOKEN
+      contact_person: NL Portal
+      email: portaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: NL Portal
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+          mode: read_and_write
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+          mode: read_and_write
+    - identifier: gzac
+      token:
+        value_from:
+          env: OPENOBJECT_GZAC_TOKEN
+      contact_person: GZAC
+      email: zaakafhandeling@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: GZAC
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c1
+          mode: read_and_write
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c2
+          mode: read_and_write
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000c3
+          mode: read_and_write

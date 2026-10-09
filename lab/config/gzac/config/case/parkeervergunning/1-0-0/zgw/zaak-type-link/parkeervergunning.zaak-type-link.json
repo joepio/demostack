@@ -1,0 +1,6 @@
+{
+    "zaakTypeUrl": "${GZAC_PARKEERVERGUNNING_ZAAKTYPE}",
+    "zakenApiPluginConfigurationId": "4a0d6c10-0000-4000-8000-000000000002",
+    "createWithDossier": true,
+    "rsin": "${GZAC_RSIN}"
+}

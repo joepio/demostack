@@ -1,0 +1,364 @@
+# Stack "g4": de keuze van het Platform Dienstverlening van de G4, bovenop
+# stacks/kern/compose.yml en stacks/maykin/compose.yml (Open VTB, Open Formulieren en de
+# BRP-vertaler komen uit maykin; Open Inwoner en Open Product staan hier uit).
+#   NL Portal 3.0 (Ritense)   burgerportaal: zaken, taken, berichten, profiel (BRP)
+#   Valtimo/GZAC 13.48        zaakafhandeling voor medewerkers, met de ZGW-plugins
+#   IKO 1.5.1                 Integraal Klant- en Objectbeeld (medewerkers, API)
+#   Open Formulieren 3.5.8    e-formulieren met DigiD en registratie in Open Zaak
+#   Open VTB 0.2.0            takenbron voor portalen (Taken API)
+#
+# NL Portal en IKO staan niet als image op een bereikbaar register; stacks/g4/bouw.sh
+# bouwt ze uit de broncode op een vaste tag.
+#
+# Afspraken: netwerkalias <component>.local, vaste tags, paden relatief aan de root van
+# de repository, hostpoorten 8200-8249, Redis-databases 18 tot en met 21.
+
+x-keycloak-doorgifte: &keycloak-doorgifte
+  # Netwerkcontainer voor een Spring Boot-toepassing: bezit de netwerk-namespace (alias,
+  # poort) en maakt Keycloak bereikbaar op localhost:8080 (tools/keycloak_doorgifte.py),
+  # want de issuer in de tokens is http://localhost:8080/... De toepassing draait met
+  # network_mode service:<naam>-net en kan zo herstarten zonder de doorgifte te verliezen.
+  image: openzaak/open-zaak:1.29.0
+  entrypoint: ["python", "/tools/keycloak_doorgifte.py"]
+  volumes:
+    - ./tools:/tools:ro
+  restart: unless-stopped
+
+services:
+  # ------------------------------------------ niet in deze stack (uit kern en maykin)
+  openproduct-init: {profiles: [uit]}
+  openproduct: {profiles: [uit]}
+  openproduct-celery: {profiles: [uit]}
+  openinwoner-init: {profiles: [uit]}
+  openinwoner: {profiles: [uit]}
+  openinwoner-celery: {profiles: [uit]}
+  elasticsearch: {profiles: [uit]}
+
+  # -------------------------------------------- aanvullingen op kern en maykin
+  openzaak-init:
+    environment:
+      ZGW_NLPORTAL_SECRET: ${ZGW_NLPORTAL_SECRET:?zie .env}
+      ZGW_GZAC_SECRET: ${ZGW_GZAC_SECRET:?zie .env}
+      ZGW_IKO_SECRET: ${ZGW_IKO_SECRET:?zie .env}
+    volumes:
+      - ./config/openzaak/stack-g4.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  opennotificaties-init:
+    environment:
+      ZGW_GZAC_SECRET: ${ZGW_GZAC_SECRET:?zie .env}
+    volumes:
+      - ./config/opennotificaties/stack-g4.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  openobject-init:
+    environment:
+      OPENOBJECT_NLPORTAL_TOKEN: ${OPENOBJECT_NLPORTAL_TOKEN:?zie .env}
+      OPENOBJECT_GZAC_TOKEN: ${OPENOBJECT_GZAC_TOKEN:?zie .env}
+    volumes:
+      - ./config/openobject/stack-g4.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  openklant-init:
+    environment:
+      OPENKLANT_NLPORTAL_TOKEN: ${OPENKLANT_NLPORTAL_TOKEN:?zie .env}
+      OPENKLANT_GZAC_TOKEN: ${OPENKLANT_GZAC_TOKEN:?zie .env}
+    volumes:
+      - ./config/openklant/stack-g4.yaml:/app/setup_configuration_stack/data.yaml:ro
+
+  # NL Portal 3.0.4 wisselt het burgertoken in zonder subject_token_type. De standaard
+  # token exchange (v2) van Keycloak 26 eist die parameter; de oudere variant (v1, preview)
+  # niet. Daarom staat hier de v1-feature aan (alleen voor de client nlportal-m2m in gebruik).
+  keycloak:
+    environment:
+      KC_FEATURES: token-exchange
+
+  # Open Formulieren: alleen de client van Open Formulieren (Open Inwoner draait hier niet)
+  keycloak-clients:
+    command:
+      - "openformulieren=Open Formulieren=KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET=http://localhost:${PORT_OPENFORMULIEREN:-8202}/*,http://127.0.0.1:${PORT_OPENFORMULIEREN:-8202}/*,http://openformulieren.local:8000/*"
+
+  openformulieren-init:
+    environment: &openformulieren-g4
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENFORMULIEREN:-8202},http://127.0.0.1:${PORT_OPENFORMULIEREN:-8202}
+      BASE_URL: http://localhost:${PORT_OPENFORMULIEREN:-8202}
+      CORS_ALLOWED_ORIGINS: http://localhost:${PORT_OPENFORMULIEREN:-8202},http://127.0.0.1:${PORT_OPENFORMULIEREN:-8202},http://localhost:${PORT_NLPORTAL:-8203},http://openformulieren.local:8000
+  openformulieren:
+    environment: *openformulieren-g4
+  openformulieren-celery:
+    environment: *openformulieren-g4
+  openformulieren-celery-beat:
+    environment: *openformulieren-g4
+
+  # Keycloak: realm "g4" (medewerkers: GZAC en IKO) en de NL Portal-clients in de
+  # DigiD-simulatie (config/keycloak-g4/realm.sh)
+  keycloak-g4:
+    image: ${IMAGE_KEYCLOAK:-keycloak/keycloak:26.4.7}
+    entrypoint: ["bash", "/config/realm.sh"]
+    environment:
+      KC_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      KC_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      MEDEWERKER_WACHTWOORD: ${MEDEWERKER_WACHTWOORD:?zie .env}
+      KEYCLOAK_GZAC_M2M_SECRET: ${KEYCLOAK_GZAC_M2M_SECRET:?zie .env}
+      KEYCLOAK_IKO_SECRET: ${KEYCLOAK_IKO_SECRET:?zie .env}
+      KEYCLOAK_NLPORTAL_M2M_SECRET: ${KEYCLOAK_NLPORTAL_M2M_SECRET:?zie .env}
+      PORT_GZAC: ${PORT_GZAC:-8205}
+      PORT_GZAC_BACKEND: ${PORT_GZAC_BACKEND:-8206}
+      PORT_IKO: ${PORT_IKO:-8207}
+      PORT_NLPORTAL: ${PORT_NLPORTAL:-8203}
+    volumes:
+      - ./config/keycloak-g4:/config:ro
+    depends_on:
+      keycloak: {condition: service_healthy}
+
+  # -------------------------------------------------------------- NL Portal
+  nlportal-backend-net:
+    <<: *keycloak-doorgifte
+    networks:
+      default:
+        aliases: [nlportal-backend.local]
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_NLPORTAL_BACKEND:-8204}:8000"
+
+  nlportal-backend:
+    image: demogemeente/nlportal-backend:3.0.4
+    network_mode: service:nlportal-backend-net
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/config/nlportal/application.yml
+      JAVA_OPTS: -XX:MaxRAMPercentage=75 -Xss512k
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+      KEYCLOAK_NLPORTAL_M2M_SECRET: ${KEYCLOAK_NLPORTAL_M2M_SECRET:?zie .env}
+      ZGW_NLPORTAL_SECRET: ${ZGW_NLPORTAL_SECRET:?zie .env}
+      OPENOBJECT_NLPORTAL_TOKEN: ${OPENOBJECT_NLPORTAL_TOKEN:?zie .env}
+      OPENKLANT_NLPORTAL_TOKEN: ${OPENKLANT_NLPORTAL_TOKEN:?zie .env}
+      GEMEENTE_RSIN: ${GEMEENTE_RSIN:-999990007}
+      PORT_NLPORTAL: ${PORT_NLPORTAL:-8203}
+      TZ: Europe/Amsterdam
+    mem_limit: 900m
+    volumes:
+      - ./config/nlportal:/config/nlportal:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 60s
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak-g4: {condition: service_completed_successfully}
+      openzaak: {condition: service_healthy}
+      openobject: {condition: service_healthy}
+      openklant: {condition: service_healthy}
+      brp-api: {condition: service_healthy}
+      nlportal-backend-net: {condition: service_started}
+    restart: unless-stopped
+
+  nlportal:
+    image: demogemeente/nlportal-frontend:3.0.3
+    networks:
+      default:
+        aliases: [nlportal.local]
+    environment:
+      NLPORTAL_PUBLIEK: http://localhost:${PORT_NLPORTAL:-8203}
+      NLPORTAL_BACKEND_PUBLIEK: http://localhost:${PORT_NLPORTAL_BACKEND:-8204}
+      NLPORTAL_OIDC_URL: http://localhost:${PORT_KEYCLOAK:-8080}
+      NLPORTAL_OIDC_REALM: voorbeeldstad
+      NLPORTAL_OIDC_CLIENT_ID: nlportal
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_NLPORTAL:-8203}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/config.js"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      nlportal-backend: {condition: service_started}
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ Valtimo/GZAC
+  # De inrichting (case-definitie, BPMN, formulieren, plugins, rechten) staat in
+  # config/gzac/ en komt via de classpath binnen: Valtimo deployt bij het starten alles
+  # onder config/ automatisch. De verwijzingen naar zaaktype, roltype en statustypen in
+  # Open Zaak zijn URL's; gzac-zaaktypen maakt die zaaktypen vooraf aan (met de functies
+  # van de gedeelde seed) en geeft de URL's aan GZAC als eigenschappen
+  # (config/gzac/zaaktypen.py). Een definitieve case-definitie is daarna niet meer te
+  # wijzigen, dus de URL's moeten bij de eerste start kloppen.
+  gzac-zaaktypen:
+    image: openzaak/open-zaak:1.29.0
+    user: "0:0"
+    entrypoint: ["python", "config/gzac/zaaktypen.py"]
+    working_dir: /demogemeente
+    env_file: ./.env
+    environment:
+      DEMO_STACK: g4
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - ./:/demogemeente:ro
+      - gzac-runtime:/gzac-runtime
+    depends_on:
+      openzaak: {condition: service_healthy}
+      brp-mock: {condition: service_started}
+
+  gzac-backend-net:
+    <<: *keycloak-doorgifte
+    networks:
+      default:
+        aliases: [gzac-backend.local]
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_GZAC_BACKEND:-8206}:8000"
+
+  gzac-backend:
+    image: ${IMAGE_GZAC_BACKEND:-ritense/gzac-backend:13.48.0}
+    network_mode: service:gzac-backend-net
+    entrypoint: ["java", "-XX:MaxRAMPercentage=75", "-cp", "/app.war:/gzac-config",
+                 "org.springframework.boot.loader.launch.WarLauncher"]
+    environment:
+      SERVER_PORT: "8000"
+      SPRING_CONFIG_IMPORT: file:/gzac-runtime/zaaktypen.properties
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gzac
+      SPRING_DATASOURCE_NAME: gzac
+      SPRING_DATASOURCE_USERNAME: gzac
+      SPRING_DATASOURCE_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+      VALTIMO_APP_HOSTNAME: localhost:${PORT_GZAC:-8205}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI: http://keycloak.local:8080/realms/g4/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAKAPI_ISSUERURI: http://localhost:8080/realms/g4
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAKJWT_ISSUERURI: http://localhost:8080/realms/g4
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAKJWT_CLIENTID: valtimo-console
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAKAPI_CLIENTID: valtimo-user-m2m-client
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAKAPI_CLIENTSECRET: ${KEYCLOAK_GZAC_M2M_SECRET:?zie .env}
+      VALTIMO_PLUGIN_ENCRYPTIONSECRET: ${GZAC_PLUGIN_ENCRYPTIESLEUTEL:?zie .env}
+      OPERATON_BPM_ADMINUSER_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      SPRING_ACTUATOR_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+      VALTIMO_WEB_CORS_CORSCONFIGURATION_ALLOWEDORIGINS: http://localhost:${PORT_GZAC:-8205}
+      VALTIMO_WEB_CORS_CORSCONFIGURATION_ALLOWEDMETHODS: "*"
+      VALTIMO_WEB_CORS_CORSCONFIGURATION_ALLOWEDHEADERS: "*"
+      VALTIMO_WEB_CORS_PATHS: /**
+      VALTIMO_SECURITY_WHITELIST_HOSTS: localhost,openzaak.local,opennotificaties.local,openobject.local,openklant.local,gzac-backend.local
+      # Plugin-configuratie (config/gzac/config/global/plugin/*.pluginconfig.json)
+      GZAC_RSIN: ${GEMEENTE_RSIN:-999990007}
+      GZAC_ZGW_CLIENT_SECRET: ${ZGW_GZAC_SECRET:?zie .env}
+      GZAC_OBJECTEN_TOKEN: ${OPENOBJECT_GZAC_TOKEN:?zie .env}
+      GZAC_OPENKLANT_TOKEN: ${OPENKLANT_GZAC_TOKEN:?zie .env}
+      TZ: Europe/Amsterdam
+    mem_limit: 1600m
+    volumes:
+      - ./config/gzac:/gzac-config:ro
+      - gzac-runtime:/gzac-runtime:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8000/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak-g4: {condition: service_completed_successfully}
+      openzaak: {condition: service_healthy}
+      opennotificaties: {condition: service_healthy}
+      openobject: {condition: service_healthy}
+      gzac-zaaktypen: {condition: service_completed_successfully}
+      gzac-backend-net: {condition: service_started}
+    restart: unless-stopped
+
+  gzac:
+    image: ${IMAGE_GZAC_FRONTEND:-ritense/gzac-frontend:13.48.0}
+    networks:
+      default:
+        aliases: [gzac.local]
+    environment:
+      # De frontend proxyt /api naar de backend (config/gzac/frontend-nginx.conf)
+      API_URI: http://localhost:${PORT_GZAC:-8205}/api
+      KEYCLOAK_URL: http://localhost:${PORT_KEYCLOAK:-8080}
+      KEYCLOAK_REALM: g4
+      KEYCLOAK_CLIENT_ID: valtimo-console
+      KEYCLOAK_REDIRECT_URI: http://localhost:${PORT_GZAC:-8205}/keycloak/callback
+      KEYCLOAK_LOGOUT_REDIRECT_URI: http://localhost:${PORT_GZAC:-8205}
+      WHITELISTED_DOMAIN: localhost:${PORT_GZAC:-8205}
+      ENABLE_OBJECT_MANAGEMENT: "true"
+      CASE_FILE_SIZE_UPLOAD_LIMIT_MB: "20"
+    volumes:
+      - ./config/gzac/frontend-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_GZAC:-8205}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://127.0.0.1:8080/ || wget -q -O /dev/null http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------- IKO
+  # Connector Open Zaak en profiel "zaken-van-burger" als Flyway-migratie (config/iko/inrichting.py)
+  iko-inrichting:
+    image: openzaak/open-zaak:1.29.0
+    user: "0:0"
+    entrypoint: ["python", "config/iko/inrichting.py"]
+    working_dir: /demogemeente
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      IKO_CRYPTO_KEY: ${IKO_CRYPTO_KEY:?zie .env}
+      ZGW_IKO_SECRET: ${ZGW_IKO_SECRET:?zie .env}
+    volumes:
+      - ./:/demogemeente:ro
+      - iko-seed:/iko-seed
+
+  iko-net:
+    <<: *keycloak-doorgifte
+    networks:
+      default:
+        aliases: [iko.local]
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_IKO:-8207}:8000"
+
+  iko:
+    image: demogemeente/iko:1.5.1
+    network_mode: service:iko-net
+    environment:
+      SERVER_PORT: "8000"
+      JAVA_OPTS: -XX:MaxRAMPercentage=75
+      IKO_CRYPTO_KEY: ${IKO_CRYPTO_KEY:?zie .env}
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_DATABASE: "18"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/iko
+      SPRING_DATASOURCE_USERNAME: iko
+      SPRING_DATASOURCE_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUERURI: http://localhost:8080/realms/g4
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENTID: iko
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENTSECRET: ${KEYCLOAK_IKO_SECRET:?zie .env}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI: http://localhost:8080/realms/g4
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "false"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration,filesystem:/iko-seed
+      # de Camel-routes in de inrichting bevatten ${...}; dat zijn geen Flyway-placeholders
+      SPRING_FLYWAY_PLACEHOLDER_REPLACEMENT: "false"
+      TZ: Europe/Amsterdam
+    volumes:
+      - iko-seed:/iko-seed:ro
+    mem_limit: 900m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9090/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 60s
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      keycloak-g4: {condition: service_completed_successfully}
+      iko-inrichting: {condition: service_completed_successfully}
+      iko-net: {condition: service_started}
+    restart: unless-stopped
+
+  # De testcontainer krijgt de hostpoorten van deze stack (stack.env), voor de links die
+  # de browser ziet (taken, formulieren, redirect-URI's)
+  tools:
+    environment:
+      PORT_OPENVTB: ${PORT_OPENVTB:-8201}
+      PORT_OPENFORMULIEREN: ${PORT_OPENFORMULIEREN:-8202}
+      PORT_NLPORTAL: ${PORT_NLPORTAL:-8203}
+      PORT_NLPORTAL_BACKEND: ${PORT_NLPORTAL_BACKEND:-8204}
+      PORT_GZAC: ${PORT_GZAC:-8205}
+      PORT_GZAC_BACKEND: ${PORT_GZAC_BACKEND:-8206}
+      PORT_IKO: ${PORT_IKO:-8207}
+
+volumes:
+  gzac-runtime:
+  iko-seed:

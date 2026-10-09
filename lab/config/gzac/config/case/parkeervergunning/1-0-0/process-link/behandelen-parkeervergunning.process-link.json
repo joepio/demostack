@@ -1,0 +1,84 @@
+[
+  {
+    "activityId": "beoordelen-aanvraag",
+    "activityType": "bpmn:UserTask:create",
+    "processLinkType": "form",
+    "formDefinitionName": "beoordelen-parkeervergunning",
+    "viewModelEnabled": false,
+    "formDisplayType": "modal",
+    "formSize": "medium",
+    "subtitles": []
+  },
+  {
+    "activityId": "kentekenbewijs-aanleveren",
+    "activityType": "bpmn:UserTask:create",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "4a0d6c10-0000-4000-8000-00000000000a",
+    "pluginActionDefinitionKey": "create-portaaltaak",
+    "actionProperties": {
+      "formType": "id",
+      "formTypeId": "kentekenbewijs-aanleveren",
+      "sendData": [
+        {
+          "key": "/kenteken",
+          "value": "doc:/kenteken"
+        }
+      ],
+      "receiveData": [
+        {
+          "key": "doc:/kentekenbewijs",
+          "value": "/kentekenbewijs"
+        }
+      ],
+      "receiver": "other",
+      "identificationKey": "bsn",
+      "identificationValue": "doc:/aanvrager/bsn",
+      "verloopDurationInDays": 14
+    }
+  },
+  {
+    "activityId": "rol-initiator",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "4a0d6c10-0000-4000-8000-000000000002",
+    "pluginActionDefinitionKey": "create-natuurlijk-persoon-zaak-rol",
+    "actionProperties": {
+      "roltypeUrl": "${GZAC_PARKEERVERGUNNING_ROLTYPE_INITIATOR}",
+      "rolToelichting": "Aanvrager",
+      "inpBsn": "doc:/aanvrager/bsn"
+    }
+  },
+  {
+    "activityId": "status-ontvangen",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "4a0d6c10-0000-4000-8000-000000000002",
+    "pluginActionDefinitionKey": "set-zaakstatus",
+    "actionProperties": {
+      "statustypeUrl": "${GZAC_PARKEERVERGUNNING_STATUSTYPE_ONTVANGEN}",
+      "statustoelichting": "Aanvraag ontvangen"
+    }
+  },
+  {
+    "activityId": "status-in-behandeling",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "4a0d6c10-0000-4000-8000-000000000002",
+    "pluginActionDefinitionKey": "set-zaakstatus",
+    "actionProperties": {
+      "statustypeUrl": "${GZAC_PARKEERVERGUNNING_STATUSTYPE_IN_BEHANDELING}",
+      "statustoelichting": "Aanvraag in behandeling"
+    }
+  },
+  {
+    "activityId": "status-afgehandeld",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "4a0d6c10-0000-4000-8000-000000000002",
+    "pluginActionDefinitionKey": "set-zaakstatus",
+    "actionProperties": {
+      "statustypeUrl": "${GZAC_PARKEERVERGUNNING_STATUSTYPE_AFGEHANDELD}",
+      "statustoelichting": "Aanvraag afgehandeld"
+    }
+  }
+]
