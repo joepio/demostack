@@ -105,7 +105,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     <div class="arrow" aria-hidden="true">→</div>
     <div class="step" role="listitem">KCC ziet de zaak<span>KISS + Open Klant</span></div>
     <div class="arrow" aria-hidden="true">→</div>
-    <div class="step" role="listitem">Behandelaar handelt af<span>Open Zaak</span></div>
+    <div class="step" role="listitem">Behandelaar handelt af<span>GZAC, met Open Zaak als register</span></div>
   </div>
 
   <h2>Kies je rol</h2>
@@ -148,17 +148,20 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 
     <section class="card">
       <figure class="shots">
-        <img src="shots/behandelaar-1.jpg" alt="Binnengekomen zaken" data-caption="Binnengekomen zaken" loading="lazy" class="on">
-        <img src="shots/behandelaar-2.jpg" alt="Een zaak bekijken" data-caption="Een zaak bekijken" loading="lazy">
-        <figcaption>Binnengekomen zaken</figcaption>
-        <span class="hint" aria-hidden="true">2 schermen</span>
+        <img src="shots/behandelaar-1.jpg" alt="Dashboard in GZAC" data-caption="Dashboard in GZAC" loading="lazy" class="on">
+        <img src="shots/behandelaar-2.jpg" alt="Dossiers in GZAC" data-caption="Dossiers in GZAC" loading="lazy">
+        <img src="shots/behandelaar-3.jpg" alt="Een dossier behandelen" data-caption="Een dossier behandelen" loading="lazy">
+        <img src="shots/behandelaar-oz.jpg" alt="Zaken in het register (Open Zaak)" data-caption="Zaken in het register (Open Zaak)" data-extra loading="lazy">
+        <figcaption>Dashboard in GZAC</figcaption>
+        <span class="hint" aria-hidden="true">3 schermen</span>
       </figure>
       <div class="body">
       <div class="who">Zaakbehandelaar</div>
       <h3>Zaken afhandelen</h3>
-      <p>Bekijk binnengekomen meldingen, de rol van de melder en het PDF-document van het formulier. In deze demo nog via het beheerscherm van Open Zaak.</p>
+      <p>In GZAC (Valtimo) werk je dossiers af: taken oppakken, beoordelen, besluiten. Open Zaak is daarbij het register waarin de zaken staan. Deze demo bevat de voorbeeldcasus evenementenvergunning.</p>
       <div class="links">
-        <a class="btn" data-shot="behandelaar-1.jpg" href="https://zaken.__BASE__/admin/zaken/zaak/">Zaken in Open Zaak <small>beheerscherm</small></a>
+        <a class="btn" data-shot="behandelaar-1.jpg" href="https://gzac.__BASE__/">GZAC <small>werkplek behandelaar</small></a>
+        <a class="btn" data-shot="behandelaar-oz.jpg" href="https://zaken.__BASE__/admin/zaken/zaak/">Zaken in Open Zaak <small>register</small></a>
       </div>
       </div>
     </section>
@@ -222,6 +225,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <tr><td>Open Klant</td><td>Klantgegevens en contactmomenten</td><td>2.19.1</td><td><span class="state ok">Draait</span></td></tr>
       <tr><td>Objecten en Objecttypen</td><td>Overige registraties volgens zelf gedefinieerde schema's</td><td>3.6.2 / 3.4.2</td><td><span class="state ok">Draait</span></td></tr>
       <tr><td>KISS</td><td>Werkplek voor het klantcontactcentrum, met Keycloak voor inloggen en een BRP-testvoorziening</td><td>__KISS_VERSION__</td><td>__KISS_STATE__</td></tr>
+      <tr><td>GZAC (Valtimo)</td><td>Zaakafhandeling: dossiers, taken en processen (BPMN)</td><td>13.49.1</td><td><span class="state ok">Draait</span></td></tr>
       <tr><td>Open Notificaties</td><td>Meldingen tussen componenten bij wijzigingen</td><td>-</td><td><span class="state soon">Gepland</span></td></tr>
     </tbody>
   </table>
@@ -236,6 +240,8 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <tr><td>KISS</td><td><code>kcc</code></td><td>Klantcontactmedewerker</td></tr>
       <tr><td>KISS</td><td><code>redacteur</code></td><td>Klantcontactmedewerker en redacteur nieuws/werkinstructies</td></tr>
       <tr><td>KISS</td><td><code>beheerder</code></td><td>Alle rollen, inclusief beheer van KISS</td></tr>
+      <tr><td>GZAC</td><td><code>behandelaar</code></td><td>Zaakbehandelaar</td></tr>
+      <tr><td>GZAC</td><td><code>beheerder</code></td><td>Beheer en inrichting van GZAC</td></tr>
       <tr><td>Beheerschermen en Mailpit</td><td><code>admin</code></td><td>Functioneel beheer</td></tr>
     </tbody>
   </table>

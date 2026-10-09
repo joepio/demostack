@@ -10,6 +10,7 @@ Een melding van een inwoner, van formulier tot klantcontact.
 | Open Klant | 2.19.1 | `klant.<domein>` |
 | Objecten / Objecttypen | 3.6.2 / 3.4.2 | `objecten.<domein>`, `objecttypen.<domein>` |
 | KISS | 3.2.0 | `kiss.<domein>` |
+| GZAC (Valtimo), demo-casus evenementenvergunning | 13.49.1 | `gzac.<domein>` |
 | Keycloak | 26.7.5 | `keycloak.<domein>` |
 | Mailpit (basic auth) | 1.31.4 | `mail.<domein>` |
 
@@ -21,7 +22,7 @@ Intern: één Postgres (PostGIS 17) met een database per component, één Redis,
     ./scripts/setup.sh                                 # daarna: brengt alles bij, maakt niets dubbel
     ./scripts/caddyfile.sh                             # print de Caddy-config voor deze stack
 
-Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur` en `beheerder` in KISS. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`.
+Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur` en `beheerder` in KISS; `behandelaar` en `beheerder` in GZAC. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`.
 
 ## Demodata
 
@@ -49,4 +50,4 @@ Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur
 - Open Klant aan Open Formulieren.
 - Kennisartikelen (producten en diensten) in KISS: het objecttype bestaat, inhoud nog niet.
 - DigiD/eHerkenning: het formulier is anoniem.
-- Een zaakafhandelcomponent; behandelaars gebruiken nu het beheerscherm van Open Zaak.
+- GZAC is nog niet gekoppeld aan Open Zaak: het draait met de eigen demo-casus. De melding openbare ruimte als casus in GZAC volgt na Open Notificaties.
