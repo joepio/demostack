@@ -37,7 +37,9 @@ Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van
 
 - Catalogus "Demogemeente" met zaaktype MOR "Melding openbare ruimte" (`scripts/seed_openzaak.py`). Het zaaktype voldoet aan de inrichtingseisen van ZAC (statustypen Intake t/m Afgerond, roltypen Initiator en Behandelaar, informatieobjecttype e-mail).
 - ZAC: functionele rollen en groepen in Keycloak (`scripts/keycloak_zac.py`), autorisaties in PABC (`config/pabc-dataset.json`), zaakafhandelparameters voor MOR (`scripts/zac_inrichten.py`).
-- Formulier "Melding openbare ruimte", registreert als zaak (`scripts/seed_openforms.py`).
+- Formulier "Melding openbare ruimte" (`scripts/seed_openforms.py`): kaart, inloggen met DigiD (demo), en registratie als zaak met leesbare omschrijving ("soort: plek"), toelichting, locatie (zaakgeometrie) en de inwoner als initiator (BSN).
+- DigiD (demo): Keycloak-client `digid` geeft het BSN als claim; testinwoners `suzanne`, `lukas`, `merel` (`scripts/keycloak_digid.py`, `scripts/openforms_inrichting.py`).
+- Demomeldingen met verschillende soorten, inwoners, locaties en statussen (`scripts/seed_meldingen.py`; `OPRUIMEN=1` verwijdert eerst de zaken van rooktests).
 - KISS-objecttypen en -inhoud: afdelingen, teams, medewerkers, veelgestelde vragen (`scripts/seed_kiss_objecttypes.py`, `scripts/seed_kiss_objecten.py`), nieuws, werkinstructies, links en afhandelopties (`scripts/seed_kiss.sql.tmpl`).
 - Testinwoner Suzanne Moulin, BSN 999993653, met een lopende melding (`scripts/seed_testpersoon.py`).
 

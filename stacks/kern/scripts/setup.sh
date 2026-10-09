@@ -23,7 +23,7 @@ if [ ! -f .env ]; then
     echo "ON_SECRET_KEY=$(gen 30)"
     for v in ON_CLIENT_SECRET OZ_TO_ON_SECRET OBJ_TO_ON_SECRET OK_TOKEN_ZAC OBJ_TOKEN_ZAC; do echo "$v=$(gen 20)"; done
     for v in ZAC_DB_PASSWORD PABC_DB_PASSWORD SOLR_PASSWORD OFFICE_CONVERTER_PASSWORD; do echo "$v=$(gen 16)"; done
-    for v in BEHEER_OIDC_SECRET ZAC_OIDC_SECRET ZAC_ADMIN_SECRET PABC_OIDC_SECRET PABC_ADMIN_SECRET PABC_API_KEY ZAC_ZGW_SECRET ZAC_ON_KEY ZAC_INTERNAL_KEY; do echo "$v=$(gen 24)"; done
+    for v in BEHEER_OIDC_SECRET DIGID_OIDC_SECRET ZAC_OIDC_SECRET ZAC_ADMIN_SECRET PABC_OIDC_SECRET PABC_ADMIN_SECRET PABC_API_KEY ZAC_ZGW_SECRET ZAC_ON_KEY ZAC_INTERNAL_KEY; do echo "$v=$(gen 24)"; done
     for v in KISS_OT_AFDELING KISS_OT_GROEP KISS_OT_MEDEWERKER KISS_OT_VAC KISS_OT_KENNISARTIKEL; do echo "$v="; done
   } > .env
   echo "Nieuwe .env aangemaakt."
@@ -77,9 +77,14 @@ docker compose up -d kiss
 TOKEN=$(docker compose exec -T openforms python src/manage.py drf_create_token admin 2>/dev/null | grep -oE '[0-9a-f]{40}')
 GID=$(docker compose exec -T openforms python src/manage.py shell -c \
   "from openforms.registrations.contrib.zgw_apis.models import ZGWApiGroupConfig as Z; print(Z.objects.get(identifier='demogemeente').pk)" 2>/dev/null | tail -1)
-run_seed openforms seed_openforms.py -e OF_TOKEN="$TOKEN" -e ZGW_GROUP_ID="$GID"
 run_seed objects seed_kiss_objecten.py -e OBJ_TOKEN_KISS -e KISS_OT_AFDELING -e KISS_OT_GROEP -e KISS_OT_MEDEWERKER -e KISS_OT_VAC -e KISS_OT_KENNISARTIKEL
 run_seed openzaak seed_testpersoon.py -e OZ_DEMO_SECRET
+run_seed openzaak seed_meldingen.py -e OZ_DEMO_SECRET
+# DigiD (demo) via Keycloak: testinwoners met BSN; Open Formulieren gebruikt het als DigiD-login
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e DIGID_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+  python /scripts/keycloak_digid.py 2>&1 | q
+docker compose exec -T -e BASE_DOMAIN -e DIGID_OIDC_SECRET openforms python src/manage.py shell < scripts/openforms_inrichting.py 2>&1 | grep " ok" || true
+run_seed openforms seed_openforms.py -e OF_TOKEN="$TOKEN" -e ZGW_GROUP_ID="$GID"
 run_seed openforms seed_mail.py
 
 wait_http 8108 /healthz

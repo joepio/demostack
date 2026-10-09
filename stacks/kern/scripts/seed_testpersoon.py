@@ -16,8 +16,9 @@ bestaand = call("GET", f"{Z}/zaken/api/v1/zaken", params={"rol__betrokkeneIdenti
 if bestaand: print("bestaat al:", bestaand[0]["identificatie"]); sys.exit(0)
 zaak = call("POST", f"{Z}/zaken/api/v1/zaken", json={
     "bronorganisatie": "002220647", "verantwoordelijkeOrganisatie": "002220647", "zaaktype": zt["url"],
-    "omschrijving": "Losliggende stoeptegel Dorpsstraat 12", "toelichting": "Tegel steekt 3 cm uit, struikelgevaar.",
-    "startdatum": "2026-10-06", "registratiedatum": "2026-10-06", "vertrouwelijkheidaanduiding": "openbaar"})
+    "omschrijving": "Losliggende stoeptegel: Dorpsstraat 12", "toelichting": "Tegel steekt 3 cm uit, struikelgevaar.",
+    "startdatum": "2026-10-06", "registratiedatum": "2026-10-06", "vertrouwelijkheidaanduiding": "openbaar",
+    "zaakgeometrie": {"type": "Point", "coordinates": [5.3872, 52.1561]}})
 rt = call("GET", f"{Z}/catalogi/api/v1/roltypen", params={"zaaktype": zt["url"], "omschrijvingGeneriek": "initiator"})["results"][0]
 call("POST", f"{Z}/zaken/api/v1/rollen", json={
     "zaak": zaak["url"], "betrokkeneType": "natuurlijk_persoon", "roltype": rt["url"], "roltoelichting": "Melder",
