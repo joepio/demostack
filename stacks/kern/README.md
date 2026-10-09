@@ -23,6 +23,13 @@ Intern: één Postgres (PostGIS 17) met een database per component, één Redis,
     ./scripts/setup.sh                                 # daarna: brengt alles bij, maakt niets dubbel
     ./scripts/caddyfile.sh                             # print de Caddy-config voor deze stack
 
+Werkplekken aan en uit (de registers draaien altijd):
+
+    ./scripts/stack.sh status
+    ./scripts/stack.sh uit gzac        # of: aan kcc, alleen gzac
+
+Profielen: `kcc` (KISS, Elasticsearch, BRP-mock) en `gzac` (GZAC). De welkomstpagina toont wat uit staat.
+
 Inloggen: gebruiker `admin` op alle beheerschermen en Mailpit; `kcc`, `redacteur` en `beheerder` in KISS; `behandelaar` en `beheerder` in GZAC. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`.
 
 ## Demodata
