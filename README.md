@@ -3,7 +3,7 @@
 Een werkende demogemeente met ongewijzigde open source Common Ground-componenten, in één commando op te zetten.
 Bedoeld om de componenten en standaarden te laten zien, te analyseren en (later) te toetsen op naleving van de API-specificaties.
 
-> Status: werkversie. Aangeboden aan VNG als hulpmiddel rond de standaarden; geen product van VNG.
+> Status: werkversie. Een hulpmiddel van VNG rond de Common Ground-standaarden.
 
 ## Uitgangspunten
 
