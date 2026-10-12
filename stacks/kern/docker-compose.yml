@@ -819,7 +819,7 @@ services:
   zaakchat-koppeling:
     profiles: [zaakchat]
     build: ./services/zaakchat-koppeling
-    image: demostack/zaakchat-koppeling:1
+    image: demostack/zaakchat-koppeling:2
     restart: unless-stopped
     mem_limit: 96m
     environment:

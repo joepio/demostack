@@ -4,7 +4,8 @@
   en geeft daarna een kortlevende ZaakChat-inlogtoken af voor het e-mailadres uit Keycloak.
 - Zaken: Open Notificaties meldt nieuwe zaken en statuswijzigingen (kanaal 'zaken'). De koppeling zet elke zaak
   van een testinwoner om naar een ZaakChat-zaak (Issue), met de inwoner en de behandelaars als betrokkenen,
-  en elke status als bericht in de tijdlijn. Bij het starten worden bestaande zaken ingelezen.
+  en elke status als bericht in de tijdlijn. De planning toont de stappen van het zaaktype met datums.
+  Bij het starten worden bestaande zaken ingelezen.
 ZaakChat zelf blijft ongewijzigd.
 """
 import json, os, secrets, threading, time, urllib.parse, uuid
@@ -84,6 +85,7 @@ def sync_zaak(url):
             "involved": [email] + MEDEWERKERS})
     statustypen = {s["url"]: s for s in oz(f"{OZ}/catalogi/api/v1/statustypen", zaaktype=zaak["zaaktype"])["results"]}
     statussen = sorted(oz(f"{OZ}/zaken/api/v1/statussen", zaak=zaak["url"])["results"], key=lambda s: s["datumStatusGezet"])
+    planning(zaak, zt, statustypen, statussen)
     for i, st in enumerate(statussen):
         cid = f"status-{st['uuid']}"
         if bestaat(cid):
@@ -93,6 +95,47 @@ def sync_zaak(url):
         commit(zid, "Comment", cid, data={"content": f"Status: {regel}" + (f"\n{st['statustoelichting']}" if st.get("statustoelichting") else "")})
         nieuw = "closed" if zaak.get("einddatum") and i == len(statussen) - 1 else ("in_progress" if i > 0 else "open")
         commit(zid, "Issue", zid, patch={"status": nieuw})
+
+
+def dagen(duur):
+    """ISO 8601-duur zoals P14D of P2W naar dagen (alleen dagen en weken, genoeg voor zaaktypen)."""
+    import re
+    m = re.fullmatch(r"P(?:(\d+)W)?(?:(\d+)D)?", duur or "")
+    return (int(m.group(1) or 0) * 7 + int(m.group(2) or 0)) if m else None
+
+
+def planning(zaak, zt, statustypen, statussen):
+    """Planning links in ZaakChat: de stappen (statustypen) van het zaaktype, met datum en voortgang.
+    Bereikte stappen krijgen de datum waarop ze bereikt zijn, de laatste stap de streefdatum van het zaaktype."""
+    from datetime import date, timedelta
+    stappen = sorted(statustypen.values(), key=lambda s: s["volgnummer"])
+    bereikt = {}
+    for st in statussen:  # oud naar nieuw; eerste keer bereikt telt
+        bereikt.setdefault(st["statustype"], st["datumStatusGezet"][:10])
+    huidig = statussen[-1]["statustype"] if statussen else None
+    nr_huidig = statustypen.get(huidig, {}).get("volgnummer", 0)
+    eind = zaak.get("uiterlijkeEinddatumAfdoening") or zaak.get("einddatumGepland")
+    if not eind and dagen(zt.get("doorlooptijd")) is not None:
+        eind = (date.fromisoformat(zaak["startdatum"]) + timedelta(days=dagen(zt["doorlooptijd"]))).isoformat()
+    momenten = []
+    for i, st in enumerate(stappen):
+        if zaak.get("einddatum") or st["volgnummer"] < nr_huidig:
+            status = "completed"
+        elif st["url"] == huidig:
+            status = "current"
+        else:
+            status = "planned"
+        datum = bereikt.get(st["url"]) or (eind if i == len(stappen) - 1 else None)
+        momenten.append({"title": st.get("statustekst") or st["omschrijving"], "status": status, **({"date": datum} if datum else {})})
+    pid = f"planning-{zaak['uuid']}"
+    data = {"title": f"Afhandeling {zt['omschrijving'].lower()}",
+            "description": f"Volgens het zaaktype {zt['omschrijving']}" +
+                           (f": afgehandeld binnen {dagen(zt['doorlooptijd'])} dagen." if dagen(zt.get("doorlooptijd")) else "."),
+            "moments": momenten}
+    if bestaat(pid):
+        commit(zaak["uuid"], "Planning", pid, patch=data)
+    else:
+        commit(zaak["uuid"], "Planning", pid, data=data)
 
 
 def eerste_import():
