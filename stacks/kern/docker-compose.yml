@@ -836,6 +836,20 @@ services:
     depends_on:
       - zaakchat
 
+  # Inloggen zonder wachtwoord voor de demo-accounts, bereikbaar als keycloak.<domein>/demo-login
+  demo-login:
+    profiles: [kcc]
+    build: ./services/demo-login
+    image: demostack/demo-login:1
+    restart: unless-stopped
+    mem_limit: 64m
+    environment:
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      DEMO_LOGIN_SECRET: ${DEMO_LOGIN_SECRET}
+      DEMO_ACCOUNTS: suzanne,lukas,merel,kcc,behandelaar
+    ports:
+      - 127.0.0.1:8120:8080
+
 volumes:
   db:
   solr-data:

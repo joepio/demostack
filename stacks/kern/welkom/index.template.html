@@ -161,14 +161,14 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <span id="sessie-wie">Even kijken wie er ingelogd is…</span>
       <span class="als">Inloggen als:
         <button type="button" data-als="demo">demo</button>
-        <button type="button" data-als="suzanne">suzanne (inwoner)</button>
-        <button type="button" data-als="kcc">kcc</button>
-        <button type="button" data-als="behandelaar">behandelaar</button>
+        <button type="button" data-als="suzanne" data-klik>suzanne (inwoner)</button>
+        <button type="button" data-als="kcc" data-klik>kcc</button>
+        <button type="button" data-als="behandelaar" data-klik>behandelaar</button>
         <button type="button" data-als="beheerder">beheerder</button>
         <button type="button" id="uitloggen" hidden>Uitloggen</button>
       </span>
       <div class="voor-jou" id="voor-jou" hidden><span id="voor-jou-label">Voor jou:</span></div>
-      <small>Eén inlog voor alle onderdelen. Inwonerportalen en formulieren vragen een testinwoner met BSN, zoals suzanne. Een onderdeel dat al open stond houdt zijn eigen sessie tot je daar uitlogt of het opnieuw opent.</small>
+      <small>Eén inlog voor alle onderdelen. suzanne, kcc en behandelaar wisselen met één klik; demo en beheerder vragen het wachtwoord. Inwonerportalen en formulieren vragen een testinwoner met BSN, zoals suzanne. Een onderdeel dat al open stond houdt zijn eigen sessie tot je daar uitlogt of het opnieuw opent.</small>
     </div>
   </div>
 </header>
@@ -427,6 +427,11 @@ try {
     box.querySelectorAll("[data-als]").forEach((b) => {
       if (b.dataset.als === user) b.setAttribute("aria-current", "true");
       b.addEventListener("click", () => {
+        // Testinwoners, kcc en behandelaar: één klik, zonder wachtwoord (keycloak.<domein>/demo-login)
+        if (b.hasAttribute("data-klik")) {
+          location.href = `https://keycloak.__BASE__/demo-login?als=${encodeURIComponent(b.dataset.als)}&terug=${encodeURIComponent(location.origin + "/")}`;
+          return;
+        }
         if (ok) kc.logout({ redirectUri: location.origin + "/?als=" + encodeURIComponent(b.dataset.als) });
         else kc.login({ loginHint: b.dataset.als, prompt: "login", redirectUri: location.origin + "/" });
       });

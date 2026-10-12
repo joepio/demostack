@@ -150,8 +150,8 @@ GEEN_BSN = """<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta n
 a.b{{display:inline-block;margin:6px 8px 0 0;padding:10px 16px;background:#154273;color:#fff;border-radius:4px;text-decoration:none}}</style></head>
 <body><h1>Inloggen als inwoner</h1>
 <p>Je bent ingelogd als <strong>{wie}</strong>. Dat is een medewerkersaccount zonder BSN, en MijnOverheid laat de gegevens van een inwoner zien.
-Kies een testinwoner (DigiD demo, zelfde wachtwoord):</p>
-<p><a class="b" href="/wissel?als=suzanne">Suzanne Moulin</a><a class="b" href="/wissel?als=lukas">Lukas Klamer</a><a class="b" href="/wissel?als=merel">Merel Kooyman</a></p>
+Kies een testinwoner (DigiD demo, één klik):</p>
+<p><a class="b" href="{klik}?als=suzanne&terug={terug}">Suzanne Moulin</a><a class="b" href="{klik}?als=lukas&terug={terug}">Lukas Klamer</a><a class="b" href="{klik}?als=merel&terug={terug}">Merel Kooyman</a></p>
 </body></html>"""
 
 
@@ -261,7 +261,9 @@ class H(BaseHTTPRequestHandler):
         claims = jwt.decode(idt, jwks.get_signing_key_from_jwt(idt).key, algorithms=["RS256"], audience=CLIENT)
         if not claims.get("bsn"):
             # id_token bewaren zodat /wissel de Keycloak-sessie zonder bevestigingsscherm kan beëindigen
-            return self.send(403, GEEN_BSN.format(wie=html.escape(claims.get("preferred_username", "dit account"))),
+            return self.send(403, GEEN_BSN.format(wie=html.escape(claims.get("preferred_username", "dit account")),
+                                                  klik=f"https://keycloak.{D}/demo-login",
+                                                  terug=urllib.parse.quote(f"{ORIGIN}/login", safe="")),
                              "text/html; charset=utf-8",
                              {"Set-Cookie": f"mo_idt={idt}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600"})
         naam = " ".join(x for x in [claims.get("given_name"), claims.get("family_name")] if x) or "inwoner"

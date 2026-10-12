@@ -34,7 +34,7 @@ for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD; do grep -q "^$v=" .env
 for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
 # NL Portal kiest het JWT-algoritme op sleutellengte; Open Zaak accepteert alleen HS256, dus precies 32 tekens
 grep -q "^NLP_ZGW_SECRET=" .env || echo "NLP_ZGW_SECRET=$(gen 16)" >> .env
-for v in ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
+for v in DEMO_LOGIN_SECRET ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
 grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat" >> .env
 set -a; . ./.env; set +a
 # Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
@@ -142,7 +142,7 @@ docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e IKO_OIDC_SECRET -
   python /scripts/keycloak_iko.py 2>&1 | q
 
 # Single sign-on: account 'demo', langere sessies, beheerschermen via Keycloak
-docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRET -e DEMO_LOGIN_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
   python /scripts/keycloak_sso.py 2>&1 | q
 for s in openzaak openklant objects objecttypes opennotificaties; do apply $s oidc; done
 apply openforms oidc-openforms
