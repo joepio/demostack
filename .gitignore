@@ -2,3 +2,4 @@
 .env
 stacks/*/config/generated/
 stacks/*/welkom/public/
+__pycache__/
