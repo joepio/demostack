@@ -39,6 +39,48 @@ OMSCHRIJVING = {
     "vcg": "De VCG-basisset: de vaste set componenten van de Voorziening Common Ground.",
 }
 
+# Functies voor de vergelijking per functie: welke componenten (id's uit stack.yaml) die
+# functie invullen, en welke standaard-API's erbij horen.
+FUNCTIES = [
+    {"id": "melden", "naam": "Inwoner doet een aanvraag of melding",
+     "componenten": ["openformulieren"],
+     "apis": ["ZGW Zaken", "ZGW Documenten", "Objecten", "Haal Centraal BRP"]},
+    {"id": "volgen", "naam": "Inwoner volgt zijn zaken en taken",
+     "componenten": ["openinwoner", "nlportal"],
+     "apis": ["ZGW Zaken", "Klantinteracties", "Objecten (taken)", "Mijn-API's (VNG API Lab)"]},
+    {"id": "informeren", "naam": "Openbare informatie: producten, publicaties",
+     "componenten": ["openpdc", "openpub", "publicatiebank", "openproduct"],
+     "apis": ["Woo-publicaties", "Producten en diensten"]},
+    {"id": "klantcontact", "naam": "KCC handelt een klantcontact af",
+     "componenten": ["kiss"],
+     "apis": ["Klantinteracties", "ZGW Zaken", "Haal Centraal BRP", "Objecten"]},
+    {"id": "interne-taken", "naam": "Contactverzoek doorzetten naar een medewerker",
+     "componenten": ["ita"],
+     "apis": ["Klantinteracties", "Objecten"]},
+    {"id": "zaak-afhandelen", "naam": "Behandelaar handelt een zaak af",
+     "componenten": ["zac", "gzac", "operaton"],
+     "apis": ["ZGW Zaken", "ZGW Catalogi", "ZGW Documenten", "ZGW Besluiten", "Notificaties"]},
+    {"id": "klantbeeld", "naam": "Integraal beeld van een klant of object",
+     "componenten": ["iko"],
+     "apis": ["ZGW Zaken", "Klantinteracties", "Haal Centraal BRP"]},
+    {"id": "registreren", "naam": "Registers: zaken, klanten, objecten",
+     "componenten": ["openzaak", "openklant", "openobject", "objecttypen", "openvtb",
+                     "openregister", "openplan", "openorganisatie"],
+     "apis": ["ZGW API's", "Klantinteracties", "Objecten", "Objecttypen", "Verzoeken/Taken/Berichten"]},
+    {"id": "notificeren", "naam": "Systemen op de hoogte houden en de inwoner berichten",
+     "componenten": ["opennotificaties", "omc"],
+     "apis": ["Notificaties", "NotifyNL"]},
+    {"id": "archiveren", "naam": "Archiveren en vernietigen",
+     "componenten": ["openarchiefbeheer"],
+     "apis": ["ZGW Zaken", "Selectielijst"]},
+    {"id": "inrichten", "naam": "Zaaktypen en catalogi beheren",
+     "componenten": ["openbeheer"],
+     "apis": ["ZGW Catalogi", "Referentielijsten"]},
+    {"id": "autorisatie", "naam": "Wie mag welk zaaktype zien",
+     "componenten": ["pabc"],
+     "apis": ["ZGW Autorisaties"]},
+]
+
 # component-id in stack.yaml -> naam in landschap.json
 LANDSCHAP = {
     "openzaak": "OpenZaak", "opennotificaties": "OpenNotificaties",
@@ -123,6 +165,19 @@ def main():
             "componenten": componenten,
             "niet_draaiend": [{"naam": g["naam"], "reden": g.get("opmerking")} for g in gepland],
         })
+    # Vergelijking per functie: per functie en per stack de componenten die het doen.
+    # "status" is getest (draait in het lab) of gepland (hoort bij het landschap, draait
+    # niet in het lab; ZAC draait wel in de live omgeving op demostack.nl).
+    uit["functies"] = []
+    for f in FUNCTIES:
+        rij = {"id": f["id"], "naam": f["naam"], "apis": f["apis"], "per_stack": {}}
+        for s in uit["stacks"]:
+            draait = {c["id"]: c["naam"] for c in s["componenten"]}
+            gepl = {g["id"]: g["naam"] for g in manifest(s["id"])[2]}
+            rij["per_stack"][s["id"]] = (
+                [{"naam": draait[i], "status": "getest"} for i in f["componenten"] if i in draait]
+                + [{"naam": gepl[i], "status": "gepland"} for i in f["componenten"] if i in gepl])
+        uit["functies"].append(rij)
     pad = ROOT / "docs" / "stacks.json"
     pad.write_text(json.dumps(uit, ensure_ascii=False, indent=2) + "\n")
     print(f"{pad.relative_to(ROOT)}: {len(uit['stacks'])} stacks")

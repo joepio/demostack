@@ -1688,5 +1688,434 @@
         }
       ]
     }
+  ],
+  "functies": [
+    {
+      "id": "melden",
+      "naam": "Inwoner doet een aanvraag of melding",
+      "apis": [
+        "ZGW Zaken",
+        "ZGW Documenten",
+        "Objecten",
+        "Haal Centraal BRP"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [
+          {
+            "naam": "Open Formulieren",
+            "status": "getest"
+          }
+        ],
+        "dimpact": [
+          {
+            "naam": "Open Formulieren 3.5.8",
+            "status": "getest"
+          }
+        ],
+        "g4": [
+          {
+            "naam": "Open Formulieren 3.5.8",
+            "status": "getest"
+          }
+        ],
+        "vcg": []
+      }
+    },
+    {
+      "id": "volgen",
+      "naam": "Inwoner volgt zijn zaken en taken",
+      "apis": [
+        "ZGW Zaken",
+        "Klantinteracties",
+        "Objecten (taken)",
+        "Mijn-API's (VNG API Lab)"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [
+          {
+            "naam": "Open Inwoner (met Elasticsearch)",
+            "status": "getest"
+          }
+        ],
+        "dimpact": [
+          {
+            "naam": "Open Inwoner 2.4.3 (met Elasticsearch)",
+            "status": "getest"
+          }
+        ],
+        "g4": [
+          {
+            "naam": "NL Portal 3.0 (backend 3.0.4, frontend 3.0.3)",
+            "status": "getest"
+          }
+        ],
+        "vcg": []
+      }
+    },
+    {
+      "id": "informeren",
+      "naam": "Openbare informatie: producten, publicaties",
+      "apis": [
+        "Woo-publicaties",
+        "Producten en diensten"
+      ],
+      "per_stack": {
+        "kern": [
+          {
+            "naam": "Open Product",
+            "status": "getest"
+          }
+        ],
+        "maykin": [
+          {
+            "naam": "Open Product",
+            "status": "getest"
+          }
+        ],
+        "dimpact": [],
+        "g4": [],
+        "vcg": [
+          {
+            "naam": "OpenPDC 3.18.1 (WordPress 6.8.3)",
+            "status": "getest"
+          },
+          {
+            "naam": "OpenPub 3.8.7 (WordPress 6.8.3)",
+            "status": "getest"
+          },
+          {
+            "naam": "GPP-publicatiebank 2.1.0 (woo-publications)",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Product",
+            "status": "getest"
+          }
+        ]
+      }
+    },
+    {
+      "id": "klantcontact",
+      "naam": "KCC handelt een klantcontact af",
+      "apis": [
+        "Klantinteracties",
+        "ZGW Zaken",
+        "Haal Centraal BRP",
+        "Objecten"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [],
+        "dimpact": [
+          {
+            "naam": "KISS 3.1.3 (Klantinteractie-Servicesysteem)",
+            "status": "getest"
+          }
+        ],
+        "g4": [],
+        "vcg": []
+      }
+    },
+    {
+      "id": "interne-taken",
+      "naam": "Contactverzoek doorzetten naar een medewerker",
+      "apis": [
+        "Klantinteracties",
+        "Objecten"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [],
+        "dimpact": [
+          {
+            "naam": "ITA 3.3.2 (Interne Taak Afhandeling, web en poller)",
+            "status": "getest"
+          }
+        ],
+        "g4": [],
+        "vcg": []
+      }
+    },
+    {
+      "id": "zaak-afhandelen",
+      "naam": "Behandelaar handelt een zaak af",
+      "apis": [
+        "ZGW Zaken",
+        "ZGW Catalogi",
+        "ZGW Documenten",
+        "ZGW Besluiten",
+        "Notificaties"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [],
+        "dimpact": [
+          {
+            "naam": "Zaakafhandelcomponent (ZAC) 5.4.5",
+            "status": "gepland"
+          }
+        ],
+        "g4": [
+          {
+            "naam": "Valtimo/GZAC 13.48.0 (backend en frontend)",
+            "status": "getest"
+          }
+        ],
+        "vcg": [
+          {
+            "naam": "Operaton 2.1.5 (procesengine) met procesworker naar Open Zaak",
+            "status": "getest"
+          }
+        ]
+      }
+    },
+    {
+      "id": "klantbeeld",
+      "naam": "Integraal beeld van een klant of object",
+      "apis": [
+        "ZGW Zaken",
+        "Klantinteracties",
+        "Haal Centraal BRP"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [],
+        "dimpact": [],
+        "g4": [
+          {
+            "naam": "IKO 1.5.1 (Integraal Klant- en Objectbeeld)",
+            "status": "getest"
+          }
+        ],
+        "vcg": []
+      }
+    },
+    {
+      "id": "registreren",
+      "naam": "Registers: zaken, klanten, objecten",
+      "apis": [
+        "ZGW API's",
+        "Klantinteracties",
+        "Objecten",
+        "Objecttypen",
+        "Verzoeken/Taken/Berichten"
+      ],
+      "per_stack": {
+        "kern": [
+          {
+            "naam": "Open Zaak",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Klant",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Object (Objecten en Objecttypen)",
+            "status": "getest"
+          }
+        ],
+        "maykin": [
+          {
+            "naam": "Open Zaak",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Klant",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Object (Objecten en Objecttypen)",
+            "status": "getest"
+          },
+          {
+            "naam": "Open VTB (Verzoeken, Taken, Berichten)",
+            "status": "getest"
+          }
+        ],
+        "dimpact": [
+          {
+            "naam": "Open Zaak",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Klant",
+            "status": "getest"
+          },
+          {
+            "naam": "Objecten API 3.6.2 (los, zoals PodiumD)",
+            "status": "getest"
+          },
+          {
+            "naam": "Objecttypen API 3.4.2",
+            "status": "getest"
+          }
+        ],
+        "g4": [
+          {
+            "naam": "Open Zaak",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Klant",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Object (Objecten en Objecttypen)",
+            "status": "getest"
+          },
+          {
+            "naam": "Open VTB 0.2.0 (Verzoeken, Taken, Berichten)",
+            "status": "getest"
+          }
+        ],
+        "vcg": [
+          {
+            "naam": "Open Zaak",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Klant",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Object (Objecten en Objecttypen)",
+            "status": "getest"
+          },
+          {
+            "naam": "OpenRegister 1.0.3 (Nextcloud 31.0.9)",
+            "status": "getest"
+          },
+          {
+            "naam": "OpenPlan 0.1.0 (uit broncode)",
+            "status": "getest"
+          },
+          {
+            "naam": "Open Organisatie 0.2.0",
+            "status": "getest"
+          }
+        ]
+      }
+    },
+    {
+      "id": "notificeren",
+      "naam": "Systemen op de hoogte houden en de inwoner berichten",
+      "apis": [
+        "Notificaties",
+        "NotifyNL"
+      ],
+      "per_stack": {
+        "kern": [
+          {
+            "naam": "Open Notificaties",
+            "status": "getest"
+          }
+        ],
+        "maykin": [
+          {
+            "naam": "Open Notificaties",
+            "status": "getest"
+          }
+        ],
+        "dimpact": [
+          {
+            "naam": "Open Notificaties",
+            "status": "getest"
+          },
+          {
+            "naam": "NotifyNL OMC 1.17.19 (met Notify-mock)",
+            "status": "getest"
+          }
+        ],
+        "g4": [
+          {
+            "naam": "Open Notificaties",
+            "status": "getest"
+          }
+        ],
+        "vcg": [
+          {
+            "naam": "Open Notificaties",
+            "status": "getest"
+          }
+        ]
+      }
+    },
+    {
+      "id": "archiveren",
+      "naam": "Archiveren en vernietigen",
+      "apis": [
+        "ZGW Zaken",
+        "Selectielijst"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [
+          {
+            "naam": "Open Archiefbeheer",
+            "status": "gepland"
+          }
+        ],
+        "dimpact": [
+          {
+            "naam": "Open Archiefbeheer 2.0.0",
+            "status": "getest"
+          }
+        ],
+        "g4": [],
+        "vcg": []
+      }
+    },
+    {
+      "id": "inrichten",
+      "naam": "Zaaktypen en catalogi beheren",
+      "apis": [
+        "ZGW Catalogi",
+        "Referentielijsten"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [
+          {
+            "naam": "Open Beheer",
+            "status": "gepland"
+          }
+        ],
+        "dimpact": [
+          {
+            "naam": "Open Beheer 0.9.1",
+            "status": "getest"
+          }
+        ],
+        "g4": [],
+        "vcg": [
+          {
+            "naam": "Open Beheer 0.9.0",
+            "status": "getest"
+          }
+        ]
+      }
+    },
+    {
+      "id": "autorisatie",
+      "naam": "Wie mag welk zaaktype zien",
+      "apis": [
+        "ZGW Autorisaties"
+      ],
+      "per_stack": {
+        "kern": [],
+        "maykin": [],
+        "dimpact": [
+          {
+            "naam": "PABC 1.1.1 (Platform Autorisatie Beheer Component)",
+            "status": "getest"
+          }
+        ],
+        "g4": [],
+        "vcg": []
+      }
+    }
   ]
 }
