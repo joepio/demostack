@@ -7,10 +7,10 @@
 #   ./scripts/stack.sh toepassen         zet de profielen uit .env (COMPOSE_PROFILES) door
 # Profielen: kcc (KISS, Elasticsearch, BRP-mock), gzac (GZAC/Valtimo), zac (ZAC van Dimpact met Solr, OPA, PABC),
 #            oip (Open Inwoner), nlportal (NL Portal), mijnoverheid (MijnOverheid-demo VNG API Lab), iko (IKO),
-#            zaakchat (ZaakChat met koppeling)
+#            zaakchat (ZaakChat met koppeling), oneground (OneGround: ZGW-API's van Visma Roxit)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ALL="kcc gzac zac oip nlportal mijnoverheid iko zaakchat"
+ALL="kcc gzac zac oip nlportal mijnoverheid iko zaakchat oneground"
 cur=$(grep '^COMPOSE_PROFILES=' .env | cut -d= -f2 | tr ',' ' ')
 want="$cur"
 case "${1:-status}" in
@@ -19,7 +19,7 @@ case "${1:-status}" in
   aan)    want="$cur ${2:?profiel}" ;;
   uit)    want=$(echo "$cur" | tr ' ' '\n' | grep -vx "${2:?profiel}" | tr '\n' ' ') ;;
   alleen) want="${2:?profiel}" ;;
-  *) sed -n '2,10p' "$0"; exit 1 ;;
+  *) sed -n '2,11p' "$0"; exit 1 ;;
 esac
 want=$(echo $want | tr ' ' '\n' | grep -E "^($(echo $ALL | tr ' ' '|'))$" | sort -u | tr '\n' ',' | sed 's/,$//')
 if [ "${1:-status}" != status ]; then

@@ -25,6 +25,11 @@ printf 'portaal.%s {\n\timport proxy\n\t@api path /graphql* /api/*\n\treverse_pr
 printf 'zaakchat.%s {\n\timport proxy\n\treverse_proxy /koppeling/* 127.0.0.1:8119\n\treverse_proxy 127.0.0.1:8118\n}\n' "$BASE_DOMAIN"
 # Keycloak, met /demo-login (inloggen zonder wachtwoord voor demo-accounts) op hetzelfde adres vanwege de sessiecookies
 printf 'keycloak.%s {\n\timport proxy\n\treverse_proxy /demo-login* 127.0.0.1:8120\n\treverse_proxy 127.0.0.1:8107\n}\n' "$BASE_DOMAIN"
+# OneGround: elke ZGW-API op een eigen adres (de API's staan op /api/v1); Keycloak zonder beheerconsole
+for pair in autorisaties:8130 catalogi:8131 zaken:8132 documenten:8133 besluiten:8134 notificaties:8135 referentielijsten:8136; do
+  printf 'og-%s.%s {\n\timport proxy\n\treverse_proxy 127.0.0.1:%s\n}\n' "${pair%%:*}" "$BASE_DOMAIN" "${pair##*:}"
+done
+printf 'og-keycloak.%s {\n\timport proxy\n\trespond /admin* 403\n\treverse_proxy 127.0.0.1:8137\n}\n' "$BASE_DOMAIN"
 # Mailpit bevat alleen demomail; geen apart wachtwoord nodig
 printf 'mail.%s {\n\timport proxy\n\treverse_proxy 127.0.0.1:8106\n}\n' "$BASE_DOMAIN"
 

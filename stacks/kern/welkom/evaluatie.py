@@ -35,6 +35,7 @@ APIS = {
     "lab": ("VNG API Lab: MijnZaken en MijnTaken (next)", None),
     "iko": ("IKO aggregatie-API", None),
     "cloudevents": ("JSONCommit / CloudEvents (ZaakChat)", None),
+    "og-zgw": ("ZGW-API's in OneGround: Zaken 1.5, Catalogi 1.3, Documenten 1.7, Besluiten 1.0, Autorisaties 1.1, Notificaties 1.0", None),
 }
 
 C = lambda **kw: kw  # leesbaarheid
@@ -107,6 +108,16 @@ STACKS = [
         C(naam="ZaakChat", maker="Joep Meindertsma", licentie="MIT", diensten=["zaakchat"], biedt=["cloudevents"], gebruikt=[]),
         C(naam="ZaakChat-koppeling", maker="DemoStack", licentie="EUPL-1.2", diensten=["zaakchat-koppeling"], biedt=[],
           gebruikt=["zaken", "catalogi", "notificaties", "cloudevents", "oidc"]),
+     ]},
+    {"id": "oneground", "naam": "Tweede ZGW-implementatie: OneGround", "profiel": "oneground",
+     "uitleg": "De ZGW-API's van Visma Roxit (open source sinds 2025), naast Open Zaak met dezelfde demo-catalogus en -meldingen. Eigen Autorisaties- en Notificaties-API, eigen Keycloak met een plugin voor ZGW-tokens, RabbitMQ. Multi-tenant op RSIN. Laat zien waar twee implementaties van dezelfde standaard verschillen.",
+     "componenten": [
+        C(naam="OneGround ZGW-API's", maker="Visma Roxit", licentie="BSD-3-Clause",
+          diensten=["og-zaken", "og-catalogi", "og-documenten", "og-documenten-listener", "og-besluiten", "og-autorisaties",
+                    "og-notificaties", "og-notificaties-listener", "og-referentielijsten"], biedt=["og-zgw"], gebruikt=["oidc"]),
+        C(naam="Keycloak met ZGW-introspectie", maker="Red Hat / Visma Roxit (plugin)", licentie="Apache-2.0, BSD-3-Clause",
+          diensten=["og-keycloak"], biedt=[], gebruikt=[]),
+        C(naam="RabbitMQ", maker="Broadcom", licentie="MPL-2.0", diensten=["og-rabbitmq"], biedt=[], gebruikt=[]),
      ]},
     {"id": "iko", "naam": "Klant- en objectbeeld: IKO", "profiel": "iko",
      "uitleg": "Integraal Klant- en Objectbeeld (Ritense): een aggregatielaag die gegevens uit meerdere bronnen samenvoegt tot één beeld via een eigen API. GZAC kan het tonen. De connectoren en profielen zijn hier nog niet ingericht.",
@@ -255,6 +266,8 @@ FUNCTIES = [
      "podiumd": ("Geen; hier de MijnOverheid-demo van het VNG API Lab", "geen"), "gzac": ("Geen; hier de MijnOverheid-demo van het VNG API Lab", "geen")},
     {"functie": "Zaken registreren", "wie": "Register", "apis": ["zaken", "catalogi", "documenten", "besluiten"],
      "podiumd": ("Open Zaak", "hier"), "gzac": ("Open Zaak", "hier")},
+    {"functie": "Andere ZGW-implementatie", "wie": "Register", "apis": ["og-zgw"],
+     "podiumd": ("OneGround (Visma Roxit) draait hier naast Open Zaak", "hier"), "gzac": ("OneGround (Visma Roxit) draait hier naast Open Zaak", "hier")},
     {"functie": "Klantgegevens en contactmomenten", "wie": "Register", "apis": ["klantinteracties"],
      "podiumd": ("Open Klant", "hier"), "gzac": ("Open Klant", "hier")},
     {"functie": "Overige registraties", "wie": "Register", "apis": ["objecten", "objecttypen"],

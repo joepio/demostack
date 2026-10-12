@@ -1,10 +1,13 @@
-"""Maakt een demo-catalogus met zaaktype 'Melding openbare ruimte' in Open Zaak (idempotent-ish)."""
+"""Maakt een demo-catalogus met zaaktype 'Melding openbare ruimte' in Open Zaak (idempotent-ish).
+Met CATALOGI_API, ZGW_CLIENT, ZGW_SECRET en SELECTIELIJST_API draait hetzelfde script tegen een andere ZGW-implementatie
+(bijvoorbeeld OneGround): zo zie je of beide hetzelfde accepteren."""
 import os, sys, time, jwt, requests
 
-BASE = f"https://zaken.{os.environ['BASE_DOMAIN']}"
-CID, SECRET = "demo", os.environ["OZ_DEMO_SECRET"]
+CATALOGI = os.environ.get("CATALOGI_API", f"https://zaken.{os.environ['BASE_DOMAIN']}/catalogi/api/v1")
+CID = os.environ.get("ZGW_CLIENT", "demo")
+SECRET = os.environ.get("ZGW_SECRET") or os.environ["OZ_DEMO_SECRET"]
 RSIN = "002220647"
-SL = "https://selectielijst.openzaak.nl/api/v1"
+SL = os.environ.get("SELECTIELIJST_API", "https://selectielijst.openzaak.nl/api/v1")
 
 def headers():
     tok = jwt.encode({"iss": CID, "iat": int(time.time()), "client_id": CID,
@@ -12,7 +15,7 @@ def headers():
     return {"Authorization": f"Bearer {tok}", "Accept-Crs": "EPSG:4326", "Content-Crs": "EPSG:4326"}
 
 def call(method, path, **kw):
-    url = path if path.startswith("http") else f"{BASE}/catalogi/api/v1/{path}"
+    url = path if path.startswith("http") else f"{CATALOGI}/{path}"
     r = requests.request(method, url, headers=headers(), timeout=30, **kw)
     if r.status_code >= 400:
         print(method, url, r.status_code, r.text[:1500]); sys.exit(1)
@@ -71,7 +74,7 @@ zt = call("POST", "zaaktypen", json={
     "verlengingMogelijk": True, "verlengingstermijn": "P14D", "publicatieIndicatie": False, "productenOfDiensten": [],
     "referentieproces": {"naam": "Melding openbare ruimte"}, "verantwoordelijke": "Demogemeente",
     "selectielijstProcestype": procestype["url"],
-    "catalogus": cat["url"], "besluittypen": [], "gerelateerdeZaaktypen": [], "informatieobjecttypen": [],
+    "catalogus": cat["url"], "besluittypen": [], "gerelateerdeZaaktypen": [], "informatieobjecttypen": [], "deelzaaktypen": [],
     "beginGeldigheid": begin, "versiedatum": begin})
 
 for nr, (oms, toel) in enumerate([("Intake", "De melding is ontvangen"),
@@ -89,9 +92,11 @@ for oms, rto in [("Afgehandeld", "afgehandeld"), ("Niet ontvankelijk", "afgebrok
     call("POST", "resultaattypen", json={
         "zaaktype": zt["url"], "omschrijving": oms, "resultaattypeomschrijving": omschrijving(rto)["url"],
         "selectielijstklasse": resultaat["url"], "archiefnominatie": "vernietigen", "archiefactietermijn": "P1Y",
-        "brondatumArchiefprocedure": brondatum})
+        "brondatumArchiefprocedure": brondatum, "besluittypen": []})
 for nr, (i, richting) in enumerate([(bijlage, "inkomend"), (email, "uitgaand")], start=1):
-    call("POST", "zaaktype-informatieobjecttypen", json={"zaaktype": zt["url"], "informatieobjecttype": i["url"],
+    # Catalogi 1.3 verwijst hier met de omschrijving; Open Zaak accepteert ook de URL, OneGround alleen de omschrijving
+    ref = i["omschrijving"] if "CATALOGI_API" in os.environ else i["url"]
+    call("POST", "zaaktype-informatieobjecttypen", json={"zaaktype": zt["url"], "informatieobjecttype": ref,
                                                          "volgnummer": nr, "richting": richting})
 call("POST", zt["url"] + "/publish")
 print("klaar:", zt["url"])

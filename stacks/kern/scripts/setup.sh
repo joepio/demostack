@@ -29,16 +29,24 @@ if [ ! -f .env ]; then
   echo "Nieuwe .env aangemaakt."
 fi
 # Geheimen voor later toegevoegde onderdelen aanvullen in een bestaande .env
-for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
+for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD OG_DB_ADMIN_PASSWORD OG_DB_USER_PASSWORD OG_KC_DB_PASSWORD OG_KC_ADMIN_PASSWORD OG_RABBIT_PASSWORD OG_DP_CERT_PASSWORD OG_SERVICE_SECRET; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
 # API-tokens van Objecten en Open Klant zijn maximaal 40 tekens
 for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
 # NL Portal kiest het JWT-algoritme op sleutellengte; Open Zaak accepteert alleen HS256, dus precies 32 tekens
 grep -q "^NLP_ZGW_SECRET=" .env || echo "NLP_ZGW_SECRET=$(gen 16)" >> .env
 for v in DEMO_LOGIN_SECRET ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
-grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat" >> .env
+# OneGround: HMAC-sleutel en certificaat voor het versleuteld opslaan van BSN's in de Zaken API
+grep -q "^OG_HMAC_KEY=" .env || echo "OG_HMAC_KEY=$(openssl rand -base64 32)" >> .env
+if ! grep -q "^OG_DP_CERT=" .env; then
+  T=$(mktemp -d); P=$(grep '^OG_DP_CERT_PASSWORD=' .env | cut -d= -f2)
+  openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=oneground-dataprotection" -keyout "$T/k.pem" -out "$T/c.pem" 2>/dev/null
+  openssl pkcs12 -export -inkey "$T/k.pem" -in "$T/c.pem" -out "$T/dp.pfx" -passout "pass:$P"
+  echo "OG_DP_CERT=$(base64 -w0 "$T/dp.pfx")" >> .env; rm -rf "$T"
+fi
+grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat,oneground" >> .env
 set -a; . ./.env; set +a
 # Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
-WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat
+WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat,oneground
 setenv() { if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 q() { grep -v -E '^\{"|Container|^$' || true; }
 
@@ -47,6 +55,8 @@ docker compose up -d db redis
 for _ in $(seq 1 30); do docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1 && break; sleep 2; done
 # Databases voor later toegevoegde onderdelen ook in een bestaande installatie aanmaken (idempotent)
 docker compose exec -T db bash /docker-entrypoint-initdb.d/01-databases.sh 2>&1 | grep -vE "already exists|^CREATE|^$" || true
+docker compose exec -T -e OG_DB_ADMIN_PASSWORD -e OG_DB_USER_PASSWORD -e OG_KC_DB_PASSWORD db bash /docker-entrypoint-initdb.d/02-oneground.sh 2>&1 \
+  | grep -vE "already exists|^(CREATE|GRANT|ALTER)|^$" || true
 docker compose up -d
 
 wait_http() { # poort pad
@@ -140,6 +150,16 @@ docker compose restart openinwoner >/dev/null
 # IKO: alleen de SSO-client; connectoren en profielen richt je in het beheerscherm in
 docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e IKO_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
   python /scripts/keycloak_iko.py 2>&1 | q
+
+# OneGround: eigen Keycloak (realm, client met rsin-claim), daarna dezelfde demo-catalogus en -meldingen als in Open Zaak
+for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8137/realms/master | grep -q 200 && break; sleep 5; done
+docker compose run --rm -T --no-deps -e OG_KC_ADMIN_PASSWORD -e OG_CLIENTS="oneground-002220647=$OG_SERVICE_SECRET" \
+  -v "$PWD/scripts:/scripts:ro" openforms python /scripts/keycloak_oneground.py 2>&1 | q
+docker compose restart og-autorisaties og-catalogi og-zaken og-documenten og-besluiten og-notificaties >/dev/null
+for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' "https://og-catalogi.$BASE_DOMAIN/api/v1/catalogussen" | grep -q 401 && break; sleep 5; done
+OG="-e CATALOGI_API=https://og-catalogi.$BASE_DOMAIN/api/v1 -e ZAKEN_API=https://og-zaken.$BASE_DOMAIN/api/v1 -e ZGW_CLIENT=oneground-002220647 -e ZGW_SECRET=$OG_SERVICE_SECRET"
+run_seed openzaak seed_openzaak.py -e OZ_DEMO_SECRET $OG -e SELECTIELIJST_API="https://og-referentielijsten.$BASE_DOMAIN/api/v1"
+run_seed openzaak seed_meldingen.py -e OZ_DEMO_SECRET $OG
 
 # Single sign-on: account 'demo', langere sessies, beheerschermen via Keycloak
 docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRET -e DEMO_LOGIN_SECRET -v "$PWD/scripts:/scripts:ro" openforms \

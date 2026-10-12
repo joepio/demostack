@@ -1,0 +1,19 @@
+[
+    {
+        "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d01",
+        "Label": "DemoStack (beheer en rooktests)",
+        "HeeftAlleAutorisaties": true,
+        "CreationTime": "2026-10-12T08:00:00Z",
+        "CreatedBy": "data-seed",
+        "Owner": "002220647",
+        "ClientIds": [
+            {
+                "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d02",
+                "ApplicatieId": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d01",
+                "ClientId": "oneground-002220647",
+                "CreationTime": "2026-10-12T08:00:00Z",
+                "CreatedBy": "data-seed"
+            }
+        ]
+    }
+]

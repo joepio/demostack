@@ -18,6 +18,7 @@ Een melding van een inwoner, van formulier tot klantcontact.
 | MijnOverheid-demo (VNG API Lab) met adapter | lab 482be6e | `mijnoverheid.<domein>` |
 | IKO (Integraal Klant- en Objectbeeld) | 1.5.1 | `iko.<domein>` |
 | ZaakChat met koppeling | image sha256:91af2df | `zaakchat.<domein>` |
+| OneGround ZGW-API's (Visma Roxit), met eigen Keycloak en RabbitMQ | zaken 1.5.183, catalogi 1.3.175 e.a. | `og-zaken.<domein>`, `og-catalogi.<domein>`, ... |
 | Keycloak | 26.7.5 | `keycloak.<domein>` |
 | Mailpit | 1.31.4 | `mail.<domein>` |
 
@@ -35,7 +36,7 @@ Werkplekken aan en uit (de registers draaien altijd):
     ./scripts/stack.sh status
     ./scripts/stack.sh uit gzac        # of: aan kcc, alleen gzac
 
-Profielen: `kcc` (KISS, Elasticsearch, BRP-mock), `gzac` (GZAC), `zac` (ZAC met Solr, OPA, PABC, documentconversie), `oip` (Open Inwoner), `nlportal` (NL Portal), `mijnoverheid` (MijnOverheid-demo), `iko` (IKO) en `zaakchat` (ZaakChat). De welkomstpagina toont wat uit staat.
+Profielen: `kcc` (KISS, Elasticsearch, BRP-mock), `gzac` (GZAC), `zac` (ZAC met Solr, OPA, PABC, documentconversie), `oip` (Open Inwoner), `nlportal` (NL Portal), `mijnoverheid` (MijnOverheid-demo), `iko` (IKO), `zaakchat` (ZaakChat) en `oneground` (OneGround). De welkomstpagina toont wat uit staat.
 
 Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van de Django-apps. Account `demo` mag alles; daarnaast rol-accounts `kcc`, `redacteur`, `behandelaar`, `coordinator` en `beheerder`. Lokale `admin`-accounts in de beheerschermen bestaan nog als noodingang. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`. Sessies duren een werkdag, met "onthoud mij" een week. De welkomstpagina toont wie er ingelogd is en wisselt met één klik van testgebruiker (Keycloak-client `welkom`, uitloggen en opnieuw inloggen met de naam voorgevuld). De testinwoners en `kcc` en `behandelaar` wisselen met één klik zonder wachtwoord via `keycloak.<domein>/demo-login` (`services/demo-login/`: Keycloak-impersonatie met serviceaccount `demo-login`, alleen voor de accounts in `DEMO_ACCOUNTS` en alleen terug naar adressen onder het eigen domein). `demo` en `beheerder` houden een wachtwoord, omdat ze alle beheerschermen mogen wijzigen.
 
@@ -56,6 +57,7 @@ Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van
 - **Portaaltaken**: objecttype `Taak` volgens het TaakV2-schema van NL Portal (`config/objecttypes-schemas/taak.json`). GZAC schrijft portaaltaken nog in het oude formaat, die verschijnen dus niet in NL Portal.
 - **MijnOverheid-demo**: de app uit het [VNG API Lab](https://github.com/VNG-Realisatie/VNG-API-Lab) op een vaste commit, met een adapter (`services/mijnoverheid/`). Dit is een uitzondering op "ongewijzigde componenten": de app krijgt bij het bouwen een paar regels aangepast (API-basis, naam van de ingelogde inwoner, uitloggen). De adapter logt in met DigiD (demo) en vertaalt de Lab-API's MijnZaken, MijnTaken en de gegevenspagina naar Open Zaak, Objecten en de BRP-mock; de overige API's gaan door naar de mockserver van het Lab. De chatassistent werkt als `OPENROUTER_API_KEY` in `.env` staat.
 - **ZaakChat**: [joepio/zaakchat](https://github.com/joepio/zaakchat), ongewijzigd. ZaakChat kent alleen inloggen met een magic link per e-mail; de koppeling (`services/zaakchat-koppeling/`) logt in via Keycloak (client `zaakchat`) en geeft een ZaakChat-token af voor het e-mailadres van de gebruiker. Via een abonnement op het kanaal `zaken` (`config/templates/opennotificaties-zaakchat.yaml`) wordt elke zaak van een testinwoner een gesprek, met inwoner en behandelaars als betrokkenen en elke status als bericht. Bij het starten leest de koppeling bestaande zaken in. Berichten in ZaakChat gaan (nog) niet terug naar Open Klant.
+- **OneGround**: de ZGW-API's van Visma Roxit naast Open Zaak, met dezelfde catalogus en meldingen (dezelfde seed-scripts, andere `CATALOGI_API`/`ZAKEN_API`). Eigen Keycloak (alleen `/realms` publiek) met de OneGround-plugin die ZGW-tokens (HS256) controleert; elke client heeft een vaste claim `rsin` (de tenant). Notificaties via RabbitMQ (met `NotificatieService__Type: Http` belandt de Notificaties-API in een lus en loopt vol). Verschillen die de seed aan het licht bracht: OneGround eist `deelzaaktypen` en `besluittypen` (Open Zaak niet) en wil bij zaaktype-informatieobjecttypen de omschrijving in plaats van de URL, zoals Catalogi 1.3 voorschrijft.
 - **IKO**: draait met inloggen via Keycloak (client `iko`, rol `ROLE_ADMIN`; `scripts/keycloak_iko.py`). Connectoren en profielen zijn nog niet ingericht.
 
 ## Rooktests

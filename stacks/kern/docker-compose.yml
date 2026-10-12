@@ -189,6 +189,49 @@ x-kiss-env: &kiss-env
   FEEDBACK_EMAIL_TO: beheer@demogemeente.local
   MANAGEMENTINFORMATIE_API_KEY: ${KISS_MI_KEY}
 
+
+x-og-env: &og-env
+  DOTNET_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://*:5000
+  ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+  TZ: Europe/Amsterdam
+  Logging__LogLevel__Default: Warning
+  Auth__Authority: https://og-keycloak.${BASE_DOMAIN}/realms/OneGround/
+  Auth__ValidIssuer: https://og-keycloak.${BASE_DOMAIN}/realms/OneGround
+  Auth__ValidAudience: account
+  Auth__ZgwTokenIntrospectionEndpoint: https://og-keycloak.${BASE_DOMAIN}/realms/OneGround/zgw-token-introspection/introspect
+  ZgwServiceAccounts__Credentials__0__Rsin: "002220647"
+  ZgwServiceAccounts__Credentials__0__ClientId: oneground-002220647
+  ZgwServiceAccounts__Credentials__0__ClientSecret: ${OG_SERVICE_SECRET:-}
+  Eventbus__HostName: og-rabbitmq
+  Eventbus__VirtualHost: oneground
+  Eventbus__UserName: oneground
+  Eventbus__Password: ${OG_RABBIT_PASSWORD:-}
+  NotificatieService__Type: MessageQueue
+  Redis__ConnectionString: redis:6379,defaultDatabase=14
+  Services__AC__Api: https://og-autorisaties.${BASE_DOMAIN}/api/v1/
+  Services__BRC__Api: https://og-besluiten.${BASE_DOMAIN}/api/v1/
+  Services__DRC__Api: https://og-documenten.${BASE_DOMAIN}/api/v1/
+  Services__NRC__Api: https://og-notificaties.${BASE_DOMAIN}/api/v1/
+  Services__RL__Api: https://og-referentielijsten.${BASE_DOMAIN}/api/v1/
+  Services__ZRC__Api: https://og-zaken.${BASE_DOMAIN}/api/v1/
+  Services__ZTC__Api: https://og-catalogi.${BASE_DOMAIN}/api/v1/
+  Services__DRC_LISTENER__Api: http://og-documenten-listener:5000/api
+
+x-og: &og
+  profiles: [oneground]
+  restart: unless-stopped
+  mem_limit: 400m
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    og-rabbitmq:
+      condition: service_healthy
+    og-keycloak:
+      condition: service_started
+
 services:
   db:
     image: postgis/postgis:17-3.5
@@ -210,6 +253,9 @@ services:
       NLP_DB_PASSWORD: ${NLP_DB_PASSWORD}
       OIP_DB_PASSWORD: ${OIP_DB_PASSWORD}
       IKO_DB_PASSWORD: ${IKO_DB_PASSWORD}
+      OG_DB_ADMIN_PASSWORD: ${OG_DB_ADMIN_PASSWORD:-}
+      OG_DB_USER_PASSWORD: ${OG_DB_USER_PASSWORD:-}
+      OG_KC_DB_PASSWORD: ${OG_KC_DB_PASSWORD:-}
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d:ro
       - db:/var/lib/postgresql/data
@@ -850,6 +896,175 @@ services:
     ports:
       - 127.0.0.1:8120:8080
 
+  # ---------- OneGround (Visma Roxit): tweede implementatie van de ZGW-API's, naast Open Zaak ----------
+  # Eigen Autorisaties- en Notificaties-API, eigen Keycloak met de ZGW-introspectieplugin (voor HS256-clients)
+  # en RabbitMQ. Tenant = RSIN van de demogemeente.
+  og-rabbitmq:
+    profiles: [oneground]
+    image: rabbitmq:3.13-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      RABBITMQ_DEFAULT_VHOST: oneground
+      RABBITMQ_DEFAULT_USER: oneground
+      RABBITMQ_DEFAULT_PASS: ${OG_RABBIT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 10
+
+  # Haalt de introspectieplugin op (vaste versie, gecontroleerd op sha256), zoals OneGround zelf doet
+  og-keycloak-plugin:
+    profiles: [oneground]
+    image: alpine:3.23
+    restart: "no"
+    volumes:
+      - og-kc-providers:/providers
+    command: >-
+      sh -euc '
+      JAR=/providers/zgw-token-introspection.jar;
+      SHA256=1b03b68d43d92705b38e99800fa4abbdada0127641cb44c07cc4c8a5a96ea5d3;
+      URL=https://github.com/OneGround/Keycloak-ZGW-Token-Introspection/releases/download/v2/zgw-token-introspection.jar;
+      if [ -f "$$JAR" ] && [ "$$(sha256sum "$$JAR" | cut -d" " -f1)" = "$$SHA256" ]; then exit 0; fi;
+      wget -q -O "$$JAR.download" "$$URL";
+      [ "$$(sha256sum "$$JAR.download" | cut -d" " -f1)" = "$$SHA256" ] || { echo checksum >&2; exit 1; };
+      chmod 644 "$$JAR.download"; mv -f "$$JAR.download" "$$JAR"
+      '
+
+  # Via Caddy op og-keycloak.<domein> (de API's eisen HTTPS voor de issuer); de beheerconsole blokkeert Caddy
+  og-keycloak:
+    profiles: [oneground]
+    image: quay.io/keycloak/keycloak:26.3.1
+    restart: unless-stopped
+    mem_limit: 768m
+    command: ["start"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${OG_KC_ADMIN_PASSWORD}
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: https://og-keycloak.${BASE_DOMAIN}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/og_keycloak
+      KC_DB_USERNAME: og_keycloak
+      KC_DB_PASSWORD: ${OG_KC_DB_PASSWORD}
+      JAVA_OPTS_KC_HEAP: -XX:MaxRAMPercentage=70
+    volumes:
+      - og-kc-providers:/opt/keycloak/providers:ro
+    ports:
+      - 127.0.0.1:8137:8080
+    depends_on:
+      db:
+        condition: service_healthy
+      og-keycloak-plugin:
+        condition: service_completed_successfully
+
+  og-autorisaties:
+    <<: *og
+    image: ghcr.io/oneground/autorisaties-api:1.1.107
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_ac;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_ac;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      SeedData__Applicaties: /app/data/applicaties.json
+      Application__ApplyFixturesAtStartup: "true"
+    volumes:
+      - ./config/oneground/applicaties.json:/app/data/applicaties.json:ro
+    ports:
+      - 127.0.0.1:8130:5000
+
+  og-catalogi:
+    <<: *og
+    image: ghcr.io/oneground/catalogi-api:1.3.175
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_ztc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_ztc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+    ports:
+      - 127.0.0.1:8131:5000
+
+  og-zaken:
+    <<: *og
+    image: ghcr.io/oneground/zaken-api:1.5.183
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_zrc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_zrc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      ConnectionStrings__DataProtectionConnectionString: Host=db;Port=5432;Database=og_zrc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      HmacHasher__HmacKey: ${OG_HMAC_KEY:-}
+      DataProtection__Certificate: ${OG_DP_CERT:-}
+      DataProtection__CertificatePassword: ${OG_DP_CERT_PASSWORD:-}
+    ports:
+      - 127.0.0.1:8132:5000
+
+  og-documenten:
+    <<: *og
+    image: ghcr.io/oneground/documenten-api:1.7.112
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_drc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_drc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      FileSystemDocumentServiceSettings__DocumentRootPath: /data/drc_dms
+    volumes:
+      - og-documenten:/data
+    ports:
+      - 127.0.0.1:8133:5000
+
+  og-documenten-listener:
+    <<: *og
+    image: ghcr.io/oneground/documenten-listener:1.7.112
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_drc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_drc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      ConnectionStrings__HangfireConnectionString: Host=db;Port=5432;Database=og_drc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      FileSystemDocumentServiceSettings__DocumentRootPath: /data/drc_dms
+    volumes:
+      - og-documenten:/data
+
+  og-besluiten:
+    <<: *og
+    image: ghcr.io/oneground/besluiten-api:1.0.176
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_brc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_brc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+    ports:
+      - 127.0.0.1:8134:5000
+
+  og-notificaties:
+    <<: *og
+    image: ghcr.io/oneground/notificaties-api:1.0.185
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_nrc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_nrc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      SeedData__kanalen: /app/data/kanalen.json
+      Application__ApplyFixturesAtStartup: "true"
+    volumes:
+      - ./config/oneground/kanalen.json:/app/data/kanalen.json:ro
+    ports:
+      - 127.0.0.1:8135:5000
+
+  og-notificaties-listener:
+    <<: *og
+    image: ghcr.io/oneground/notificaties-listener:1.0.185
+    environment:
+      <<: *og-env
+      ConnectionStrings__UserConnectionString: Host=db;Port=5432;Database=og_nrc;Username=oneground_user;Password=${OG_DB_USER_PASSWORD}
+      ConnectionStrings__AdminConnectionString: Host=db;Port=5432;Database=og_nrc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+      ConnectionStrings__HangfireConnectionString: Host=db;Port=5432;Database=og_nrc;Username=oneground_admin;Password=${OG_DB_ADMIN_PASSWORD}
+
+  og-referentielijsten:
+    <<: *og
+    image: ghcr.io/oneground/referentielijsten-api:1.0.164
+    environment:
+      <<: *og-env
+    ports:
+      - 127.0.0.1:8136:5000
+
 volumes:
   db:
   solr-data:
@@ -865,4 +1080,6 @@ volumes:
   of-log:
   oip-media:
   zaakchat-data:
+  og-kc-providers:
+  og-documenten:
   oip-private-media:

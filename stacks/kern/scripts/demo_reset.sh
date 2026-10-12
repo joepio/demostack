@@ -8,11 +8,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 DIR=${DEMO_BASIS:-/var/lib/demostack/basis}
-DBS="openzaak openklant objects objecttypes openforms opennotificaties kiss zac gzac openinwoner"
+DBS="openzaak openklant objects objecttypes openforms opennotificaties kiss zac gzac openinwoner og_ac og_ztc og_zrc og_drc og_brc og_nrc"
 # Diensten die deze databases gebruiken (alleen de draaiende worden gestopt en weer gestart)
 APPS="openzaak openzaak-celery openzaak-beat openklant openklant-celery objects objects-celery objecttypes
   openforms openforms-celery openforms-beat opennotificaties opennotificaties-celery opennotificaties-beat
-  kiss zac gzac-backend gzac openinwoner openinwoner-celery openinwoner-beat zaakchat zaakchat-koppeling"
+  kiss zac gzac-backend gzac openinwoner openinwoner-celery openinwoner-beat zaakchat zaakchat-koppeling
+  og-autorisaties og-catalogi og-zaken og-documenten og-documenten-listener og-besluiten og-notificaties og-notificaties-listener"
 
 case "${1:-}" in
   basis)
@@ -32,7 +33,8 @@ case "${1:-}" in
     for db in $DBS; do
       docker compose exec -T db psql -U postgres -qc "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$db' AND pid <> pg_backend_pid();" >/dev/null
       docker compose exec -T db dropdb -U postgres --if-exists "$db"
-      docker compose exec -T db createdb -U postgres -O "$db" "$db"
+      case "$db" in og_*) eigenaar=postgres ;; *) eigenaar=$db ;; esac  # OneGround-databases zijn van postgres, met rechten per rol
+      docker compose exec -T db createdb -U postgres -O "$eigenaar" "$db"
       # Als postgres terugzetten: eigenaars, schema's en extensies (PostGIS) komen mee uit de dump
       docker compose exec -T db pg_restore -U postgres -d "$db" < "$DIR/$db.dump" 2>&1 | head -5 || true
     done
