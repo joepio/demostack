@@ -14,7 +14,7 @@ Een melding van een inwoner, van formulier tot klantcontact.
 | GZAC (Valtimo), demo-casus evenementenvergunning | 13.49.1 | `gzac.<domein>` |
 | Open Notificaties | 1.17.0 | `notificaties.<domein>` |
 | Keycloak | 26.7.5 | `keycloak.<domein>` |
-| Mailpit (basic auth) | 1.31.4 | `mail.<domein>` |
+| Mailpit | 1.31.4 | `mail.<domein>` |
 
 Intern: één Postgres (PostGIS 17) met een database per component, één Redis, Elasticsearch 8.19 en de BRP personen-mock. KvK-gegevens komen uit de openbare testomgeving van de KvK.
 
@@ -23,6 +23,7 @@ Intern: één Postgres (PostGIS 17) met een database per component, één Redis,
     BASE_DOMAIN=demo.example.nl ./scripts/setup.sh    # eerste keer; maakt .env aan
     ./scripts/setup.sh                                 # daarna: brengt alles bij, maakt niets dubbel
     ./scripts/caddyfile.sh                             # print de Caddy-config voor deze stack
+    ./scripts/domeinwissel.sh nieuw.domein.nl          # alles omzetten naar een ander domein; oude adressen verwijzen door
 
 Werkplekken aan en uit (de registers draaien altijd):
 
@@ -61,7 +62,7 @@ Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van
 
 - Open Klant aan Open Formulieren.
 - Kennisartikelen (producten en diensten) in KISS: het objecttype bestaat, inhoud nog niet.
-- DigiD/eHerkenning: het formulier is anoniem.
+- eHerkenning: alleen DigiD (demo) is ingericht.
 - GZAC is nog niet gekoppeld aan Open Zaak: het draait met de eigen demo-casus.
 - ZAC: zaken die Open Formulieren direct in Open Zaak aanmaakt verschijnen in de werkvoorraad, maar zonder ZAC-takenmodel (CMMN). Dat start alleen als ZAC de zaak zelf aanmaakt, bijvoorbeeld via een productaanvraag in Objecten.
 - GZAC zet bij elke start de rechten terug; `gzac-permissions` herstelt ze automatisch.
