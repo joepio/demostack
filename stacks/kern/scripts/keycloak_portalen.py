@@ -41,10 +41,11 @@ if "aanvrager" not in scopes:
          "protocolMappers": [attr_mapper("bsn", "aanvrager.bsn"), attr_mapper("kvk", "aanvrager.kvk")]})
     scopes = {s["name"]: s for s in call("GET", f"{R}/client-scopes")}
 
-P = f"https://portaal.{D}"
+P = f"https://portaal.{D}"; PO = f"https://portaal-og.{D}"  # tweede NL Portal, op OneGround
 upsert_client({"clientId": "nl-portal", "name": "NL Portal (inwoner)", "publicClient": True,
     "standardFlowEnabled": True, "directAccessGrantsEnabled": False,
-    "redirectUris": [f"{P}/*"], "webOrigins": [P], "attributes": {"post.logout.redirect.uris": f"{P}/*", "pkce.code.challenge.method": "S256"},
+    "redirectUris": [f"{P}/*", f"{PO}/*"], "webOrigins": [P, PO],
+    "attributes": {"post.logout.redirect.uris": f"{P}/*##{PO}/*", "pkce.code.challenge.method": "S256"},
     "protocolMappers": [audience("nl-portal-m2m")]})
 m2m = upsert_client({"clientId": "nl-portal-m2m", "name": "NL Portal backend", "publicClient": False,
     "secret": os.environ["NLP_M2M_SECRET"], "serviceAccountsEnabled": True, "standardFlowEnabled": False,

@@ -796,6 +796,83 @@ services:
     ports:
       - 127.0.0.1:8114:8081
 
+  # Tweede NL Portal die de zaken uit OneGround leest. NL Portal zet zelf /zaken/api/v1 voor elk pad (Open Zaak-indeling);
+  # og-zgw.<domein> vertaalt dat naar de OneGround-API's. Eigen profiel (staat uit): NL Portal stuurt zoekfilters als lijsten
+  # ("inpBsn": ["..."]) en OneGround weigert dat (415); Open Zaak accepteert het. Aanzetten om die incompatibiliteit te tonen.
+  nlportal-og-backend:
+    profiles: [oneground-nlportal]
+    image: ghcr.io/nl-portal/nl-portal-app-backend:3.1.1
+    restart: unless-stopped
+    mem_limit: 900m
+    environment:
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75
+      DATABASE_URL: jdbc:postgresql://db:5432/nlportal
+      DATABASE_USERNAME: nlportal
+      DATABASE_PASSWORD: ${NLP_DB_PASSWORD}
+      JWKS_URI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/certs
+      KEYCLOAK_TOKEN_EXCHANGE_VERSION: v2
+      KEYCLOAK_CLIENT_ID: nl-portal-m2m
+      KEYCLOAK_CLIENT_SECRET: ${NLP_M2M_SECRET}
+      CONFIGURATION_PANEL_ENABLED: "false"
+      NLPORTAL_CONFIG_ZAKENAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_URL: https://og-zgw.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_SECRET: ${OG_NLP_SECRET}
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_ZAAKDOCUMENTENCONFIG_STATUSWHITELIST: ter_vaststelling,in_bewerking,definitief,gearchiveerd
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_ZAAKDOCUMENTENCONFIG_VERTROUWELIJKHEIDSAANDUIDINGWHITELIST: openbaar,beperkt_openbaar,intern,zaakvertrouwelijk
+      NLPORTAL_CONFIG_CATALOGIAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_CATALOGIAPI_PROPERTIES_URL: https://og-zgw.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_CATALOGIAPI_PROPERTIES_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_CATALOGIAPI_PROPERTIES_SECRET: ${OG_NLP_SECRET}
+      NLPORTAL_CONFIG_BESLUITENAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_BESLUITENAPI_PROPERTIES_URL: https://og-zgw.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_BESLUITENAPI_PROPERTIES_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_BESLUITENAPI_PROPERTIES_SECRET: ${OG_NLP_SECRET}
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_ENABLED: "true"
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_DEFAULTDOCUMENTAPI: openzaak
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_URL: https://og-zgw.${BASE_DOMAIN}/documenten/api/v1
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_SECRET: ${OG_NLP_SECRET}
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_RSIN: "002220647"
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_DOCUMENTTYPEURL: ${OG_BIJLAGE_IOT:-}
+      NLPORTAL_CONFIG_OBJECTENAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_OBJECTENAPI_PROPERTIES_URL: https://objecten.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_OBJECTENAPI_PROPERTIES_TOKEN: ${NLP_OBJ_TOKEN}
+      NLPORTAL_CONFIG_OPENKLANT2_ENABLED: "true"
+      NLPORTAL_CONFIG_OPENKLANT2_PROPERTIES_KLANTINTERACTIESAPIURL: https://klant.${BASE_DOMAIN}/klantinteracties/api/v1
+      NLPORTAL_CONFIG_OPENKLANT2_PROPERTIES_CONTACTGEGEVENSAPIURL: https://klant.${BASE_DOMAIN}/contactgegevens/api/v1
+      NLPORTAL_CONFIG_OPENKLANT2_PROPERTIES_TOKEN: ${NLP_OK_TOKEN}
+      NLPORTAL_CONFIG_HAALCENTRAAL2_ENABLED: "true"
+      NLPORTAL_CONFIG_HAALCENTRAAL2_PROPERTIES_BRPAPIURL: http://personen-mock:5010/haalcentraal/api/brp/
+      NLPORTAL_CONFIG_TAAK_ENABLED: "true"
+      # De sleutelnaam verschilt per versie; 3.1 leest OBJECTTYPEURL
+      NLPORTAL_CONFIG_TAAK_PROPERTIES_OBJECTTYPEURL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${TAAK_OT}
+      NLPORTAL_CONFIG_TAAK_PROPERTIES_TYPEURL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${TAAK_OT}
+      NLPORTAL_CONFIG_TAAK_PROPERTIES_TYPEURLV2: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${TAAK_OT}
+    ports:
+      - 127.0.0.1:8138:8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nlportal-og:
+    profiles: [oneground-nlportal]
+    image: ghcr.io/nl-portal/nl-portal-app-frontend:3.1.1
+    restart: unless-stopped
+    environment:
+      OIDC_URL: https://keycloak.${BASE_DOMAIN}
+      OIDC_REALM: demogemeente
+      OIDC_CLIENT_ID: nl-portal
+      OIDC_REDIRECT_URI: https://portaal-og.${BASE_DOMAIN}/oidc/callback
+      OIDC_POST_LOGOUT_REDIRECT_URI: https://portaal-og.${BASE_DOMAIN}
+      GRAPHQL_URI: https://portaal-og.${BASE_DOMAIN}/graphql
+      REST_URI: https://portaal-og.${BASE_DOMAIN}/api
+      OPEN_KLANT_VERSION: v2
+      USE_THEME_API: "false"
+      MESSAGE_COUNT_ENABLE: "false"
+    ports:
+      - 127.0.0.1:8139:8081
+
   # ---------- Inwonerportaal: MijnOverheid-demo (VNG API Lab) met adapter op de registers ----------
   # Zaken en taken van de ingelogde inwoner komen uit Open Zaak en Objecten, de rest uit de mocks van het Lab.
   mijnoverheid:

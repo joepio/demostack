@@ -29,6 +29,13 @@ printf 'keycloak.%s {\n\timport proxy\n\treverse_proxy /demo-login* 127.0.0.1:81
 for pair in autorisaties:8130 catalogi:8131 zaken:8132 documenten:8133 besluiten:8134 notificaties:8135 referentielijsten:8136; do
   printf 'og-%s.%s {\n\timport proxy\n\treverse_proxy 127.0.0.1:%s\n}\n' "${pair%%:*}" "$BASE_DOMAIN" "${pair##*:}"
 done
+# NL Portal verwacht de Open Zaak-indeling (/zaken/api/v1, /catalogi/api/v1, ...); og-zgw vertaalt die naar OneGround
+printf 'og-zgw.%s {\n\timport proxy\n' "$BASE_DOMAIN"
+for pair in zaken:8132 catalogi:8131 documenten:8133 besluiten:8134; do
+  printf '\thandle_path /%s/* {\n\t\treverse_proxy 127.0.0.1:%s {\n\t\t\theader_up Host og-%s.%s\n\t\t\theader_up X-Forwarded-Host og-%s.%s\n\t\t}\n\t}\n' "${pair%%:*}" "${pair##*:}" "${pair%%:*}" "$BASE_DOMAIN" "${pair%%:*}" "$BASE_DOMAIN"
+done
+printf '}\n'
+printf 'portaal-og.%s {\n\timport proxy\n\t@api path /graphql* /api/*\n\treverse_proxy @api 127.0.0.1:8138\n\treverse_proxy 127.0.0.1:8139\n}\n' "$BASE_DOMAIN"
 printf 'og-keycloak.%s {\n\timport proxy\n\trespond /admin* 403\n\treverse_proxy 127.0.0.1:8137\n}\n' "$BASE_DOMAIN"
 # Mailpit bevat alleen demomail; geen apart wachtwoord nodig
 printf 'mail.%s {\n\timport proxy\n\treverse_proxy 127.0.0.1:8106\n}\n' "$BASE_DOMAIN"
