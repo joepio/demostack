@@ -26,12 +26,30 @@ body { margin: 0; background: var(--bg); color: var(--text);
 a { color: var(--accent); }
 .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
 header { background: var(--band); color: var(--band-text); }
-header .wrap { padding-top: 36px; padding-bottom: 36px; }
+header .wrap { padding-top: 36px; padding-bottom: 36px; position: relative; }
 header .lead { color: rgba(255,255,255,.86); }
-/* Wie is er ingelogd: één regel in de kop */
-.sessie { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 15px; color: rgba(255,255,255,.86); }
-.sessie strong { color: #fff; }
-.sessie button { font: inherit; padding: 0; border: 0; background: none; color: #fff; text-decoration: underline; cursor: pointer; }
+/* Accountmenu rechtsboven: wie je bent en wisselen van rol */
+.account { position: absolute; top: 20px; right: 16px; z-index: 10; }
+.account summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px;
+  border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font-weight: 600; font-size: 15px; }
+.account summary::-webkit-details-marker { display: none; }
+.account summary::after { content: "▾"; font-size: 12px; opacity: .8; }
+.account summary:hover, .account summary:focus-visible { background: rgba(255,255,255,.22); outline: none; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: #fff; color: var(--band); display: grid; place-items: center;
+  font-weight: 700; font-size: 14px; }
+.account .menu { position: absolute; right: 0; top: calc(100% + 8px); width: 290px; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.25); padding: 6px 0; }
+.menu .kop { padding: 10px 14px 8px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.menu .kop strong { display: block; color: var(--text); font-size: 15px; }
+.menu .groep { padding: 8px 14px 2px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.menu button { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 8px; padding: 8px 14px;
+  border: 0; background: none; font: inherit; font-size: 15px; color: var(--text); text-align: left; cursor: pointer; }
+.menu button small { color: var(--muted); font-size: 12px; }
+.menu button:hover, .menu button:focus-visible { background: var(--accent-soft); outline: none; }
+.menu button[aria-current="true"] { font-weight: 700; color: var(--accent); }
+.menu button[aria-current="true"]::after { content: "✓"; }
+.menu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; }
+@media (max-width: 640px) { .account { position: relative; top: 0; right: 0; display: block; width: fit-content; margin-bottom: 16px; } .account .menu { left: 0; right: auto; } }
 /* Rol kiezen = inloggen als het testaccount van die rol */
 .kies { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .kies button { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 4px; border: 0; cursor: pointer;
@@ -151,15 +169,28 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 <body data-off="__OFF__">
 <header>
   <div class="wrap">
+    <details class="account" id="account" hidden>
+      <summary><span class="avatar" id="account-letter">?</span><span id="account-naam">Kies een rol</span></summary>
+      <div class="menu" role="menu">
+        <div class="kop" id="account-kop">Je bent niet ingelogd</div>
+        <div class="groep">Inwoner (één klik)</div>
+        <button type="button" data-als="suzanne" data-klik>Suzanne Moulin <small>melding loopt</small></button>
+        <button type="button" data-als="lukas" data-klik>Lukas Klamer</button>
+        <button type="button" data-als="merel" data-klik>Merel Kooyman</button>
+        <div class="groep">Medewerker (één klik)</div>
+        <button type="button" data-als="kcc" data-klik>KCC-medewerker <small>KISS</small></button>
+        <button type="button" data-als="behandelaar" data-klik>Zaakbehandelaar <small>ZAC, GZAC</small></button>
+        <div class="groep">Met wachtwoord</div>
+        <button type="button" data-als="beheerder">Functioneel beheerder <small>inrichting</small></button>
+        <button type="button" data-als="demo">Demo <small>alle rollen tegelijk</small></button>
+        <hr>
+        <button type="button" id="uitloggen" hidden>Uitloggen</button>
+      </div>
+    </details>
     <span class="badge">Demo-omgeving, geen echte gegevens</span>
     <h1>DemoStack</h1>
     <p class="lead">Een werkende gemeente in het klein, gebouwd met open source Common Ground-componenten.
       Kies een rol: je bent dan meteen ingelogd en ziet wat die rol ziet.</p>
-    <div class="sessie" id="sessie" hidden>
-      <span id="sessie-wie"></span>
-      <button type="button" id="als-demo">Alles tegelijk bekijken als demo</button>
-      <button type="button" id="uitloggen" hidden>Uitloggen</button>
-    </div>
   </div>
 </header>
 
@@ -340,7 +371,7 @@ __STACKS__
 <script type="module">
 // Rol kiezen = inloggen als het testaccount van die rol. Accounts met data-klik gaan zonder wachtwoord
 // (keycloak.<domein>/demo-login); de rest via Keycloak met de naam voorgevuld.
-const box = document.getElementById("sessie");
+const box = document.getElementById("account");
 const ROL = { suzanne: "inwoner", lukas: "inwoner", merel: "inwoner", kcc: "kcc", redacteur: "kcc",
   behandelaar: "behandelaar", coordinator: "behandelaar", beheerder: "beheerder" };
 try {
@@ -365,20 +396,26 @@ try {
     const t = kc.tokenParsed || {};
     const user = t.preferred_username;
     const esc = (x) => String(x).replace(/[<>&]/g, "");
-    document.getElementById("sessie-wie").innerHTML = user
-      ? `Je bent <strong>${esc(t.name || user)}</strong> (${esc(user)}).` : "Je bent niet ingelogd. Kies hieronder een rol.";
-    document.querySelectorAll(".kies button[data-als]").forEach((b) =>
-      b.addEventListener("click", () => word(b.dataset.als, b.hasAttribute("data-klik"))));
+    const naam = t.name || user;
+    document.getElementById("account-naam").textContent = user ? naam : "Kies een rol";
+    document.getElementById("account-letter").textContent = user ? naam.trim()[0].toUpperCase() : "?";
+    document.getElementById("account-kop").innerHTML = user
+      ? `Ingelogd als<strong>${esc(naam)}</strong>${esc(user)}` : "Je bent niet ingelogd. Kies een rol:";
+    document.querySelectorAll(".menu button[data-als], .kies button[data-als]").forEach((b) => {
+      if (b.closest(".menu") && b.dataset.als === user) b.setAttribute("aria-current", "true");
+      b.addEventListener("click", () => word(b.dataset.als, b.hasAttribute("data-klik")));
+    });
     const kaart = document.querySelector(`.card[data-rol="${ROL[user] || "-"}"]`);
     if (kaart) {
       kaart.classList.add("actief");
       const nu = kaart.querySelector(".kies .nu");
       if (nu && t.name) nu.textContent = `Je bent ${t.name}`;
     }
-    const demo = document.getElementById("als-demo");
-    if (user === "demo") demo.hidden = true; else demo.addEventListener("click", () => word("demo", false));
     const uit = document.getElementById("uitloggen");
     if (ok) { uit.hidden = false; uit.addEventListener("click", () => kc.logout({ redirectUri: location.origin + "/" })); }
+    // Menu sluiten bij klik ernaast of Escape
+    document.addEventListener("click", (e) => { if (!box.contains(e.target)) box.open = false; });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") box.open = false; });
     box.hidden = false;
   }
 } catch (e) { box.hidden = true; }
