@@ -55,7 +55,7 @@ Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van
 - Open Notificaties: Open Zaak en Objecten sturen hun wijzigingen naar de kanalen zaken, documenten, besluiten, objecten enz. Rooktest: `scripts/test_notificatie.py`.
 - `config/nginx/`: nginx tussen Caddy en de Django-apps (zoekt containernamen dynamisch op, zodat een herstarte app direct bereikbaar is). KISS stuurt request-bodies chunked en uWSGI leest die als leeg; nginx buffert ze en zet een Content-Length.
 - `config/objecttypes-schemas/`: JSON-schema's voor de KISS-objecttypen, uit [Dimpact-Samenwerking/objecttypes2](https://github.com/Dimpact-Samenwerking/objecttypes2).
-- `welkom/`: template en build-script voor de welkomstpagina.
+- `welkom/`: template en build-script voor de welkomstpagina. `welkom/evaluatie.py` maakt de stackvergelijking (API's en versies live uit de OpenAPI-specificaties, geheugen en images live uit Docker, licenties); zet elk kwartier in cron.
 - De KISS-zoekindex wordt bijgewerkt met `docker compose run --rm kiss-sync-vac` en `kiss-sync-smoelenboek`; zet dit in cron.
 
 ## Nog niet gekoppeld

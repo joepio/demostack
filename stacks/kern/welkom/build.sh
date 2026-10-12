@@ -13,3 +13,9 @@ ACTIVE=",${COMPOSE_PROFILES:-},"; OFF=""
 for p in kcc gzac zac; do case "$ACTIVE" in *",$p,"*) ;; *) OFF="$OFF $p";; esac; done
 sed -e "s#__OFF__#${OFF# }#" -e "s#__BASE__#$BASE_DOMAIN#g" -e "s#__KISS_LINK__#$LINK#" -e "s#__KISS_STATE__#$STATE#" -e "s#__KISS_VERSION__#$VER#" \
   index.template.html > public/index.html
+# Evaluatie per stack invoegen (welkom/evaluatie.py maakt public/stacks.html)
+python3 - <<PY
+from pathlib import Path
+p = Path("public/index.html"); frag = Path("public/stacks.html")
+p.write_text(p.read_text().replace("__STACKS__", frag.read_text() if frag.exists() else "<p>Evaluatie nog niet gemaakt.</p>"))
+PY

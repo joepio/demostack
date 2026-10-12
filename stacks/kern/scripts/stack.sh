@@ -29,6 +29,7 @@ if [ "${1:-status}" != status ]; then
     fi
   done
   docker compose up -d 2>&1 | grep -E "Started|Created" || true
+  python3 welkom/evaluatie.py || true
   KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
 fi
 echo "Aan: ${want:-alleen de registers}"
