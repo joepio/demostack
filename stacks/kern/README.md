@@ -36,7 +36,7 @@ Werkplekken aan en uit (de registers draaien altijd):
 
 Profielen: `kcc` (KISS, Elasticsearch, BRP-mock), `gzac` (GZAC), `zac` (ZAC met Solr, OPA, PABC, documentconversie), `oip` (Open Inwoner), `nlportal` (NL Portal), `mijnoverheid` (MijnOverheid-demo) en `iko` (IKO). De welkomstpagina toont wat uit staat.
 
-Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van de Django-apps. Account `demo` mag alles; daarnaast rol-accounts `kcc`, `redacteur`, `behandelaar`, `coordinator` en `beheerder`. Lokale `admin`-accounts in de beheerschermen bestaan nog als noodingang. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`. Sessies duren een werkdag, met "onthoud mij" een week.
+Inloggen gaat overal via Keycloak (single sign-on), ook in de beheerschermen van de Django-apps. Account `demo` mag alles; daarnaast rol-accounts `kcc`, `redacteur`, `behandelaar`, `coordinator` en `beheerder`. Lokale `admin`-accounts in de beheerschermen bestaan nog als noodingang. Alle accounts gebruiken `ADMIN_PASSWORD` uit `.env`. Sessies duren een werkdag, met "onthoud mij" een week. De welkomstpagina toont wie er ingelogd is en wisselt met één klik van testgebruiker (Keycloak-client `welkom`, uitloggen en opnieuw inloggen met de naam voorgevuld).
 
 ## Demodata
 

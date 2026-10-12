@@ -13,6 +13,8 @@ ACTIVE=",${COMPOSE_PROFILES:-},"; OFF=""
 for p in kcc gzac zac oip nlportal mijnoverheid iko; do case "$ACTIVE" in *",$p,"*) ;; *) OFF="$OFF $p";; esac; done
 sed -e "s#__OFF__#${OFF# }#" -e "s#__BASE__#$BASE_DOMAIN#g" -e "s#__KISS_LINK__#$LINK#" -e "s#__KISS_STATE__#$STATE#" -e "s#__KISS_VERSION__#$VER#" \
   "${TEMPLATE:-index.template.html}" > "public/${OUT:-index.html}"
+# Voor de inlogstatus op de welkomstpagina (keycloak-js check-sso)
+printf '<!doctype html><html><body><script>parent.postMessage(location.href, location.origin)</script></body></html>\n' > public/silent-check-sso.html
 # Evaluatie per stack invoegen (welkom/evaluatie.py maakt public/stacks.html)
 OUT="${OUT:-index.html}" python3 - <<PY
 from pathlib import Path

@@ -28,6 +28,16 @@ a { color: var(--accent); }
 header { background: var(--band); color: var(--band-text); }
 header .wrap { padding-top: 36px; padding-bottom: 36px; }
 header .lead { color: rgba(255,255,255,.86); }
+/* Wie is er ingelogd (Keycloak), met snel wisselen van testgebruiker */
+.sessie { margin-top: 20px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 6px;
+  background: rgba(255,255,255,.06); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.sessie strong { color: #fff; }
+.sessie .als { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sessie button { font: inherit; font-size: 14px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.45); background: transparent; color: #fff; }
+.sessie button:hover, .sessie button:focus-visible { background: rgba(255,255,255,.15); }
+.sessie button[aria-current="true"] { background: #fff; color: var(--band); }
+.sessie small { color: rgba(255,255,255,.75); flex-basis: 100%; }
 header .badge { background: rgba(255,255,255,.14); color: #fff; }
 .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px;
   background: var(--soon-soft); color: var(--soon); }
@@ -139,6 +149,18 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     <h1>DemoStack</h1>
     <p class="lead">Een werkende gemeente in het klein, gebouwd met open source Common Ground-componenten.
       Kies hieronder je rol en bekijk hoe een melding van een inwoner door de gemeente loopt.</p>
+    <div class="sessie" id="sessie" hidden>
+      <span id="sessie-wie">Even kijken wie er ingelogd is…</span>
+      <span class="als">Inloggen als:
+        <button type="button" data-als="demo">demo</button>
+        <button type="button" data-als="suzanne">suzanne (inwoner)</button>
+        <button type="button" data-als="kcc">kcc</button>
+        <button type="button" data-als="behandelaar">behandelaar</button>
+        <button type="button" data-als="beheerder">beheerder</button>
+        <button type="button" id="uitloggen" hidden>Uitloggen</button>
+      </span>
+      <small>Eén inlog voor alle onderdelen. Inwonerportalen en formulieren vragen een testinwoner met BSN, zoals suzanne. Een onderdeel dat al open stond houdt zijn eigen sessie tot je daar uitlogt of het opnieuw opent.</small>
+    </div>
   </div>
 </header>
 
@@ -323,6 +345,37 @@ __STACKS__
 <footer>
   <div class="wrap">DemoStack door <a href="https://vng.nl">VNG</a>: een demo-omgeving rond de <a href="https://commonground.nl">Common Ground</a>-standaarden, zoals de ZGW-API's. Componenten van Maykin Media, Dimpact, Ritense en anderen, ongewijzigd en open source.</div>
 </footer>
+<script type="module">
+// Toont wie er via Keycloak ingelogd is en wisselt van testgebruiker: uitloggen en opnieuw inloggen met die naam voorgevuld.
+const box = document.getElementById("sessie");
+try {
+  const { default: Keycloak } = await import("https://cdn.jsdelivr.net/npm/keycloak-js@26.2.0/+esm");
+  const kc = new Keycloak({ url: "https://keycloak.__BASE__", realm: "demogemeente", clientId: "welkom" });
+  const ok = await kc.init({ onLoad: "check-sso", pkceMethod: "S256", checkLoginIframe: false,
+    silentCheckSsoRedirectUri: location.origin + "/silent-check-sso.html" });
+  const als = new URLSearchParams(location.search).get("als");
+  if (als) {
+    if (ok) await kc.logout({ redirectUri: location.origin + "/?als=" + encodeURIComponent(als) });
+    else { history.replaceState(null, "", "/"); await kc.login({ loginHint: als, prompt: "login", redirectUri: location.origin + "/" }); }
+  } else {
+    const t = kc.tokenParsed || {};
+    const user = t.preferred_username;
+    document.getElementById("sessie-wie").innerHTML = user
+      ? `Ingelogd als <strong>${(t.name || user).replace(/[<>&]/g, "")}</strong> (${user.replace(/[<>&]/g, "")})`
+      : "Niet ingelogd";
+    box.querySelectorAll("[data-als]").forEach((b) => {
+      if (b.dataset.als === user) b.setAttribute("aria-current", "true");
+      b.addEventListener("click", () => {
+        if (ok) kc.logout({ redirectUri: location.origin + "/?als=" + encodeURIComponent(b.dataset.als) });
+        else kc.login({ loginHint: b.dataset.als, prompt: "login", redirectUri: location.origin + "/" });
+      });
+    });
+    const uit = document.getElementById("uitloggen");
+    if (ok) { uit.hidden = false; uit.addEventListener("click", () => kc.logout({ redirectUri: location.origin + "/" })); }
+    box.hidden = false;
+  }
+} catch (e) { box.hidden = true; }
+</script>
 <script>
 (() => {
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

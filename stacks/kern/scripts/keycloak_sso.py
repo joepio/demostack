@@ -39,6 +39,17 @@ else:
     call("PUT", f"{R}/clients/{c['id']}", json={**c, "redirectUris": redirects})
 beheerders = group("beheerders")
 
+# Welkomstpagina: public client die alleen toont wie er ingelogd is en wisselen van gebruiker mogelijk maakt
+W = f"https://{D}"
+welkom = {"clientId": "welkom", "name": "Welkomstpagina", "publicClient": True, "standardFlowEnabled": True,
+          "directAccessGrantsEnabled": False, "redirectUris": [f"{W}/*"], "webOrigins": [W],
+          "attributes": {"post.logout.redirect.uris": f"{W}/*", "pkce.code.challenge.method": "S256"}}
+w = client("welkom")
+if not w:
+    call("POST", f"{R}/clients", json=welkom)
+else:
+    call("PUT", f"{R}/clients/{w['id']}", json={**w, **welkom, "attributes": {**w.get("attributes", {}), **welkom["attributes"]}})
+
 # Eén account voor alles
 u = call("GET", f"{R}/users", params={"username": "demo", "exact": "true"})
 if not u:
