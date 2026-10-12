@@ -34,6 +34,7 @@ APIS = {
     "taken": ("Portaaltaken (TaakV2 in Objecten)", None),
     "lab": ("VNG API Lab: MijnZaken en MijnTaken (next)", None),
     "iko": ("IKO aggregatie-API", None),
+    "cloudevents": ("JSONCommit / CloudEvents (ZaakChat)", None),
 }
 
 C = lambda **kw: kw  # leesbaarheid
@@ -99,6 +100,13 @@ STACKS = [
      "componenten": [
         C(naam="MijnOverheid-demo + adapter", maker="VNG Realisatie (app), DemoStack (adapter)", licentie="EUPL-1.2",
           diensten=["mijnoverheid"], biedt=["lab"], gebruikt=["zaken", "catalogi", "documenten", "objecten", "taken", "brp", "oidc"]),
+     ]},
+    {"id": "zaakchat", "naam": "Gesprekken over zaken: ZaakChat", "profiel": "zaakchat",
+     "uitleg": "Experiment: inwoner en behandelaar chatten over een lopende zaak, met realtime updates via CloudEvents (JSONCommit). Een koppeling logt in via Keycloak en zet zaken en statuswijzigingen uit Open Zaak door via Open Notificaties.",
+     "componenten": [
+        C(naam="ZaakChat", maker="Joep Meindertsma", licentie="MIT", diensten=["zaakchat"], biedt=["cloudevents"], gebruikt=[]),
+        C(naam="ZaakChat-koppeling", maker="DemoStack", licentie="EUPL-1.2", diensten=["zaakchat-koppeling"], biedt=[],
+          gebruikt=["zaken", "catalogi", "notificaties", "cloudevents", "oidc"]),
      ]},
     {"id": "iko", "naam": "Klant- en objectbeeld: IKO", "profiel": "iko",
      "uitleg": "Integraal Klant- en Objectbeeld (Ritense): een aggregatielaag die gegevens uit meerdere bronnen samenvoegt tot één beeld via een eigen API. GZAC kan het tonen. De connectoren en profielen zijn hier nog niet ingericht.",
@@ -241,6 +249,8 @@ FUNCTIES = [
      "podiumd": ("Open Inwoner", "hier"), "gzac": ("NL Portal", "hier")},
     {"functie": "Taken voor de inwoner", "wie": "Inwoner", "apis": ["objecten", "taken"],
      "podiumd": ("Open Inwoner (TaakV2)", "hier"), "gzac": ("NL Portal (TaakV2; GZAC schrijft nog het oude formaat)", "hier")},
+    {"functie": "Chatten over een zaak", "wie": "Inwoner", "apis": ["cloudevents", "notificaties"],
+     "podiumd": ("Geen; hier ZaakChat als experiment", "geen"), "gzac": ("Geen; hier ZaakChat als experiment", "geen")},
     {"functie": "Gemeente en Rijk in één omgeving", "wie": "Inwoner", "apis": ["lab"],
      "podiumd": ("Geen; hier de MijnOverheid-demo van het VNG API Lab", "geen"), "gzac": ("Geen; hier de MijnOverheid-demo van het VNG API Lab", "geen")},
     {"functie": "Zaken registreren", "wie": "Register", "apis": ["zaken", "catalogi", "documenten", "besluiten"],

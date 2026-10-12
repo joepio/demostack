@@ -34,11 +34,11 @@ for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD; do grep -q "^$v=" .env
 for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
 # NL Portal kiest het JWT-algoritme op sleutellengte; Open Zaak accepteert alleen HS256, dus precies 32 tekens
 grep -q "^NLP_ZGW_SECRET=" .env || echo "NLP_ZGW_SECRET=$(gen 16)" >> .env
-for v in MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
-grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko" >> .env
+for v in ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
+grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat" >> .env
 set -a; . ./.env; set +a
 # Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
-WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko
+WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat
 setenv() { if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 q() { grep -v -E '^\{"|Container|^$' || true; }
 
@@ -125,10 +125,11 @@ for _ in $(seq 1 60); do curl -s http://127.0.0.1:8111/ -o /dev/null -w '%{http_
 docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts/zac_inrichten.py:/t.py:ro" \
   mcr.microsoft.com/playwright/python:v1.55.0-noble sh -c "pip -q install playwright==1.55.0 2>/dev/null; python /t.py" | tail -2
 apply opennotificaties opennotificaties-zac
+apply opennotificaties opennotificaties-zaakchat
 curl -s -o /dev/null -H "X-API-KEY: $ZAC_INTERNAL_KEY" http://127.0.0.1:8111/rest/internal/indexeren/herindexeren/ZAAK
 
 # Inwonerportalen: Keycloak (NL Portal token exchange, nep-DigiD voor Open Inwoner en MijnOverheid), portaaltaak
-docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e NLP_M2M_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e NLP_M2M_SECRET -e ZAAKCHAT_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
   python /scripts/keycloak_portalen.py 2>&1 | q
 run_seed objects seed_portaaltaak.py -e TAAK_OT -e OBJ_TOKEN_KISS -e OZ_DEMO_SECRET
 # Open Inwoner: koppelingen via setup_configuration, de rest (BRP, CMS-pagina's, abonnement) via de shell

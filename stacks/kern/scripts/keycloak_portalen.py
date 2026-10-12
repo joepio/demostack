@@ -1,6 +1,7 @@
 """Keycloak voor de inwonerportalen (idempotent).
 NL Portal: public client 'nl-portal' voor de browser en confidential client 'nl-portal-m2m' die het token
 omwisselt (standard token exchange v2) voor een token met het BSN als claim aanvrager.bsn.
+ZaakChat: confidential client voor de inlogkoppeling.
 Open Inwoner en de MijnOverheid-demo: gebruiken de nep-DigiD-client 'digid'; hier komen alleen de redirect-URI's erbij."""
 import os, sys, requests
 D, PW = os.environ["BASE_DOMAIN"], os.environ["ADMIN_PASSWORD"]
@@ -50,6 +51,12 @@ m2m = upsert_client({"clientId": "nl-portal-m2m", "name": "NL Portal backend", "
     "directAccessGrantsEnabled": False, "attributes": {"standard.token.exchange.enabled": "true"},
     "protocolMappers": [audience("nl-portal-m2m")]})
 call("PUT", f"{R}/clients/{m2m['id']}/default-client-scopes/{scopes['aanvrager']['id']}")
+
+# ZaakChat: inwoners en medewerkers loggen in via de koppeling, die een ZaakChat-token afgeeft voor hun e-mailadres
+Z = f"https://zaakchat.{D}"
+upsert_client({"clientId": "zaakchat", "name": "ZaakChat", "publicClient": False, "secret": os.environ["ZAAKCHAT_OIDC_SECRET"],
+    "standardFlowEnabled": True, "directAccessGrantsEnabled": False, "redirectUris": [f"{Z}/koppeling/*"], "webOrigins": [Z],
+    "attributes": {"post.logout.redirect.uris": f"{Z}/*"}})
 
 # Open Inwoner logt in via dezelfde nep-DigiD-client als Open Formulieren
 dig = call("GET", f"{R}/clients", params={"clientId": "digid"})[0]

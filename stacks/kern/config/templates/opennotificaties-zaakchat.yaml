@@ -1,0 +1,10 @@
+# ZaakChat-koppeling: nieuwe zaken en statuswijzigingen worden een gesprek in ZaakChat
+notifications_abonnementen_config_enable: true
+notifications_abonnementen_config:
+  items:
+    - uuid: 3c8e2b1a-6d4f-4a7e-9b2c-5e1f0a9d8c71
+      callback_url: https://zaakchat.${BASE_DOMAIN}/koppeling/notificaties
+      auth: ${ZAAKCHAT_ON_KEY}
+      kanalen:
+        - naam: zaken
+          filters: {}

@@ -800,6 +800,42 @@ services:
       redis:
         condition: service_healthy
 
+  # ---------- ZaakChat: gesprekken over lopende zaken (JSONCommit / CloudEvents) ----------
+  # ZaakChat ongewijzigd; de koppeling doet het inloggen via Keycloak en zet zaken uit Open Zaak door.
+  zaakchat:
+    profiles: [zaakchat]
+    image: docker.io/joepmeneer/zaakchat@sha256:91af2dfe745979d13e150d7301a68abbc54f9469b3dbe6a139a4ddd712e61929
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      BASE_URL: https://zaakchat.${BASE_DOMAIN}
+      JWT_SECRET: ${ZAAKCHAT_JWT_SECRET}
+      MOCK_EMAIL: "true"
+    volumes:
+      - zaakchat-data:/app/data
+    ports:
+      - 127.0.0.1:8118:8000
+
+  zaakchat-koppeling:
+    profiles: [zaakchat]
+    build: ./services/zaakchat-koppeling
+    image: demostack/zaakchat-koppeling:1
+    restart: unless-stopped
+    mem_limit: 96m
+    environment:
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      ZAAKCHAT_JWT_SECRET: ${ZAAKCHAT_JWT_SECRET}
+      ZAAKCHAT_OIDC_SECRET: ${ZAAKCHAT_OIDC_SECRET}
+      ZAAKCHAT_ZGW_SECRET: ${ZAAKCHAT_ZGW_SECRET}
+      ZAAKCHAT_ON_KEY: ${ZAAKCHAT_ON_KEY}
+      ZAAKCHAT_INWONERS: 999993653=suzanne@example.com,999991723=lukas@example.com,999993847=merel@example.com
+      ZAAKCHAT_MEDEWERKERS: behandelaar@demogemeente.local,demo@demogemeente.local,kcc@demogemeente.local
+      ZAAKCHAT_GEMEENTE: gemeente@demogemeente.local
+    ports:
+      - 127.0.0.1:8119:8080
+    depends_on:
+      - zaakchat
+
 volumes:
   db:
   solr-data:
@@ -814,4 +850,5 @@ volumes:
   of-private-media:
   of-log:
   oip-media:
+  zaakchat-data:
   oip-private-media:

@@ -220,6 +220,11 @@ with sync_playwright() as p:
         pg.get_by_text("Melding openbare ruimte").first.click(); pg.wait_for_timeout(4000)
         shot(pg, "inwoner-mo-2")
         pg.close()
+        pg = new()
+        pg.goto(f"https://zaakchat.{D}/koppeling/login?als=suzanne"); pg.wait_for_timeout(2500); digid(pg)
+        pg.get_by_text("Losliggende stoeptegel").first.click(); pg.wait_for_timeout(3000)
+        shot(pg, "inwoner-zaakchat")
+        pg.close()
 
     def iko():
         pg = new()
