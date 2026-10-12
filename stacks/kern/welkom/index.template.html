@@ -93,6 +93,38 @@ body[data-off~="kcc"] tr[data-profile="kcc"] .state, body[data-off~="gzac"] tr[d
 body[data-off~="kcc"] tr[data-profile="kcc"] td:last-child::after,
 body[data-off~="gzac"] tr[data-profile="gzac"] td:last-child::after, body[data-off~="zac"] tr[data-profile="zac"] td:last-child::after { content: "Staat nu uit"; font-size: 13px; font-weight: 600; white-space: nowrap;
   color: var(--soon); margin-left: -60px; }
+.switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 20px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600; }
+.chip small { color: var(--muted); font-weight: 500; }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); }
+.chip.off .dot { background: var(--muted); }
+.chip:hover { border-color: var(--accent); }
+.stack { background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--accent);
+  border-radius: 4px; padding: 18px 20px; margin-bottom: 16px; }
+.stack-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.stack-head h3 { margin: 0; font-size: 20px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 12px 0; }
+.facts div { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 8px 12px; }
+.facts span { display: block; font-size: 13px; color: var(--muted); }
+.facts strong { font-size: 17px; }
+.stack table { border: 0; }
+.stack td small { color: var(--muted); }
+td.num, th.num { text-align: right; white-space: nowrap; }
+table.functies td, table.functies th { font-size: 15px; }
+table.functies tr.groep th { background: var(--bg); color: var(--accent); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+table.functies td.zelfde { color: var(--muted); }
+table.functies td.anders { font-weight: 600; background: var(--accent-soft); }
+table.functies td.geen, table.functies td.niet-hier { font-weight: 500; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+.tag.soon { background: var(--soon-soft); color: var(--soon); }
+.tag.off { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.legend { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.sw { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--border); border-radius: 3px; }
+.sw.anders { background: var(--accent-soft); margin-left: 12px; }
+.totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 16px 0 8px; }
+.stack-total { background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 4px; padding: 14px 18px; }
+.stack-total h3 { margin: 0; } .stack-total h3 small { color: var(--muted); font-weight: 500; }
 footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 </style>
 </head>
@@ -230,23 +262,13 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     </section>
   </div>
 
-  <h2>Onderdelen</h2>
-  <p class="sub">Alle componenten zijn open source en draaien hier ongewijzigd.</p>
-  <div class="tbl">
-  <table>
-    <thead><tr><th>Component</th><th>Wat het doet</th><th>Versie</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr><td>Open Formulieren</td><td>Formulieren voor inwoners en bedrijven</td><td>4.0.2</td><td><span class="state ok">Draait</span></td></tr>
-      <tr><td>Open Zaak</td><td>Zaken, documenten, catalogi en besluiten (ZGW-API's)</td><td>1.30.0</td><td><span class="state ok">Draait</span></td></tr>
-      <tr><td>Open Klant</td><td>Klantgegevens en contactmomenten</td><td>2.19.1</td><td><span class="state ok">Draait</span></td></tr>
-      <tr><td>Objecten en Objecttypen</td><td>Overige registraties volgens zelf gedefinieerde schema's</td><td>3.6.2 / 3.4.2</td><td><span class="state ok">Draait</span></td></tr>
-      <tr data-profile="kcc"><td>KISS</td><td>Werkplek voor het klantcontactcentrum, met Keycloak voor inloggen en een BRP-testvoorziening</td><td>__KISS_VERSION__</td><td>__KISS_STATE__</td></tr>
-      <tr data-profile="zac"><td>ZAC (Dimpact)</td><td>Zaakafhandeling binnen PodiumD: werkvoorraad, taken (CMMN), documenten, met Solr, OPA en PABC</td><td>5.8.0</td><td><span class="state ok">Draait</span></td></tr>
-      <tr data-profile="gzac"><td>GZAC (Valtimo)</td><td>Zaakafhandeling: dossiers, taken en processen (BPMN)</td><td>13.49.1</td><td><span class="state ok">Draait</span></td></tr>
-      <tr><td>Open Notificaties</td><td>Meldingen tussen componenten bij wijzigingen</td><td>1.17.0</td><td><span class="state ok">Draait</span></td></tr>
-    </tbody>
-  </table>
-  </div>
+  <h2>Stacks vergelijken per functie</h2>
+  <p class="sub">Een stack is een combinatie van onderdelen die samen alle flows van een gemeente dekt. Hieronder per functie welk onderdeel het doet in elke stack, en welke standaard-API's daarbij horen (versies live uit de OpenAPI-specificaties). De registers delen beide stacks; ze verschillen vooral in de werkplekken.</p>
+__FUNCTIES__
+
+  <h2>Details per onderdeel</h2>
+  <p class="sub">Per laag: welke API's elk onderdeel biedt en gebruikt, versie, licentie, en geheugen en schijfruimte (live gemeten op deze server). Werkplekken die uit staan kosten geen geheugen.</p>
+__STACKS__
 
   <h2>Inloggen en testgegevens</h2>
   <p class="sub">Eén keer inloggen is genoeg: alle onderdelen gebruiken dezelfde inlog (Keycloak), ook de beheerschermen. Het wachtwoord krijg je van de beheerder van deze omgeving. Gebruik in deze omgeving nooit echte persoonsgegevens.</p>

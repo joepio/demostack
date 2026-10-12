@@ -115,6 +115,7 @@ docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRE
 for s in openzaak openklant objects objecttypes opennotificaties; do apply $s oidc; done
 apply openforms oidc-openforms
 
+python3 welkom/evaluatie.py || true
 KISS=1 KISS_VERSION=3.2.0 ./welkom/build.sh
 ./welkom/screenshots.sh || echo "Screenshots mislukt; de welkomstpagina werkt ook zonder."
 sed -i "s/^COMPOSE_PROFILES=.*/COMPOSE_PROFILES=$WANTED_PROFILES/" .env
