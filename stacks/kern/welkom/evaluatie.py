@@ -144,6 +144,16 @@ def main():
     (HERE / "public").mkdir(exist_ok=True)
     (HERE / "public" / "stacks.json").write_text(json.dumps({"domein": D, "stacks": out}, indent=1, ensure_ascii=False))
     (HERE / "public" / "stacks.html").write_text(render(out))
+    (HERE / "public" / "functies.html").write_text(render_functies(out))
+
+
+def lic_samenvatting(componenten):
+    """Unieke licenties; meervoudige (bijv. Elasticsearch, Redis) met naam erbij, zodat ze niet als gewone open source ogen."""
+    out = set()
+    for c in componenten:
+        for part in c["licentie"].split(", "):
+            out.add(f'{c["naam"].split(" ")[0]}: {part}' if " / " in part else part)
+    return sorted(out, key=lambda x: (":" in x, x))
 
 
 def gb(mb):
@@ -174,7 +184,7 @@ def render(stacks):
       <div><span>Geheugen nu</span><strong>{gb(st["geheugen_mb"]) if st["aan"] else "uit"}</strong></div>
       <div><span>Images (los geteld)</span><strong>{gb(st["image_mb"])}</strong></div>
       <div><span>Containers</span><strong>{st["containers"]}</strong></div>
-      <div><span>Licenties</span><strong>{e(", ".join(sorted({c["licentie"].split(",")[0].split(" /")[0] for c in st["componenten"]})))}</strong></div>
+      <div><span>Licenties</span><strong>{e(", ".join(lic_samenvatting(st["componenten"])))}</strong></div>
     </div>
     <div class="tbl"><table>
       <thead><tr><th>Component</th><th>Versie</th><th>Biedt API's</th><th>Gebruikt</th><th>Licentie</th><th class="num">Geheugen</th><th class="num">Image</th></tr></thead>
@@ -185,6 +195,82 @@ def render(stacks):
         f'<a class="chip {"on" if st["aan"] else "off"}" href="#stack-{st["id"]}"><span class="dot"></span>{e(st["naam"].split(":")[-1].strip())}'
         f'<small>{"altijd aan" if st["profiel"] is None else ("aan" if st["aan"] else "uit")}</small></a>' for st in stacks)
     return f'<nav class="switcher" aria-label="Stacks">{chips}</nav>' + "\n".join(parts)
+
+
+# Functies (rijen) per stack (kolommen). Status: "hier" = draait in deze omgeving, "niet-hier" = hoort bij de stack maar
+# is hier nog niet geïnstalleerd, "geen" = deze stack heeft er geen eigen onderdeel voor.
+STACK_KOLOMMEN = [
+    {"id": "podiumd", "naam": "PodiumD", "door": "Dimpact", "lagen": ["registers", "kcc", "zac"]},
+    {"id": "gzac", "naam": "GZAC-stack", "door": "Ritense", "lagen": ["registers", "gzac"]},
+]
+FUNCTIES = [
+    {"functie": "Melden en aanvragen", "wie": "Inwoner", "apis": ["formulieren", "zaken", "documenten", "objecten"],
+     "podiumd": ("Open Formulieren", "hier"), "gzac": ("Open Formulieren", "hier")},
+    {"functie": "Inloggen inwoner", "wie": "Inwoner", "apis": ["oidc"],
+     "podiumd": ("DigiD/eHerkenning via makelaar (hier: demo-DigiD in Keycloak)", "hier"),
+     "gzac": ("DigiD/eHerkenning via makelaar (hier: demo-DigiD in Keycloak)", "hier")},
+    {"functie": "Mijn zaken bekijken", "wie": "Inwoner", "apis": ["zaken", "klantinteracties", "objecten"],
+     "podiumd": ("Open Inwoner", "niet-hier"), "gzac": ("Open Inwoner (via portaaltaken)", "niet-hier")},
+    {"functie": "Zaken registreren", "wie": "Register", "apis": ["zaken", "catalogi", "documenten", "besluiten"],
+     "podiumd": ("Open Zaak", "hier"), "gzac": ("Open Zaak", "hier")},
+    {"functie": "Klantgegevens en contactmomenten", "wie": "Register", "apis": ["klantinteracties"],
+     "podiumd": ("Open Klant", "hier"), "gzac": ("Open Klant", "hier")},
+    {"functie": "Overige registraties", "wie": "Register", "apis": ["objecten", "objecttypen"],
+     "podiumd": ("Objecten en Objecttypen", "hier"), "gzac": ("Objecten en Objecttypen", "hier")},
+    {"functie": "Berichten tussen systemen", "wie": "Register", "apis": ["notificaties"],
+     "podiumd": ("Open Notificaties", "hier"), "gzac": ("Open Notificaties", "hier")},
+    {"functie": "Klantcontact (KCC)", "wie": "Medewerker", "apis": ["klantinteracties", "zaken", "brp", "kvk"],
+     "podiumd": ("KISS", "hier"), "gzac": ("Geen eigen KCC-werkplek; KISS is te combineren", "geen")},
+    {"functie": "Personen en bedrijven opzoeken", "wie": "Medewerker", "apis": ["brp", "kvk"],
+     "podiumd": ("KISS en ZAC (Haal Centraal BRP, KvK)", "hier"), "gzac": ("Via plugins (BRP, KvK)", "niet-hier")},
+    {"functie": "Zaken afhandelen", "wie": "Medewerker", "apis": ["zaken", "catalogi", "documenten", "besluiten", "notificaties"],
+     "podiumd": ("ZAC", "hier"), "gzac": ("GZAC (Valtimo)", "hier")},
+    {"functie": "Interne taken en terugbelverzoeken", "wie": "Medewerker", "apis": ["klantinteracties"],
+     "podiumd": ("ITA", "niet-hier"), "gzac": ("Taken in GZAC", "hier")},
+    {"functie": "Processen en werkstromen", "wie": "Beheer", "apis": [],
+     "podiumd": ("CMMN-model in ZAC (vast), BPMN", "hier"), "gzac": ("BPMN/DMN in Valtimo (zelf te modelleren)", "hier")},
+    {"functie": "Rechten per zaaktype", "wie": "Beheer", "apis": ["oidc", "pabc"],
+     "podiumd": ("Keycloak + PABC + OPA", "hier"), "gzac": ("Keycloak + rechten in Valtimo", "hier")},
+]
+
+
+def render_functies(stacks):
+    e = html.escape
+    by_id = {s["id"]: s for s in stacks}
+    ver = {}
+    for s in stacks:
+        for c in s["componenten"]:
+            for a in c["biedt"]:
+                ver[a["id"]] = a["versie"]
+    label = {"hier": "", "niet-hier": '<span class="tag soon">nog niet geïnstalleerd</span>', "geen": '<span class="tag off">ontbreekt</span>'}
+    head = "".join(f'<th>{e(k["naam"])}<br><small>{e(k["door"])}</small></th>' for k in STACK_KOLOMMEN)
+    rows, groep = [], None
+    for f in FUNCTIES:
+        if f["wie"] != groep:
+            groep = f["wie"]
+            rows.append(f'<tr class="groep"><th colspan="{2 + len(STACK_KOLOMMEN)}">{e(groep)}</th></tr>')
+        apis = ", ".join(f'{e(APIS[a][0])}{" " + e(ver[a]) if ver.get(a) else ""}' for a in f["apis"]) or "-"
+        cells = []
+        for k in STACK_KOLOMMEN:
+            comp, status = f[k["id"]]
+            other = f[[x for x in STACK_KOLOMMEN if x is not k][0]["id"]][0]
+            cls = "zelfde" if comp == other else "anders"
+            cells.append(f'<td class="{cls} {status}">{e(comp)} {label[status]}</td>')
+        rows.append(f'<tr><td><strong>{e(f["functie"])}</strong></td><td><small>{apis}</small></td>{"".join(cells)}</tr>')
+    totals = []
+    for k in STACK_KOLOMMEN:
+        lagen = [by_id[l] for l in k["lagen"]]
+        mem = sum(l["geheugen_mb"] for l in lagen); img = sum(l["image_mb"] for l in lagen); n = sum(l["containers"] for l in lagen)
+        lic = lic_samenvatting([c for l in lagen for c in l["componenten"]])
+        totals.append(f'<div class="stack-total"><h3>{e(k["naam"])} <small>{e(k["door"])}</small></h3>'
+                      f'<div class="facts"><div><span>Geheugen</span><strong>{gb(mem)}</strong></div>'
+                      f'<div><span>Images</span><strong>{gb(img)}</strong></div><div><span>Containers</span><strong>{n}</strong></div></div>'
+                      f'<p class="sub"><small>Licenties: {e(", ".join(lic))}</small></p></div>')
+    return (f'<div class="tbl"><table class="functies"><thead><tr><th>Functie</th><th>Standaard-API\'s</th>{head}</tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>'
+            f'<p class="sub legend"><span class="sw zelfde"></span>zelfde component in beide stacks '
+            f'<span class="sw anders"></span>verschillend component</p>'
+            f'<div class="totals">{"".join(totals)}</div>')
 
 
 if __name__ == "__main__":
