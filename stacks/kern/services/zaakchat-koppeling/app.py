@@ -4,7 +4,7 @@
   en geeft daarna een kortlevende ZaakChat-inlogtoken af voor het e-mailadres uit Keycloak.
 - Zaken: Open Notificaties meldt nieuwe zaken en statuswijzigingen (kanaal 'zaken'). De koppeling zet elke zaak
   van een testinwoner om naar een ZaakChat-zaak (Issue), met de inwoner en de behandelaars als betrokkenen,
-  en elke status als bericht in de tijdlijn. De planning toont de stappen van het zaaktype met datums.
+  De status van de zaak en de planning (stappen van het zaaktype met datums) lopen mee met Open Zaak.
   Bij het starten worden bestaande zaken ingelezen.
 ZaakChat zelf blijft ongewijzigd.
 """
@@ -46,20 +46,24 @@ def oz(url, **params):
     return r.json()
 
 
-def commit(subject, schema, resource_id, data=None, patch=None):
+def commit(subject, schema, resource_id, data=None, patch=None, deleted=False):
     ev = {"specversion": "1.0", "id": str(uuid.uuid4()), "source": "demostack-open-zaak", "subject": subject,
           "type": "json.commit", "time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
           "datacontenttype": "application/json", "dataschema": f"{ORIGIN}/schemas/JSONCommit",
           "data": {"schema": f"{ORIGIN}/schemas/{schema}", "resource_id": resource_id, "actor": GEMEENTE,
-                   **({"resource_data": data} if data is not None else {}), **({"patch": patch} if patch is not None else {})}}
+                   **({"resource_data": data} if data is not None else {}), **({"patch": patch} if patch is not None else {}), **({"deleted": True} if deleted else {})}}
     r = http.post(f"{ZC}/events", json=ev, timeout=20,
                   headers={"Authorization": f"Bearer {zc_token(GEMEENTE)}"})
     r.raise_for_status()
 
 
-def bestaat(resource_id):
+def resource(resource_id):
     r = http.get(f"{ZC}/resources/{resource_id}", timeout=20, headers={"Authorization": f"Bearer {zc_token(GEMEENTE)}"})
-    return r.status_code == 200
+    return r.json() if r.status_code == 200 else None
+
+
+def bestaat(resource_id):
+    return resource(resource_id) is not None
 
 
 def inwoner_van(zaak):
@@ -86,14 +90,13 @@ def sync_zaak(url):
     statustypen = {s["url"]: s for s in oz(f"{OZ}/catalogi/api/v1/statustypen", zaaktype=zaak["zaaktype"])["results"]}
     statussen = sorted(oz(f"{OZ}/zaken/api/v1/statussen", zaak=zaak["url"])["results"], key=lambda s: s["datumStatusGezet"])
     planning(zaak, zt, statustypen, statussen)
-    for i, st in enumerate(statussen):
-        cid = f"status-{st['uuid']}"
-        if bestaat(cid):
-            continue
-        tekst = statustypen.get(st["statustype"], {})
-        regel = tekst.get("statustekst") or tekst.get("omschrijving") or "Status gewijzigd"
-        commit(zid, "Comment", cid, data={"content": f"Status: {regel}" + (f"\n{st['statustoelichting']}" if st.get("statustoelichting") else "")})
-        nieuw = "closed" if zaak.get("einddatum") and i == len(statussen) - 1 else ("in_progress" if i > 0 else "open")
+    # Statuswijzigingen zijn geen berichten: ze staan in de planning en als status van de zaak.
+    # Oudere koppelingen plaatsten ze als reactie; die worden opgeruimd.
+    for st in statussen:
+        if bestaat(f"status-{st['uuid']}"):
+            commit(zid, "Comment", f"status-{st['uuid']}", deleted=True)
+    nieuw = "closed" if zaak.get("einddatum") else ("in_progress" if len(statussen) > 1 else "open")
+    if (resource(zid) or {}).get("status") != nieuw:
         commit(zid, "Issue", zid, patch={"status": nieuw})
 
 
