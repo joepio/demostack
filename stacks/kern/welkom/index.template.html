@@ -28,22 +28,20 @@ a { color: var(--accent); }
 header { background: var(--band); color: var(--band-text); }
 header .wrap { padding-top: 36px; padding-bottom: 36px; }
 header .lead { color: rgba(255,255,255,.86); }
-/* Wie is er ingelogd (Keycloak), met snel wisselen van testgebruiker */
-.sessie { margin-top: 20px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 6px;
-  background: rgba(255,255,255,.06); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+/* Wie is er ingelogd: één regel in de kop */
+.sessie { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 15px; color: rgba(255,255,255,.86); }
 .sessie strong { color: #fff; }
-.sessie .als { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.sessie button { font: inherit; font-size: 14px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
-  border: 1px solid rgba(255,255,255,.45); background: transparent; color: #fff; }
-.sessie button:hover, .sessie button:focus-visible { background: rgba(255,255,255,.15); }
-.sessie button[aria-current="true"] { background: #fff; color: var(--band); }
-.sessie small { color: rgba(255,255,255,.75); flex-basis: 100%; }
-.voor-jou { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,.2); }
-.voor-jou a { color: var(--band); background: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 15px; }
-.voor-jou a:hover, .voor-jou a:focus-visible { background: var(--accent-soft); }
-.voor-jou a small { color: var(--muted); font-weight: 500; flex-basis: auto; margin-left: 4px; }
-.card.relevant { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sessie button { font: inherit; padding: 0; border: 0; background: none; color: #fff; text-decoration: underline; cursor: pointer; }
+/* Rol kiezen = inloggen als het testaccount van die rol */
+.kies { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kies button { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 4px; border: 0; cursor: pointer;
+  background: var(--accent); color: #fff; }
+.kies button:hover, .kies button:focus-visible { filter: brightness(1.1); }
+.kies small { color: var(--muted); }
+.kies .nu { display: none; font-weight: 700; color: var(--ok); }
+.card.actief { outline: 3px solid var(--accent); outline-offset: 2px; }
+.card.actief .kies button, .card.actief .kies small { display: none; }
+.card.actief .kies .nu { display: inline; }
 header .badge { background: rgba(255,255,255,.14); color: #fff; }
 .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px;
   background: var(--soon-soft); color: var(--soon); }
@@ -156,82 +154,47 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     <span class="badge">Demo-omgeving, geen echte gegevens</span>
     <h1>DemoStack</h1>
     <p class="lead">Een werkende gemeente in het klein, gebouwd met open source Common Ground-componenten.
-      Kies hieronder je rol en bekijk hoe een melding van een inwoner door de gemeente loopt.</p>
+      Kies een rol: je bent dan meteen ingelogd en ziet wat die rol ziet.</p>
     <div class="sessie" id="sessie" hidden>
-      <span id="sessie-wie">Even kijken wie er ingelogd is…</span>
-      <span class="als">Inloggen als:
-        <button type="button" data-als="demo">demo</button>
-        <button type="button" data-als="suzanne" data-klik>suzanne (inwoner)</button>
-        <button type="button" data-als="kcc" data-klik>kcc</button>
-        <button type="button" data-als="behandelaar" data-klik>behandelaar</button>
-        <button type="button" data-als="beheerder">beheerder</button>
-        <button type="button" id="uitloggen" hidden>Uitloggen</button>
-      </span>
-      <div class="voor-jou" id="voor-jou" hidden><span id="voor-jou-label">Voor jou:</span></div>
-      <small>Eén inlog voor alle onderdelen. suzanne, kcc en behandelaar wisselen met één klik; demo en beheerder vragen het wachtwoord. Inwonerportalen en formulieren vragen een testinwoner met BSN, zoals suzanne. Een onderdeel dat al open stond houdt zijn eigen sessie tot je daar uitlogt of het opnieuw opent.</small>
+      <span id="sessie-wie"></span>
+      <button type="button" id="als-demo">Alles tegelijk bekijken als demo</button>
+      <button type="button" id="uitloggen" hidden>Uitloggen</button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <h2>Zo loopt een melding</h2>
-  <p class="sub">Eén verhaal door alle onderdelen heen.</p>
-  <div class="flow" role="list">
-    <div class="step" role="listitem">Inwoner meldt<span>Open Formulieren</span></div>
-    <div class="arrow" aria-hidden="true">→</div>
-    <div class="step" role="listitem">Zaak ontstaat<span>Open Zaak</span></div>
-    <div class="arrow" aria-hidden="true">→</div>
-    <div class="step" role="listitem">KCC ziet de zaak<span>KISS + Open Klant</span></div>
-    <div class="arrow" aria-hidden="true">→</div>
-    <div class="step" role="listitem">Behandelaar handelt af<span>ZAC of GZAC, met Open Zaak als register</span></div>
-    <div class="arrow" aria-hidden="true">→</div>
-    <div class="step" role="listitem">Inwoner volgt de zaak<span>Open Inwoner, NL Portal, MijnOverheid of ZaakChat</span></div>
-  </div>
-
   <h2>Kies je rol</h2>
-  <p class="sub">Elke rol heeft een eigen ingang. De beheerschermen zijn voor functioneel beheer, niet voor medewerkers.</p>
+  <p class="sub">Elke rol is een testaccount. Inwoner, KCC-medewerker en zaakbehandelaar: één klik. Beheer vraagt het wachtwoord, omdat je daar alles kunt wijzigen.</p>
   <div class="grid">
-    <section class="card">
+    <section class="card" data-rol="inwoner">
       <figure class="shots">
-        <img src="shots/inwoner-1.jpg" alt="Startpagina van het formulier" data-caption="Startpagina van het formulier" loading="lazy" class="on">
-        <img src="shots/inwoner-2.jpg" alt="Melding invullen" data-caption="Melding invullen" loading="lazy">
-        <figcaption>Startpagina van het formulier</figcaption>
-        <span class="hint" aria-hidden="true">2 schermen</span>
-      </figure>
-      <div class="body">
-      <div class="who">Inwoner</div>
-      <h3>Een melding doen</h3>
-      <p>Meld een losliggende stoeptegel, kapotte lantaarnpaal of zwerfafval en prik de plek op de kaart. Log in met DigiD (demo) als testinwoner, dan staat je naam bij de zaak. Je melding wordt direct een zaak bij de gemeente.</p>
-      <div class="links">
-        <a class="btn" data-shot="inwoner-1.jpg" href="https://formulieren.__BASE__/melding-openbare-ruimte">Melding openbare ruimte <small>Open Formulieren</small></a>
-      </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <figure class="shots">
-        <img src="shots/inwoner-oip.jpg" alt="Mijn zaken in Open Inwoner" data-caption="Mijn zaken in Open Inwoner" loading="lazy" class="on">
+        <img src="shots/inwoner-1.jpg" alt="Melding doen in Open Formulieren" data-caption="Melding doen in Open Formulieren" loading="lazy" class="on">
+        <img src="shots/inwoner-oip.jpg" alt="Mijn zaken in Open Inwoner" data-caption="Mijn zaken in Open Inwoner" loading="lazy">
         <img src="shots/inwoner-nlportal.jpg" alt="Overzicht in NL Portal" data-caption="Overzicht in NL Portal" loading="lazy">
-        <img src="shots/inwoner-mo.jpg" alt="MijnOverheid-demo met gemeente en Rijk" data-caption="MijnOverheid-demo met gemeente en Rijk" loading="lazy">
-        <img src="shots/inwoner-mo-2.jpg" alt="Statusverloop en open taak in de MijnOverheid-demo" data-caption="Statusverloop en open taak in de MijnOverheid-demo" loading="lazy">
+        <img src="shots/inwoner-mo-2.jpg" alt="Statusverloop in de MijnOverheid-demo" data-caption="Statusverloop in de MijnOverheid-demo" loading="lazy">
         <img src="shots/inwoner-zaakchat.jpg" alt="Gesprek over de zaak in ZaakChat" data-caption="Gesprek over de zaak in ZaakChat" loading="lazy">
-        <figcaption>Mijn zaken in Open Inwoner</figcaption>
+        <img src="shots/inwoner-2.jpg" alt="Melding invullen" data-caption="Melding invullen" data-extra loading="lazy">
+        <img src="shots/inwoner-mo.jpg" alt="MijnOverheid-demo met gemeente en Rijk" data-caption="MijnOverheid-demo met gemeente en Rijk" data-extra loading="lazy">
+        <figcaption>Melding doen in Open Formulieren</figcaption>
         <span class="hint" aria-hidden="true">5 schermen</span>
       </figure>
       <div class="body">
       <div class="who">Inwoner</div>
-      <h3>Mijn zaken volgen</h3>
-      <p>Drie portalen op dezelfde registers. Log in als <code>suzanne</code> (DigiD demo): je ziet haar melding, de status en een open taak. De MijnOverheid-demo van het VNG API Lab toont gemeente en Rijk samen. In ZaakChat chat je met de behandelaar over je zaak; statuswijzigingen verschijnen daar vanzelf.</p>
+      <h3>Melden en volgen</h3>
+      <div class="kies"><button type="button" data-als="suzanne" data-klik>Word Suzanne</button><small>testinwoner met BSN</small><span class="nu">Je bent Suzanne</span></div>
+      <p>Meld een losliggende stoeptegel en volg je zaak in een portaal naar keuze: Open Inwoner (PodiumD), NL Portal (GZAC-stack), de MijnOverheid-demo van het VNG API Lab, of chat erover in ZaakChat.</p>
       <div class="links">
+        <a class="btn" data-shot="inwoner-1.jpg" href="https://formulieren.__BASE__/melding-openbare-ruimte">Melding doen <small>Open Formulieren</small></a>
         <a class="btn" data-profile="oip" data-shot="inwoner-oip.jpg" href="https://inwoner.__BASE__/digid-oidc/authenticate/?next=/cases/">Open Inwoner <small>Maykin / PodiumD</small></a>
         <a class="btn" data-profile="nlportal" data-shot="inwoner-nlportal.jpg" href="https://portaal.__BASE__/">NL Portal <small>Ritense / GZAC-stack</small></a>
-        <a class="btn" data-profile="mijnoverheid" data-shot="inwoner-mo.jpg" href="https://mijnoverheid.__BASE__/">MijnOverheid-demo <small>VNG API Lab</small></a>
+        <a class="btn" data-profile="mijnoverheid" data-shot="inwoner-mo-2.jpg" href="https://mijnoverheid.__BASE__/">MijnOverheid-demo <small>VNG API Lab</small></a>
         <a class="btn" data-profile="zaakchat" data-shot="inwoner-zaakchat.jpg" href="https://zaakchat.__BASE__/koppeling/login">ZaakChat <small>chatten over je zaak</small></a>
       </div>
       </div>
     </section>
 
-    <section class="card" data-profile="kcc">
+    <section class="card" data-profile="kcc" data-rol="kcc">
       <figure class="shots">
         <img src="shots/kcc-1.jpg" alt="Startscherm met nieuws en werkinstructies" data-caption="Startscherm met nieuws en werkinstructies" loading="lazy" class="on">
         <img src="shots/kcc-2.jpg" alt="Inwoner opzoeken via de BRP" data-caption="Inwoner opzoeken via de BRP" loading="lazy">
@@ -243,6 +206,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <div class="offnote">Staat nu uit om geheugen te sparen. Vraag de beheerder om hem aan te zetten.</div>
       <div class="who">KCC-medewerker</div>
       <h3>Klantcontact</h3>
+      <div class="kies"><button type="button" data-als="kcc" data-klik>Word KCC-medewerker</button><small>account kcc</small><span class="nu">Je bent KCC-medewerker</span></div>
       <p>Zoek een inwoner op, zie lopende zaken en eerdere contacten, beantwoord vragen met de kennisbank en zet terugbelverzoeken door.</p>
       <div class="links">
         __KISS_LINK__
@@ -250,7 +214,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" data-rol="behandelaar">
       <figure class="shots">
         <img src="shots/behandelaar-zac.jpg" alt="Werkvoorraad in ZAC" data-caption="Werkvoorraad in ZAC" loading="lazy" class="on">
         <img src="shots/behandelaar-zac-2.jpg" alt="Een zaak in ZAC" data-caption="Een zaak in ZAC" loading="lazy">
@@ -263,6 +227,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <div class="body">
       <div class="who">Zaakbehandelaar</div>
       <h3>Zaken afhandelen</h3>
+      <div class="kies"><button type="button" data-als="behandelaar" data-klik>Word behandelaar</button><small>team Meldingen</small><span class="nu">Je bent behandelaar</span></div>
       <p>Twee werkplekken naast elkaar op dezelfde zaken: ZAC (Dimpact, onderdeel van PodiumD) en GZAC (Valtimo, Ritense). Open Zaak is in beide gevallen het register. GZAC bevat ook de voorbeeldcasus evenementenvergunning.</p>
       <div class="links">
         <a class="btn" data-profile="zac" data-shot="behandelaar-zac.jpg" href="https://zac.__BASE__/zaken/werkvoorraad">ZAC <small>Dimpact / PodiumD</small></a>
@@ -272,7 +237,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" data-rol="beheerder">
       <figure class="shots">
         <img src="shots/beheer-1.jpg" alt="Formulieren in Open Formulieren" data-caption="Formulieren in Open Formulieren" loading="lazy" class="on">
         <img src="shots/beheer-2.jpg" alt="Formulierbouwer" data-caption="Formulierbouwer" loading="lazy">
@@ -287,6 +252,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <div class="body">
       <div class="who">Functioneel beheerder</div>
       <h3>Inrichting</h3>
+      <div class="kies"><button type="button" data-als="beheerder">Word beheerder</button><small>vraagt het wachtwoord</small><span class="nu">Je bent beheerder</span></div>
       <p>Formulieren bouwen, zaaktypen en catalogi beheren, objecttypen en API-koppelingen instellen. In IKO stel je een klant- en objectbeeld samen uit meerdere bronnen (nog leeg: de bronnen richt je zelf in).</p>
       <div class="links">
         <a class="btn" data-shot="beheer-1.jpg" href="https://formulieren.__BASE__/auth/oidc/authenticate/?next=%2Fadmin%2F">Open Formulieren <small>formulieren</small></a>
@@ -313,6 +279,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       <div class="body">
       <div class="who">Ontwikkelaar / integrator</div>
       <h3>API's en testtools</h3>
+      <div class="kies"><small>Geen inlog nodig voor de API-documentatie.</small></div>
       <p>De standaard ZGW- en Klantinteracties-API's, het berichtenverkeer tussen componenten, en een mailbox die alle uitgaande mail van de demo opvangt.</p>
       <div class="links">
         <a class="btn" data-shot="ontwikkelaar-1.jpg" href="https://zaken.__BASE__/zaken/api/v1/schema/">Zaken API <small>OAS</small></a>
@@ -323,6 +290,20 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       </div>
       </div>
     </section>
+  </div>
+
+  <h2>Zo loopt een melding</h2>
+  <p class="sub">Eén verhaal door alle onderdelen heen.</p>
+  <div class="flow" role="list">
+    <div class="step" role="listitem">Inwoner meldt<span>Open Formulieren</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="step" role="listitem">Zaak ontstaat<span>Open Zaak</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="step" role="listitem">KCC ziet de zaak<span>KISS + Open Klant</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="step" role="listitem">Behandelaar handelt af<span>ZAC of GZAC, met Open Zaak als register</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="step" role="listitem">Inwoner volgt de zaak<span>Open Inwoner, NL Portal, MijnOverheid of ZaakChat</span></div>
   </div>
 
   <h2>Stacks vergelijken per functie</h2>
@@ -357,88 +338,47 @@ __STACKS__
   <div class="wrap">DemoStack door <a href="https://vng.nl">VNG</a>: een demo-omgeving rond de <a href="https://commonground.nl">Common Ground</a>-standaarden, zoals de ZGW-API's. Componenten van Maykin Media, Dimpact, Ritense en anderen, ongewijzigd en open source.</div>
 </footer>
 <script type="module">
-// Per account de onderdelen die ertoe doen, als snelkoppelingen; de bijbehorende rolkaart krijgt een rand.
-const B = "__BASE__";
-const INWONER = { rol: "Inwoner", tekst: "Als inwoner", links: [
-  ["Melding doen", `https://formulieren.${B}/melding-openbare-ruimte`, "Open Formulieren"],
-  ["Open Inwoner", `https://inwoner.${B}/digid-oidc/authenticate/?next=/cases/`, "", "oip"],
-  ["NL Portal", `https://portaal.${B}/`, "", "nlportal"],
-  ["MijnOverheid", `https://mijnoverheid.${B}/`, "", "mijnoverheid"],
-  ["ZaakChat", `https://zaakchat.${B}/koppeling/login`, "", "zaakchat"]] };
-const PER_ACCOUNT = {
-  suzanne: INWONER, lukas: INWONER, merel: INWONER,
-  kcc: { rol: "KCC-medewerker", tekst: "Als KCC-medewerker", links: [
-    ["KISS", `https://kiss.${B}/`, "klantcontact", "kcc"], ["ZaakChat", `https://zaakchat.${B}/koppeling/login`, "gesprekken", "zaakchat"]] },
-  redacteur: { rol: "KCC-medewerker", tekst: "Als redacteur", links: [["KISS", `https://kiss.${B}/`, "nieuws en werkinstructies", "kcc"]] },
-  behandelaar: { rol: "Zaakbehandelaar", tekst: "Als zaakbehandelaar", links: [
-    ["ZAC", `https://zac.${B}/zaken/werkvoorraad`, "werkvoorraad", "zac"], ["GZAC", `https://gzac.${B}/`, "dossiers", "gzac"],
-    ["ZaakChat", `https://zaakchat.${B}/koppeling/login`, "gesprekken", "zaakchat"],
-    ["Open Zaak", `https://zaken.${B}/oidc/authenticate/?next=/admin/zaken/zaak/`, "register"]] },
-  coordinator: { rol: "Zaakbehandelaar", tekst: "Als coördinator", links: [["ZAC", `https://zac.${B}/zaken/werkvoorraad`, "verdelen en volgen", "zac"]] },
-  beheerder: { rol: "Functioneel beheerder", tekst: "Als beheerder", links: [
-    ["Open Formulieren", `https://formulieren.${B}/auth/oidc/authenticate/?next=%2Fadmin%2F`, "formulieren"],
-    ["Open Zaak", `https://zaken.${B}/oidc/authenticate/?next=/admin/`, "zaaktypen"],
-    ["Open Klant", `https://klant.${B}/oidc/authenticate/?next=/admin/`, ""],
-    ["Objecten", `https://objecten.${B}/oidc/authenticate/?next=/admin/`, ""],
-    ["IKO", `https://iko.${B}/admin`, "", "iko"]] },
-  demo: { rol: null, tekst: "Met demo kun je alles. Snel naar", links: [
-    ["KISS", `https://kiss.${B}/`, "", "kcc"], ["ZAC", `https://zac.${B}/zaken/werkvoorraad`, "", "zac"], ["GZAC", `https://gzac.${B}/`, "", "gzac"],
-    ["Open Zaak", `https://zaken.${B}/oidc/authenticate/?next=/admin/`, "beheer"], ["IKO", `https://iko.${B}/admin`, "", "iko"]],
-    noot: "Voor de inwonerportalen log je in als suzanne." },
-};
-function toonVoorJou(user) {
-  const cfg = PER_ACCOUNT[user]; if (!cfg) return;
-  const uit = (document.body.dataset.off || "").split(/\s+/);
-  const el = document.getElementById("voor-jou");
-  document.getElementById("voor-jou-label").textContent = cfg.tekst + ":";
-  for (const [naam, href, sub, profiel] of cfg.links) {
-    if (profiel && uit.includes(profiel)) continue;
-    const a = document.createElement("a"); a.href = href; a.textContent = naam;
-    if (sub) { const s = document.createElement("small"); s.textContent = sub; a.append(s); }
-    el.append(a);
-  }
-  if (cfg.noot) { const s = document.createElement("small"); s.textContent = cfg.noot; el.append(s); }
-  el.hidden = false;
-  if (cfg.rol) document.querySelectorAll(".card").forEach((c) => {
-    const who = c.querySelector(".who");
-    if (who && who.textContent.trim() === cfg.rol) c.classList.add("relevant");
-  });
-}
-window.toonVoorJou = toonVoorJou;
-</script>
-<script type="module">
-// Toont wie er via Keycloak ingelogd is en wisselt van testgebruiker: uitloggen en opnieuw inloggen met die naam voorgevuld.
+// Rol kiezen = inloggen als het testaccount van die rol. Accounts met data-klik gaan zonder wachtwoord
+// (keycloak.<domein>/demo-login); de rest via Keycloak met de naam voorgevuld.
 const box = document.getElementById("sessie");
+const ROL = { suzanne: "inwoner", lukas: "inwoner", merel: "inwoner", kcc: "kcc", redacteur: "kcc",
+  behandelaar: "behandelaar", coordinator: "behandelaar", beheerder: "beheerder" };
 try {
   const { default: Keycloak } = await import("https://cdn.jsdelivr.net/npm/keycloak-js@26.2.0/+esm");
   const kc = new Keycloak({ url: "https://keycloak.__BASE__", realm: "demogemeente", clientId: "welkom" });
   const ok = await kc.init({ onLoad: "check-sso", pkceMethod: "S256", checkLoginIframe: false,
     silentCheckSsoRedirectUri: location.origin + "/silent-check-sso.html" });
   const als = new URLSearchParams(location.search).get("als");
+  const word = (account, eenKlik) => {
+    if (eenKlik) {
+      location.href = `https://keycloak.__BASE__/demo-login?als=${encodeURIComponent(account)}&terug=${encodeURIComponent(location.origin + "/")}`;
+    } else if (ok) {
+      kc.logout({ redirectUri: location.origin + "/?als=" + encodeURIComponent(account) });
+    } else {
+      kc.login({ loginHint: account, prompt: "login", redirectUri: location.origin + "/" });
+    }
+  };
   if (als) {
     if (ok) await kc.logout({ redirectUri: location.origin + "/?als=" + encodeURIComponent(als) });
     else { history.replaceState(null, "", "/"); await kc.login({ loginHint: als, prompt: "login", redirectUri: location.origin + "/" }); }
   } else {
     const t = kc.tokenParsed || {};
     const user = t.preferred_username;
+    const esc = (x) => String(x).replace(/[<>&]/g, "");
     document.getElementById("sessie-wie").innerHTML = user
-      ? `Ingelogd als <strong>${(t.name || user).replace(/[<>&]/g, "")}</strong> (${user.replace(/[<>&]/g, "")})`
-      : "Niet ingelogd";
-    box.querySelectorAll("[data-als]").forEach((b) => {
-      if (b.dataset.als === user) b.setAttribute("aria-current", "true");
-      b.addEventListener("click", () => {
-        // Testinwoners, kcc en behandelaar: één klik, zonder wachtwoord (keycloak.<domein>/demo-login)
-        if (b.hasAttribute("data-klik")) {
-          location.href = `https://keycloak.__BASE__/demo-login?als=${encodeURIComponent(b.dataset.als)}&terug=${encodeURIComponent(location.origin + "/")}`;
-          return;
-        }
-        if (ok) kc.logout({ redirectUri: location.origin + "/?als=" + encodeURIComponent(b.dataset.als) });
-        else kc.login({ loginHint: b.dataset.als, prompt: "login", redirectUri: location.origin + "/" });
-      });
-    });
+      ? `Je bent <strong>${esc(t.name || user)}</strong> (${esc(user)}).` : "Je bent niet ingelogd. Kies hieronder een rol.";
+    document.querySelectorAll(".kies button[data-als]").forEach((b) =>
+      b.addEventListener("click", () => word(b.dataset.als, b.hasAttribute("data-klik"))));
+    const kaart = document.querySelector(`.card[data-rol="${ROL[user] || "-"}"]`);
+    if (kaart) {
+      kaart.classList.add("actief");
+      const nu = kaart.querySelector(".kies .nu");
+      if (nu && t.name) nu.textContent = `Je bent ${t.name}`;
+    }
+    const demo = document.getElementById("als-demo");
+    if (user === "demo") demo.hidden = true; else demo.addEventListener("click", () => word("demo", false));
     const uit = document.getElementById("uitloggen");
     if (ok) { uit.hidden = false; uit.addEventListener("click", () => kc.logout({ redirectUri: location.origin + "/" })); }
-    toonVoorJou(user);
     box.hidden = false;
   }
 } catch (e) { box.hidden = true; }
