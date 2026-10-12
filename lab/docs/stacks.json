@@ -1,0 +1,1692 @@
+{
+  "bron": "lab/ van joepio/demostack; gegenereerd door tools/stackevaluatie.py",
+  "gemeten": "7 en 8 oktober 2026, 15 GB geheugen, 4 CPU's, lege volumes",
+  "stacks": [
+    {
+      "id": "kern",
+      "titel": "MijnServices-kern (variant 1): registers en API's",
+      "omschrijving": "Alleen de registers en hun API's: de basis waar elke andere stack op bouwt.",
+      "footprint": {
+        "geheugen_gib": 4.2,
+        "images_gb": 8.3,
+        "containers": 18,
+        "start_s": 190,
+        "zelf_gebouwd": []
+      },
+      "tests": {
+        "samenvatting": {
+          "pass": 34,
+          "fail": 7,
+          "skip": 5,
+          "fail_bekend": 7,
+          "fail_onverwacht": 0,
+          "totaal": 46
+        },
+        "per_categorie": {
+          "gezondheid": {
+            "pass": 12,
+            "fail": 0,
+            "skip": 0,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 12
+          },
+          "rook": {
+            "pass": 19,
+            "fail": 0,
+            "skip": 3,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 22
+          },
+          "zgw": {
+            "pass": 3,
+            "fail": 7,
+            "skip": 0,
+            "fail_bekend": 7,
+            "fail_onverwacht": 0,
+            "totaal": 10
+          },
+          "burger-isolatie": {
+            "pass": 0,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 1
+          },
+          "mijn-apis": {
+            "pass": 0,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 1
+          }
+        },
+        "afgeleid": null
+      },
+      "bekende_fouten": [
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet wie de burger is (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): overzicht-naar-detail",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): zonder-token",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): onbekende-zaak",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        }
+      ],
+      "licenties": [
+        "Apache-2.0",
+        "EUPL-1.2",
+        "EUPL-1.2 (aanname)"
+      ],
+      "componenten": [
+        {
+          "id": "postgres",
+          "naam": "Postgres/PostGIS",
+          "rol": "infra",
+          "images": [
+            "postgis/postgis:17-3.5-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "redis",
+          "naam": "Redis",
+          "rol": "infra",
+          "images": [
+            "redis:8.10.2-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "keycloak",
+          "naam": "Keycloak (DigiD-simulatie)",
+          "rol": "infra",
+          "images": [
+            "keycloak/keycloak:26.4.7"
+          ],
+          "licentie": "Apache-2.0",
+          "maker": "Red Hat / CNCF-community",
+          "api_standaarden": "OIDC, OAuth2 token-exchange, SAML (DigiD)",
+          "repo": "https://github.com/keycloak/keycloak"
+        },
+        {
+          "id": "brp-mock",
+          "naam": "BRP-mock (Haal Centraal BRP personen)",
+          "rol": "infra",
+          "images": [
+            "iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "notificatie-sink",
+          "naam": "Notificatie-sink",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openzaak",
+          "naam": "Open Zaak",
+          "rol": "register",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (ontwikkeling); community/stakeholders gemeenten",
+          "api_standaarden": "ZGW API's (Zaken, Catalogi, Documenten, Besluiten, Autorisaties), Notificaties (client)",
+          "repo": "https://github.com/open-zaak/open-zaak"
+        },
+        {
+          "id": "opennotificaties",
+          "naam": "Open Notificaties",
+          "rol": "register",
+          "images": [
+            "openzaak/open-notificaties:1.16.1"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (Open Zaak-community)",
+          "api_standaarden": "Notificaties API (ZGW)",
+          "repo": "https://github.com/open-zaak/open-notificaties"
+        },
+        {
+          "id": "openobject",
+          "naam": "Open Object (Objecten en Objecttypen)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-object:4.1.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Objecten API",
+          "repo": "https://github.com/maykinmedia/open-object (voorheen objects-api)"
+        },
+        {
+          "id": "openklant",
+          "naam": "Open Klant",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-klant:2.17.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Klantinteracties API, Contactgegevens API",
+          "repo": "https://github.com/maykinmedia/open-klant"
+        },
+        {
+          "id": "openproduct",
+          "naam": "Open Product",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-product:1.8.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Producten API, Producttypen API (beide concept-standaard volgens Platform Dienstverlening)",
+          "repo": "https://github.com/maykinmedia/open-product"
+        },
+        {
+          "id": "referentielijsten",
+          "naam": "Referentielijsten",
+          "rol": "register",
+          "images": [
+            "maykinmedia/referentielijsten-api:0.7.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Referentielijsten API (concept)",
+          "repo": "https://github.com/maykinmedia/referentielijsten"
+        },
+        {
+          "id": "selectielijst",
+          "naam": "VNG Selectielijst",
+          "rol": "register",
+          "images": [
+            "openzaak/vng-selectielijst:1.0.5"
+          ],
+          "licentie": "EUPL-1.2 (aanname)",
+          "maker": "Open Zaak-community (Maykin)",
+          "api_standaarden": "Selectielijst API",
+          "repo": "https://github.com/open-zaak/vng-selectielijst"
+        }
+      ],
+      "niet_draaiend": []
+    },
+    {
+      "id": "maykin",
+      "titel": "Maykin-landschap",
+      "omschrijving": "De producten van Maykin Media: Open Formulieren, Open Inwoner en Open VTB op de registers.",
+      "footprint": {
+        "geheugen_gib": 7.5,
+        "images_gb": 13.9,
+        "containers": 27,
+        "start_s": 327,
+        "zelf_gebouwd": []
+      },
+      "tests": {
+        "samenvatting": {
+          "pass": 62,
+          "fail": 7,
+          "skip": 6,
+          "fail_bekend": 7,
+          "fail_onverwacht": 0,
+          "totaal": 75
+        },
+        "per_categorie": {
+          "gezondheid": {
+            "pass": 16,
+            "fail": 0,
+            "skip": 2,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 18
+          },
+          "rook": {
+            "pass": 30,
+            "fail": 0,
+            "skip": 3,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 33
+          },
+          "zgw": {
+            "pass": 3,
+            "fail": 7,
+            "skip": 0,
+            "fail_bekend": 7,
+            "fail_onverwacht": 0,
+            "totaal": 10
+          },
+          "burger-isolatie": {
+            "pass": 13,
+            "fail": 0,
+            "skip": 0,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 13
+          },
+          "mijn-apis": {
+            "pass": 0,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 1
+          }
+        },
+        "afgeleid": "Afgeleid van de run van 2026-10-08 (commit 26c61314e074): die draaide met een ingebouwde portaallaag. De checks van die laag zijn weggelaten, de leesclient heet nu burgerportaal, en de categorie mijn-apis is overgeslagen zonder plug-in. Opnieuw draaien met scripts/stack.sh test maykin geeft een rapport uit een echte run."
+      },
+      "bekende_fouten": [
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet wie de burger is (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): overzicht-naar-detail",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): zonder-token",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): onbekende-zaak",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        }
+      ],
+      "licenties": [
+        "Apache-2.0",
+        "EUPL-1.2",
+        "EUPL-1.2 (aanname)"
+      ],
+      "componenten": [
+        {
+          "id": "postgres",
+          "naam": "Postgres/PostGIS",
+          "rol": "infra",
+          "images": [
+            "postgis/postgis:17-3.5-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "redis",
+          "naam": "Redis",
+          "rol": "infra",
+          "images": [
+            "redis:8.10.2-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "keycloak",
+          "naam": "Keycloak (DigiD-simulatie)",
+          "rol": "infra",
+          "images": [
+            "keycloak/keycloak:26.4.7"
+          ],
+          "licentie": "Apache-2.0",
+          "maker": "Red Hat / CNCF-community",
+          "api_standaarden": "OIDC, OAuth2 token-exchange, SAML (DigiD)",
+          "repo": "https://github.com/keycloak/keycloak"
+        },
+        {
+          "id": "brp-mock",
+          "naam": "BRP-mock (Haal Centraal BRP personen)",
+          "rol": "infra",
+          "images": [
+            "iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "notificatie-sink",
+          "naam": "Notificatie-sink",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openzaak",
+          "naam": "Open Zaak",
+          "rol": "register",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (ontwikkeling); community/stakeholders gemeenten",
+          "api_standaarden": "ZGW API's (Zaken, Catalogi, Documenten, Besluiten, Autorisaties), Notificaties (client)",
+          "repo": "https://github.com/open-zaak/open-zaak"
+        },
+        {
+          "id": "opennotificaties",
+          "naam": "Open Notificaties",
+          "rol": "register",
+          "images": [
+            "openzaak/open-notificaties:1.16.1"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (Open Zaak-community)",
+          "api_standaarden": "Notificaties API (ZGW)",
+          "repo": "https://github.com/open-zaak/open-notificaties"
+        },
+        {
+          "id": "openobject",
+          "naam": "Open Object (Objecten en Objecttypen)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-object:4.1.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Objecten API",
+          "repo": "https://github.com/maykinmedia/open-object (voorheen objects-api)"
+        },
+        {
+          "id": "openklant",
+          "naam": "Open Klant",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-klant:2.17.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Klantinteracties API, Contactgegevens API",
+          "repo": "https://github.com/maykinmedia/open-klant"
+        },
+        {
+          "id": "openproduct",
+          "naam": "Open Product",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-product:1.8.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Producten API, Producttypen API (beide concept-standaard volgens Platform Dienstverlening)",
+          "repo": "https://github.com/maykinmedia/open-product"
+        },
+        {
+          "id": "referentielijsten",
+          "naam": "Referentielijsten",
+          "rol": "register",
+          "images": [
+            "maykinmedia/referentielijsten-api:0.7.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Referentielijsten API (concept)",
+          "repo": "https://github.com/maykinmedia/referentielijsten"
+        },
+        {
+          "id": "selectielijst",
+          "naam": "VNG Selectielijst",
+          "rol": "register",
+          "images": [
+            "openzaak/vng-selectielijst:1.0.5"
+          ],
+          "licentie": "EUPL-1.2 (aanname)",
+          "maker": "Open Zaak-community (Maykin)",
+          "api_standaarden": "Selectielijst API",
+          "repo": "https://github.com/open-zaak/vng-selectielijst"
+        },
+        {
+          "id": "brp-api",
+          "naam": "BRP-vertaler (BRP API Personen 2, officieel formaat)",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openvtb",
+          "naam": "Open VTB (Verzoeken, Taken, Berichten)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-vtb:0.2.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin, voor de werkgroep Platform Dienstverlening",
+          "api_standaarden": "Verzoeken, Taken, Berichten API (concept); voorstel CloudEvents NL Gov-profiel",
+          "repo": "https://github.com/maykinmedia/open-vtb"
+        },
+        {
+          "id": "openformulieren",
+          "naam": "Open Formulieren",
+          "rol": "portaal",
+          "images": [
+            "openformulieren/open-forms:4.0.1"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin; stakeholders Dimpact, Den Haag, Rotterdam, Utrecht, SED-organisatie",
+          "api_standaarden": "ZGW (registratie), Objecten API, StUF-ZDS, Haal Centraal BRP (prefill), KvK, DigiD/eHerkenning/eIDAS, betalingen (Ogone/Worldline)",
+          "repo": "https://github.com/open-formulieren/open-forms"
+        },
+        {
+          "id": "openinwoner",
+          "naam": "Open Inwoner (met Elasticsearch)",
+          "rol": "portaal",
+          "images": [
+            "elasticsearch:9.0.3",
+            "maykinmedia/open-inwoner:2.4.5"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (opengem.nl); ontstaan bij Enschede, Zwolle, Leeuwarden, Deventer, Groningen, Zaanstad",
+          "api_standaarden": "ZGW, Klantinteracties (OpenKlant 2) en e-Suite-klanten, Objecten, Haal Centraal BRP, KvK, Notificaties (webhook), StUF/SOAP (sociaal domein), DigiD/eHerkenning/eIDAS via OIDC",
+          "repo": "https://github.com/maykinmedia/open-inwoner"
+        }
+      ],
+      "niet_draaiend": [
+        {
+          "naam": "Open Archiefbeheer",
+          "reden": "zit in stack dimpact (PodiumD); hoort ook bij Maykin, nog niet hier"
+        },
+        {
+          "naam": "Open Beheer",
+          "reden": "zit in stack dimpact en vcg; hoort ook bij Maykin, nog niet hier"
+        }
+      ]
+    },
+    {
+      "id": "dimpact",
+      "titel": "Dimpact PodiumD 4.9.3",
+      "omschrijving": "Wat PodiumD 4.9.3 draait, het platform van Dimpact voor ongeveer 100 gemeenten.",
+      "footprint": {
+        "geheugen_gib": 9.0,
+        "images_gb": 17.9,
+        "containers": 36,
+        "start_s": 346,
+        "zelf_gebouwd": [
+          "KISS",
+          "ITA",
+          "PABC"
+        ]
+      },
+      "tests": {
+        "samenvatting": {
+          "pass": 85,
+          "fail": 8,
+          "skip": 11,
+          "fail_bekend": 8,
+          "fail_onverwacht": 0,
+          "totaal": 104
+        },
+        "per_categorie": {
+          "gezondheid": {
+            "pass": 23,
+            "fail": 0,
+            "skip": 7,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 30
+          },
+          "rook": {
+            "pass": 46,
+            "fail": 1,
+            "skip": 3,
+            "fail_bekend": 1,
+            "fail_onverwacht": 0,
+            "totaal": 50
+          },
+          "zgw": {
+            "pass": 3,
+            "fail": 7,
+            "skip": 0,
+            "fail_bekend": 7,
+            "fail_onverwacht": 0,
+            "totaal": 10
+          },
+          "burger-isolatie": {
+            "pass": 13,
+            "fail": 0,
+            "skip": 0,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 13
+          },
+          "mijn-apis": {
+            "pass": 0,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 1
+          }
+        },
+        "afgeleid": "Afgeleid van de run van 2026-10-08 (commit 0ab0bd073347): die draaide met een ingebouwde portaallaag. De checks van die laag zijn weggelaten, de leesclient heet nu burgerportaal, en de categorie mijn-apis is overgeslagen zonder plug-in. Opnieuw draaien met scripts/stack.sh test dimpact geeft een rapport uit een echte run."
+      },
+      "bekende_fouten": [
+        {
+          "check": "keten: zaak in Open Zaak, Open Notificaties, OMC, e-mail via Notify",
+          "uitleg": "NotifyNL OMC 1.17.19 (de versie in PodiumD 4.9.3) weigert de notificaties van Open Notificaties 1.16.2 met 206 en statuscode 422: die bevatten het veld \"source\", dat het model van OMC niet kent. OMC zelf werkt (zie de rooktest met een notificatie in het OMC-formaat); de koppeling tussen deze twee versies niet."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet wie de burger is (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): overzicht-naar-detail",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): zonder-token",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): onbekende-zaak",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        }
+      ],
+      "licenties": [
+        "Apache-2.0",
+        "EUPL-1.2",
+        "EUPL-1.2 (aanname)",
+        "aanname: EUPL",
+        "onbekend"
+      ],
+      "componenten": [
+        {
+          "id": "postgres",
+          "naam": "Postgres/PostGIS",
+          "rol": "infra",
+          "images": [
+            "postgis/postgis:17-3.5-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "redis",
+          "naam": "Redis",
+          "rol": "infra",
+          "images": [
+            "redis:8.10.2-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "keycloak",
+          "naam": "Keycloak (DigiD-simulatie)",
+          "rol": "infra",
+          "images": [
+            "keycloak/keycloak:26.4.7"
+          ],
+          "licentie": "Apache-2.0",
+          "maker": "Red Hat / CNCF-community",
+          "api_standaarden": "OIDC, OAuth2 token-exchange, SAML (DigiD)",
+          "repo": "https://github.com/keycloak/keycloak"
+        },
+        {
+          "id": "brp-mock",
+          "naam": "BRP-mock (Haal Centraal BRP personen)",
+          "rol": "infra",
+          "images": [
+            "iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "notificatie-sink",
+          "naam": "Notificatie-sink",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openzaak",
+          "naam": "Open Zaak",
+          "rol": "register",
+          "images": [
+            "openzaak/open-zaak:1.29.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (ontwikkeling); community/stakeholders gemeenten",
+          "api_standaarden": "ZGW API's (Zaken, Catalogi, Documenten, Besluiten, Autorisaties), Notificaties (client)",
+          "repo": "https://github.com/open-zaak/open-zaak"
+        },
+        {
+          "id": "opennotificaties",
+          "naam": "Open Notificaties",
+          "rol": "register",
+          "images": [
+            "openzaak/open-notificaties:1.16.2"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (Open Zaak-community)",
+          "api_standaarden": "Notificaties API (ZGW)",
+          "repo": "https://github.com/open-zaak/open-notificaties"
+        },
+        {
+          "id": "openobject",
+          "naam": "Objecten API 3.6.2 (los, zoals PodiumD)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/objects-api:3.6.2"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Objecten API",
+          "repo": "https://github.com/maykinmedia/open-object (voorheen objects-api)"
+        },
+        {
+          "id": "openklant",
+          "naam": "Open Klant",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-klant:2.15.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Klantinteracties API, Contactgegevens API",
+          "repo": "https://github.com/maykinmedia/open-klant"
+        },
+        {
+          "id": "referentielijsten",
+          "naam": "Referentielijsten",
+          "rol": "register",
+          "images": [
+            "maykinmedia/referentielijsten-api:0.7.4"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Referentielijsten API (concept)",
+          "repo": "https://github.com/maykinmedia/referentielijsten"
+        },
+        {
+          "id": "selectielijst",
+          "naam": "VNG Selectielijst",
+          "rol": "register",
+          "images": [
+            "openzaak/vng-selectielijst:1.0.5"
+          ],
+          "licentie": "EUPL-1.2 (aanname)",
+          "maker": "Open Zaak-community (Maykin)",
+          "api_standaarden": "Selectielijst API",
+          "repo": "https://github.com/open-zaak/vng-selectielijst"
+        },
+        {
+          "id": "objecttypen",
+          "naam": "Objecttypen API 3.4.2",
+          "rol": "register",
+          "images": [
+            "maykinmedia/objecttypes-api:3.4.2"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Objecttypen API",
+          "repo": "https://github.com/maykinmedia/objecttypes-api"
+        },
+        {
+          "id": "brp-api",
+          "naam": "BRP-vertaler (BRP API Personen 2, officieel formaat)",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "mailpit",
+          "naam": "Mailpit (SMTP-opvang)",
+          "rol": "infra",
+          "images": [
+            "axllent/mailpit:v1.31.4"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openformulieren",
+          "naam": "Open Formulieren 3.5.8",
+          "rol": "portaal",
+          "images": [
+            "openformulieren/open-forms:3.5.8"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin; stakeholders Dimpact, Den Haag, Rotterdam, Utrecht, SED-organisatie",
+          "api_standaarden": "ZGW (registratie), Objecten API, StUF-ZDS, Haal Centraal BRP (prefill), KvK, DigiD/eHerkenning/eIDAS, betalingen (Ogone/Worldline)",
+          "repo": "https://github.com/open-formulieren/open-forms"
+        },
+        {
+          "id": "clamav",
+          "naam": "ClamAV 1.5.4 (virusscan voor Open Formulieren)",
+          "rol": "infra",
+          "images": [
+            "clamav/clamav:1.5.4"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openinwoner",
+          "naam": "Open Inwoner 2.4.3 (met Elasticsearch)",
+          "rol": "portaal",
+          "images": [
+            "elasticsearch:9.0.3",
+            "maykinmedia/open-inwoner:2.4.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (opengem.nl); ontstaan bij Enschede, Zwolle, Leeuwarden, Deventer, Groningen, Zaanstad",
+          "api_standaarden": "ZGW, Klantinteracties (OpenKlant 2) en e-Suite-klanten, Objecten, Haal Centraal BRP, KvK, Notificaties (webhook), StUF/SOAP (sociaal domein), DigiD/eHerkenning/eIDAS via OIDC",
+          "repo": "https://github.com/maykinmedia/open-inwoner"
+        },
+        {
+          "id": "openarchiefbeheer",
+          "naam": "Open Archiefbeheer 2.0.0",
+          "rol": "medewerker",
+          "images": [
+            "maykinmedia/open-archiefbeheer:2.0.0"
+          ],
+          "licentie": "EUPL-1.2 (aanname)",
+          "maker": "Maykin",
+          "api_standaarden": "ZGW",
+          "repo": "https://github.com/maykinmedia/open-archiefbeheer"
+        },
+        {
+          "id": "openbeheer",
+          "naam": "Open Beheer 0.9.1",
+          "rol": "medewerker",
+          "images": [
+            "maykinmedia/open-beheer:0.9.1"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin, oorspronkelijk voor Rotterdam; stakeholders Dimpact, Den Haag, Rotterdam, Utrecht",
+          "api_standaarden": "Catalogi API, Objecttypen API, Producttypen",
+          "repo": "https://github.com/maykinmedia/open-beheer"
+        },
+        {
+          "id": "kiss",
+          "naam": "KISS 3.1.3 (Klantinteractie-Servicesysteem)",
+          "rol": "medewerker",
+          "images": [
+            "demogemeente/kiss:3.1.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "KISS-community, trekker gemeente Oost Gelre met Deventer en Zwolle; oorspronkelijk VNG Realisatie",
+          "api_standaarden": "Klantinteracties (OpenKlant 2), ZGW, Objecten, Elasticsearch/kennisbank",
+          "repo": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend"
+        },
+        {
+          "id": "ita",
+          "naam": "ITA 3.3.2 (Interne Taak Afhandeling, web en poller)",
+          "rol": "medewerker",
+          "images": [
+            "demogemeente/ita-poller:3.3.2",
+            "demogemeente/ita-web:3.3.2"
+          ],
+          "licentie": "aanname: EUPL",
+          "maker": "KISS-community (Oost Gelre e.a.)",
+          "api_standaarden": "Klantinteracties (OpenKlant)",
+          "repo": "https://github.com/interne-taak-afhandeling"
+        },
+        {
+          "id": "pabc",
+          "naam": "PABC 1.1.1 (Platform Autorisatie Beheer Component)",
+          "rol": "integratie",
+          "images": [
+            "demogemeente/pabc-api:1.1.1"
+          ],
+          "licentie": "onbekend",
+          "maker": "onbekend (GitHub-org platform-autorisatie-beheer-component)",
+          "api_standaarden": "onbekend",
+          "repo": "https://github.com/platform-autorisatie-beheer-component"
+        },
+        {
+          "id": "omc",
+          "naam": "NotifyNL OMC 1.17.19 (met Notify-mock)",
+          "rol": "integratie",
+          "images": [
+            "openzaak/open-zaak:1.29.0",
+            "worthnl/notifynl-omc:1.17.19"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Worth Systems",
+          "api_standaarden": "Notificaties API, OpenKlant, Objecten, NotifyNL-API",
+          "repo": "https://github.com/Worth-NL/NotifyNL-OMC"
+        }
+      ],
+      "niet_draaiend": [
+        {
+          "naam": "Zaakafhandelcomponent (ZAC) 5.4.5",
+          "reden": "niet draaibaar hier: image alleen op ghcr.io (geblokkeerd), bouwen uit broncode vraagt Gradle, JDK 21 en Node met enkele GB cache, plus Solr, OPA, Gotenberg, SmartDocuments en KVK/BAG; past niet in de vrije schijfruimte van deze machine"
+        },
+        {
+          "naam": "PodiumD-adapter 0.6.7",
+          "reden": "niet nodig: koppelt KISS en ITA aan de e-Suite (licentie), niet aan Open Zaak en Open Klant"
+        },
+        {
+          "naam": "ZaakBrug 2.3.32",
+          "reden": "optioneel in PodiumD (StUF-ZKN naar ZGW voor oude zaaksystemen); geen StUF-afnemer in deze stack"
+        },
+        {
+          "naam": "ZGW Office Add-in 0.11.0",
+          "reden": "niet draaibaar hier: alleen op ghcr.io en vraagt Microsoft 365 (Word/Outlook-invoegtoepassing)"
+        },
+        {
+          "naam": "KISS Elastic Sync en Elastic Open Crawler",
+          "reden": "niet opgenomen: vult de zoekindexen van KISS (kennisbank, website, smoelenboek) uit externe bronnen (SDG, website, SharePoint); crawler staat op docker.elastic.co (geblokkeerd)"
+        },
+        {
+          "naam": "Frank!Gateway (APISIX) met OpenBao",
+          "reden": "niet opgenomen: uitgaande gateway naar landelijke registers (BRP, KVK, BAG); hier praat alles direct met de mocks"
+        },
+        {
+          "naam": "BRP personen-mock 2.7.0 (officieel)",
+          "reden": "niet draaibaar hier: ghcr.io geblokkeerd; vervangen door de iswish-mock met tools/brp_vertaler.py"
+        }
+      ]
+    },
+    {
+      "id": "g4",
+      "titel": "G4 Platform Dienstverlening",
+      "omschrijving": "De keuze van de G4 (Platform Dienstverlening): NL Portal, GZAC/Valtimo en IKO op de registers.",
+      "footprint": {
+        "geheugen_gib": 8.0,
+        "images_gb": 12.4,
+        "containers": 30,
+        "start_s": 330,
+        "zelf_gebouwd": [
+          "IKO",
+          "NL Portal"
+        ]
+      },
+      "tests": {
+        "samenvatting": {
+          "pass": 73,
+          "fail": 8,
+          "skip": 5,
+          "fail_bekend": 8,
+          "fail_onverwacht": 0,
+          "totaal": 86
+        },
+        "per_categorie": {
+          "gezondheid": {
+            "pass": 17,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 18
+          },
+          "rook": {
+            "pass": 39,
+            "fail": 1,
+            "skip": 3,
+            "fail_bekend": 1,
+            "fail_onverwacht": 0,
+            "totaal": 43
+          },
+          "zgw": {
+            "pass": 3,
+            "fail": 7,
+            "skip": 0,
+            "fail_bekend": 7,
+            "fail_onverwacht": 0,
+            "totaal": 10
+          },
+          "burger-isolatie": {
+            "pass": 14,
+            "fail": 0,
+            "skip": 0,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 14
+          },
+          "mijn-apis": {
+            "pass": 0,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 1
+          }
+        },
+        "afgeleid": "Afgeleid van de run van 2026-10-08 (commit 68eea784e4b7): die draaide met een ingebouwde portaallaag. De checks van die laag zijn weggelaten, de leesclient heet nu burgerportaal, en de categorie mijn-apis is overgeslagen zonder plug-in. Opnieuw draaien met scripts/stack.sh test g4 geeft een rapport uit een echte run."
+      },
+      "bekende_fouten": [
+        {
+          "check": "GZAC-portaaltaak zichtbaar als taak in NL Portal",
+          "uitleg": "GZAC 13.48 (core-plugin Portaaltaak) schrijft taken in het oude formaat (taak v1: title, identificatie, formulier, verwerker_taak_id). NL Portal 3.0 leest alleen taak v2 (titel, soort, koppeling, portaalformulier). De portaaltaak staat daarom wel in Open Object (objecttype Portaaltaak), maar niet in Mijn taken van NL Portal."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet wie de burger is (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): overzicht-naar-detail",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): zonder-token",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): onbekende-zaak",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        }
+      ],
+      "licenties": [
+        "Apache-2.0",
+        "EUPL-1.2",
+        "EUPL-1.2 (aanname)"
+      ],
+      "componenten": [
+        {
+          "id": "postgres",
+          "naam": "Postgres/PostGIS",
+          "rol": "infra",
+          "images": [
+            "postgis/postgis:17-3.5-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "redis",
+          "naam": "Redis",
+          "rol": "infra",
+          "images": [
+            "redis:8.10.2-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "keycloak",
+          "naam": "Keycloak (DigiD-simulatie)",
+          "rol": "infra",
+          "images": [
+            "keycloak/keycloak:26.4.7"
+          ],
+          "licentie": "Apache-2.0",
+          "maker": "Red Hat / CNCF-community",
+          "api_standaarden": "OIDC, OAuth2 token-exchange, SAML (DigiD)",
+          "repo": "https://github.com/keycloak/keycloak"
+        },
+        {
+          "id": "brp-mock",
+          "naam": "BRP-mock (Haal Centraal BRP personen)",
+          "rol": "infra",
+          "images": [
+            "iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "notificatie-sink",
+          "naam": "Notificatie-sink",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openzaak",
+          "naam": "Open Zaak",
+          "rol": "register",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (ontwikkeling); community/stakeholders gemeenten",
+          "api_standaarden": "ZGW API's (Zaken, Catalogi, Documenten, Besluiten, Autorisaties), Notificaties (client)",
+          "repo": "https://github.com/open-zaak/open-zaak"
+        },
+        {
+          "id": "opennotificaties",
+          "naam": "Open Notificaties",
+          "rol": "register",
+          "images": [
+            "openzaak/open-notificaties:1.16.1"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (Open Zaak-community)",
+          "api_standaarden": "Notificaties API (ZGW)",
+          "repo": "https://github.com/open-zaak/open-notificaties"
+        },
+        {
+          "id": "openobject",
+          "naam": "Open Object (Objecten en Objecttypen)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-object:4.1.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Objecten API",
+          "repo": "https://github.com/maykinmedia/open-object (voorheen objects-api)"
+        },
+        {
+          "id": "openklant",
+          "naam": "Open Klant",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-klant:2.17.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Klantinteracties API, Contactgegevens API",
+          "repo": "https://github.com/maykinmedia/open-klant"
+        },
+        {
+          "id": "referentielijsten",
+          "naam": "Referentielijsten",
+          "rol": "register",
+          "images": [
+            "maykinmedia/referentielijsten-api:0.7.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Referentielijsten API (concept)",
+          "repo": "https://github.com/maykinmedia/referentielijsten"
+        },
+        {
+          "id": "selectielijst",
+          "naam": "VNG Selectielijst",
+          "rol": "register",
+          "images": [
+            "openzaak/vng-selectielijst:1.0.5"
+          ],
+          "licentie": "EUPL-1.2 (aanname)",
+          "maker": "Open Zaak-community (Maykin)",
+          "api_standaarden": "Selectielijst API",
+          "repo": "https://github.com/open-zaak/vng-selectielijst"
+        },
+        {
+          "id": "brp-api",
+          "naam": "BRP-vertaler (BRP API Personen 2, officieel formaat)",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openvtb",
+          "naam": "Open VTB 0.2.0 (Verzoeken, Taken, Berichten)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-vtb:0.2.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin, voor de werkgroep Platform Dienstverlening",
+          "api_standaarden": "Verzoeken, Taken, Berichten API (concept); voorstel CloudEvents NL Gov-profiel",
+          "repo": "https://github.com/maykinmedia/open-vtb"
+        },
+        {
+          "id": "openformulieren",
+          "naam": "Open Formulieren 3.5.8",
+          "rol": "portaal",
+          "images": [
+            "openformulieren/open-forms:3.5.8"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin; stakeholders Dimpact, Den Haag, Rotterdam, Utrecht, SED-organisatie",
+          "api_standaarden": "ZGW (registratie), Objecten API, StUF-ZDS, Haal Centraal BRP (prefill), KvK, DigiD/eHerkenning/eIDAS, betalingen (Ogone/Worldline)",
+          "repo": "https://github.com/open-formulieren/open-forms"
+        },
+        {
+          "id": "nlportal",
+          "naam": "NL Portal 3.0 (backend 3.0.4, frontend 3.0.3)",
+          "rol": "portaal",
+          "images": [
+            "demogemeente/nlportal-backend:3.0.4",
+            "demogemeente/nlportal-frontend:3.0.3",
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Ritense",
+          "api_standaarden": "ZGW, Objecten (taken/berichten), Klantinteracties, Haal Centraal BRP en HR, GraphQL naar de frontend, Keycloak token-exchange",
+          "repo": "https://github.com/nl-portal/nl-portal-frontend-libraries ; https://github.com/nl-portal/nl-portal-backend-libraries"
+        },
+        {
+          "id": "gzac",
+          "naam": "Valtimo/GZAC 13.48.0 (backend en frontend)",
+          "rol": "medewerker",
+          "images": [
+            "openzaak/open-zaak:1.29.0",
+            "ritense/gzac-backend:13.48.0",
+            "ritense/gzac-frontend:13.48.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Ritense (GZAC = Valtimo-distributie voor zaakgericht werken)",
+          "api_standaarden": "ZGW, Objecten, Klantinteracties, BRP, Notificaties; BPMN/DMN",
+          "repo": "https://github.com/valtimo-platform/valtimo"
+        },
+        {
+          "id": "iko",
+          "naam": "IKO 1.5.1 (Integraal Klant- en Objectbeeld)",
+          "rol": "medewerker",
+          "images": [
+            "demogemeente/iko:1.5.1",
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Ritense (GitHub-org Integraal-Klant-en-Objectbeeld)",
+          "api_standaarden": "Consumeert OpenZaak, OpenKlant, Objecten, Open Documenten, Haal Centraal BRP (ook WS-gateway), BAG; levert eigen JWT-beveiligde ADP-REST-API (geen VNG-standaard)",
+          "repo": "https://github.com/Integraal-Klant-en-Objectbeeld/iko"
+        }
+      ],
+      "niet_draaiend": [
+        {
+          "naam": "BRP personen-mock 2.7.0 (officieel)",
+          "reden": "niet draaibaar hier: ghcr.io geblokkeerd; vervangen door de iswish-mock met tools/brp_vertaler.py"
+        }
+      ]
+    },
+    {
+      "id": "vcg",
+      "titel": "VCG-basisset",
+      "omschrijving": "De VCG-basisset: de vaste set componenten van de Voorziening Common Ground.",
+      "footprint": {
+        "geheugen_gib": 7.1,
+        "images_gb": 17.4,
+        "containers": 39,
+        "start_s": 309,
+        "zelf_gebouwd": [
+          "OpenRegister",
+          "WordPress (OpenPDC, OpenPub)",
+          "OpenPlan"
+        ]
+      },
+      "tests": {
+        "samenvatting": {
+          "pass": 69,
+          "fail": 7,
+          "skip": 6,
+          "fail_bekend": 7,
+          "fail_onverwacht": 0,
+          "totaal": 82
+        },
+        "per_categorie": {
+          "gezondheid": {
+            "pass": 22,
+            "fail": 0,
+            "skip": 2,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 24
+          },
+          "rook": {
+            "pass": 38,
+            "fail": 0,
+            "skip": 3,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 41
+          },
+          "zgw": {
+            "pass": 3,
+            "fail": 7,
+            "skip": 0,
+            "fail_bekend": 7,
+            "fail_onverwacht": 0,
+            "totaal": 10
+          },
+          "burger-isolatie": {
+            "pass": 6,
+            "fail": 0,
+            "skip": 0,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 6
+          },
+          "mijn-apis": {
+            "pass": 0,
+            "fail": 0,
+            "skip": 1,
+            "fail_bekend": 0,
+            "fail_onverwacht": 0,
+            "totaal": 1
+          }
+        },
+        "afgeleid": "Afgeleid van de run van 2026-10-08 (commit ec6514bbfbbf): die draaide met een ingebouwde portaallaag. De checks van die laag zijn weggelaten, de leesclient heet nu burgerportaal, en de categorie mijn-apis is overgeslagen zonder plug-in. Opnieuw draaien met scripts/stack.sh test vcg geeft een rapport uit een echte run."
+      },
+      "bekende_fouten": [
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (gedrag): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet wie de burger is (aansluitprofielen/README.md)."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): overzicht-naar-detail",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): zonder-token",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): onbekende-zaak",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-haalt-zaak-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        },
+        {
+          "check": "ZGW-aansluitprofiel (strikt): burger-a-zoekt-op-bsn-van-burger-b",
+          "uitleg": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+        }
+      ],
+      "licenties": [
+        "Apache-2.0",
+        "EUPL-1.2",
+        "EUPL-1.2 (aanname)",
+        "aanname: EUPL (niet gecontroleerd)"
+      ],
+      "componenten": [
+        {
+          "id": "postgres",
+          "naam": "Postgres/PostGIS",
+          "rol": "infra",
+          "images": [
+            "postgis/postgis:17-3.5-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "redis",
+          "naam": "Redis",
+          "rol": "infra",
+          "images": [
+            "redis:8.10.2-alpine"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "keycloak",
+          "naam": "Keycloak (DigiD-simulatie)",
+          "rol": "infra",
+          "images": [
+            "keycloak/keycloak:26.4.7"
+          ],
+          "licentie": "Apache-2.0",
+          "maker": "Red Hat / CNCF-community",
+          "api_standaarden": "OIDC, OAuth2 token-exchange, SAML (DigiD)",
+          "repo": "https://github.com/keycloak/keycloak"
+        },
+        {
+          "id": "brp-mock",
+          "naam": "BRP-mock (Haal Centraal BRP personen)",
+          "rol": "infra",
+          "images": [
+            "iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "notificatie-sink",
+          "naam": "Notificatie-sink",
+          "rol": "infra",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openzaak",
+          "naam": "Open Zaak",
+          "rol": "register",
+          "images": [
+            "openzaak/open-zaak:1.29.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (ontwikkeling); community/stakeholders gemeenten",
+          "api_standaarden": "ZGW API's (Zaken, Catalogi, Documenten, Besluiten, Autorisaties), Notificaties (client)",
+          "repo": "https://github.com/open-zaak/open-zaak"
+        },
+        {
+          "id": "opennotificaties",
+          "naam": "Open Notificaties",
+          "rol": "register",
+          "images": [
+            "openzaak/open-notificaties:1.16.1"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin (Open Zaak-community)",
+          "api_standaarden": "Notificaties API (ZGW)",
+          "repo": "https://github.com/open-zaak/open-notificaties"
+        },
+        {
+          "id": "openobject",
+          "naam": "Open Object (Objecten en Objecttypen)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-object:4.1.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Objecten API",
+          "repo": "https://github.com/maykinmedia/open-object (voorheen objects-api)"
+        },
+        {
+          "id": "openklant",
+          "naam": "Open Klant",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-klant:2.17.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Klantinteracties API, Contactgegevens API",
+          "repo": "https://github.com/maykinmedia/open-klant"
+        },
+        {
+          "id": "openproduct",
+          "naam": "Open Product",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-product:1.8.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Producten API, Producttypen API (beide concept-standaard volgens Platform Dienstverlening)",
+          "repo": "https://github.com/maykinmedia/open-product"
+        },
+        {
+          "id": "referentielijsten",
+          "naam": "Referentielijsten",
+          "rol": "register",
+          "images": [
+            "maykinmedia/referentielijsten-api:0.7.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Referentielijsten API (concept)",
+          "repo": "https://github.com/maykinmedia/referentielijsten"
+        },
+        {
+          "id": "selectielijst",
+          "naam": "VNG Selectielijst",
+          "rol": "register",
+          "images": [
+            "openzaak/vng-selectielijst:1.0.5"
+          ],
+          "licentie": "EUPL-1.2 (aanname)",
+          "maker": "Open Zaak-community (Maykin)",
+          "api_standaarden": "Selectielijst API",
+          "repo": "https://github.com/open-zaak/vng-selectielijst"
+        },
+        {
+          "id": "keycloak-vcg",
+          "naam": "Keycloak-realm vcg (medewerkers Voorbeeldstad)",
+          "rol": "infra",
+          "images": [
+            "keycloak/keycloak:26.4.7"
+          ],
+          "licentie": null,
+          "maker": null,
+          "api_standaarden": null,
+          "repo": null
+        },
+        {
+          "id": "openorganisatie",
+          "naam": "Open Organisatie 0.2.0",
+          "rol": "register",
+          "images": [
+            "maykinmedia/open-organisatie:0.2.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Eigen REST-API, SCIM",
+          "repo": "https://github.com/maykinmedia/open-organisatie"
+        },
+        {
+          "id": "publicatiebank",
+          "naam": "GPP-publicatiebank 2.1.0 (woo-publications)",
+          "rol": "register",
+          "images": [
+            "maykinmedia/woo-publications:2.1.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin, in opdracht van ICATT en Dimpact (GPP-Woo)",
+          "api_standaarden": "Eigen REST-API; koppelt met Documenten API (Open Zaak) en GPP-zoeken",
+          "repo": "https://github.com/GPP-Woo/GPP-publicatiebank"
+        },
+        {
+          "id": "openbeheer",
+          "naam": "Open Beheer 0.9.0",
+          "rol": "medewerker",
+          "images": [
+            "maykinmedia/open-beheer:0.9.0",
+            "nginx:1.29.8-alpine"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin, oorspronkelijk voor Rotterdam; stakeholders Dimpact, Den Haag, Rotterdam, Utrecht",
+          "api_standaarden": "Catalogi API, Objecttypen API, Producttypen",
+          "repo": "https://github.com/maykinmedia/open-beheer"
+        },
+        {
+          "id": "operaton",
+          "naam": "Operaton 2.1.5 (procesengine) met procesworker naar Open Zaak",
+          "rol": "proces",
+          "images": [
+            "openzaak/open-zaak:1.29.0",
+            "operaton/operaton:2.1.5"
+          ],
+          "licentie": "Apache-2.0",
+          "maker": "Operaton-community (fork van Camunda 7 CE)",
+          "api_standaarden": "BPMN 2.0, DMN 1.3, Camunda 7 REST-API",
+          "repo": "https://github.com/operaton/operaton"
+        },
+        {
+          "id": "openplan",
+          "naam": "OpenPlan 0.1.0 (uit broncode)",
+          "rol": "register",
+          "images": [
+            "demogemeente/openplan:0.1.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Maykin",
+          "api_standaarden": "Eigen Plannen API (ook opgenomen in VNG Interactie-API's als openplan-plannen)",
+          "repo": "https://github.com/maykinmedia/open-plan"
+        },
+        {
+          "id": "openpdc",
+          "naam": "OpenPDC 3.18.1 (WordPress 6.8.3)",
+          "rol": "burger-api",
+          "images": [
+            "demogemeente/wordpress-owc:6.8.3",
+            "mariadb:11.8.3"
+          ],
+          "licentie": "aanname: EUPL (niet gecontroleerd)",
+          "maker": "OpenWebconcept (WordPress-community); bouwer aanname: Yard",
+          "api_standaarden": "Eigen WordPress REST-API (geen VNG-standaard)",
+          "repo": "https://github.com/OpenWebconcept/plugin-pdc-base"
+        },
+        {
+          "id": "openpub",
+          "naam": "OpenPub 3.8.7 (WordPress 6.8.3)",
+          "rol": "burger-api",
+          "images": [
+            "demogemeente/wordpress-owc:6.8.3",
+            "mariadb:11.8.3"
+          ],
+          "licentie": "aanname: EUPL (niet gecontroleerd)",
+          "maker": "OpenWebconcept (WordPress-community)",
+          "api_standaarden": "Eigen WordPress REST-API",
+          "repo": "https://github.com/OpenWebconcept/plugin-openpub-base"
+        },
+        {
+          "id": "openregister",
+          "naam": "OpenRegister 1.0.3 (Nextcloud 31.0.9)",
+          "rol": "register",
+          "images": [
+            "demogemeente/openregister:1.0.3"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "Conduction",
+          "api_standaarden": "Eigen REST-API, schema-gedreven",
+          "repo": "https://github.com/ConductionNL/openregister (VCG verwijst naar codeberg.org/Conduction/openregister, niet bereikbaar)"
+        },
+        {
+          "id": "openfsc",
+          "naam": "OpenFSC 2.4.0 (directory, manager, controller, inway, outway, txlog)",
+          "rol": "integratie",
+          "images": [
+            "federatedserviceconnectivity/controller:v2.4.0",
+            "federatedserviceconnectivity/inway:v2.4.0",
+            "federatedserviceconnectivity/manager:v2.4.0",
+            "federatedserviceconnectivity/outway:v2.4.0",
+            "federatedserviceconnectivity/txlog-api:v2.4.0"
+          ],
+          "licentie": "EUPL-1.2",
+          "maker": "RINIS (rinis-oss); standaard FSC door Logius",
+          "api_standaarden": "FSC Core 2.0 (Logius), Digikoppeling REST-profiel, OIN-certificaten (PKIoverheid)",
+          "repo": "https://gitlab.com/rinis-oss/fsc/open-fsc"
+        }
+      ],
+      "niet_draaiend": [
+        {
+          "naam": "Operaton Modeler 1.2.0",
+          "reden": "niet draaibaar: een desktopapplicatie (Electron) voor het tekenen van BPMN/DMN, geen server of container. Het proces in config/operaton/resources/ is met de hand geschreven en wordt bij de start in Operaton gezet."
+        },
+        {
+          "naam": "OpenFTV 1.26.14",
+          "reden": "niet draaibaar: geen implementatie gevonden. De link in de basisset wijst naar ZaakBrug en 1.26.14 is een versienummer van ZaakBrug; FTV (Federatieve Toegangsverlening) is een standaard (AuthZEN), geen product. Nodig: een bron of image van de bedoelde component."
+        }
+      ]
+    }
+  ]
+}
