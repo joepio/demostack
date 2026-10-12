@@ -191,6 +191,48 @@ with sync_playwright() as p:
         ctx.close()
         pg.close()
 
-    for fn in (inwoner, kcc, behandelaar_zac, behandelaar, beheer, ontwikkelaar):
-        safe(fn)
+    def digid(pg):
+        if pg.locator("#kc-login").count():
+            pg.fill("#username", "suzanne"); pg.fill("#password", PW); pg.click("#kc-login"); pg.wait_for_timeout(6000)
+
+    def portalen():
+        # Open Inwoner: eerste keer na inloggen een registratiescherm (alleen e-mail invullen)
+        pg = new()
+        pg.goto(f"https://inwoner.{D}/digid-oidc/authenticate/?next=/"); pg.wait_for_timeout(2500); digid(pg)
+        if "register/necessary" in pg.url:
+            if not pg.locator("[name=email]").input_value():
+                pg.fill("[name=email]", "suzanne@example.com")
+            pg.get_by_role("button", name="Voltooi registratie").click(); pg.wait_for_timeout(4000)
+        for t in ("Alles weigeren", "Weigeren"):
+            if pg.get_by_role("button", name=t).count():
+                pg.get_by_role("button", name=t).first.click(); break
+        pg.goto(f"https://inwoner.{D}/cases/"); pg.wait_for_timeout(5000)
+        shot(pg, "inwoner-oip")
+        pg.close()
+        pg = new()
+        pg.goto(f"https://portaal.{D}/"); pg.wait_for_timeout(3000); digid(pg); pg.wait_for_timeout(3000)
+        shot(pg, "inwoner-nlportal")
+        pg.close()
+        pg = new()
+        pg.goto(f"https://mijnoverheid.{D}/"); pg.wait_for_timeout(2500); digid(pg)
+        shot(pg, "inwoner-mo")
+        pg.goto(f"https://mijnoverheid.{D}/#/zaken"); pg.wait_for_timeout(3000)
+        pg.get_by_text("Melding openbare ruimte").first.click(); pg.wait_for_timeout(4000)
+        shot(pg, "inwoner-mo-2")
+        pg.close()
+
+    def iko():
+        pg = new()
+        pg.goto(f"https://iko.{D}/admin"); pg.wait_for_timeout(2500)
+        if pg.locator("#kc-login").count():
+            pg.fill("#username", "demo"); pg.fill("#password", PW); pg.click("#kc-login"); pg.wait_for_timeout(4000)
+        pg.goto(f"https://iko.{D}/admin/connectors"); pg.wait_for_timeout(2500)
+        shot(pg, "beheer-iko")
+        pg.close()
+
+    alle = (inwoner, portalen, kcc, behandelaar_zac, behandelaar, beheer, iko, ontwikkelaar)
+    alleen = set(filter(None, os.environ.get("ALLEEN", "").split(",")))
+    for fn in alle:
+        if not alleen or fn.__name__ in alleen:
+            safe(fn)
     b.close()

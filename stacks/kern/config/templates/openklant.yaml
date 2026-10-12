@@ -15,3 +15,17 @@ tokenauth:
       organization: Demogemeente
       application: ZAC
       administration: Demo
+    - identifier: nl-portal
+      token: ${NLP_OK_TOKEN}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: NL Portal
+      administration: Demo
+    - identifier: open-inwoner
+      token: ${OIP_OK_TOKEN}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Open Inwoner
+      administration: Demo

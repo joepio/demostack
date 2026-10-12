@@ -22,3 +22,10 @@ tokenauth:
       organization: Demogemeente
       application: Seed-scripts
       administration: Demo
+    - identifier: open-inwoner
+      token: ${OIP_OT_TOKEN}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Open Inwoner
+      administration: Demo

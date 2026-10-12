@@ -1,0 +1,138 @@
+# Open Inwoner: beheer via SSO, inwoners via nep-DigiD, koppelingen met de registers
+oidc_db_config_enable: true
+oidc_db_config_admin_auth:
+  providers:
+  - identifier: keycloak
+    oidc_use_nonce: true
+    oidc_nonce_size: 32
+    oidc_state_size: 32
+    endpoint_config:
+      oidc_op_authorization_endpoint: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/auth
+      oidc_op_jwks_endpoint: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/certs
+      oidc_op_token_endpoint: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/token
+      oidc_op_user_endpoint: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/userinfo
+      oidc_op_logout_endpoint: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/logout
+  items:
+  - identifier: admin-oidc
+    enabled: true
+    oidc_rp_client_id: beheer
+    oidc_rp_client_secret: ${BEHEER_OIDC_SECRET}
+    oidc_rp_scopes_list: [openid, email, profile]
+    oidc_rp_sign_algo: RS256
+    oidc_provider_identifier: keycloak
+    userinfo_claims_source: id_token
+    options:
+      user_settings:
+        claim_mappings:
+          username: [preferred_username]
+          first_name: [given_name]
+          last_name: [family_name]
+          email: [email]
+        username_case_sensitive: false
+      groups_settings:
+        claim_mapping: [groups]
+        sync: true
+        sync_pattern: '*'
+        default_groups: []
+        make_users_staff: true
+        superuser_group_names: [beheerders]
+  - identifier: oidc-digid
+    enabled: true
+    oidc_provider_identifier: keycloak
+    oidc_rp_client_id: digid
+    oidc_rp_client_secret: ${DIGID_OIDC_SECRET}
+    oidc_rp_sign_algo: RS256
+    oidc_rp_scopes_list: [openid]
+    userinfo_claims_source: userinfo_endpoint
+    options:
+      identity_settings:
+        bsn_claim_path: [bsn]
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+  - identifier: oz-zaken
+    label: Zaken API
+    api_root: https://zaken.${BASE_DOMAIN}/zaken/api/v1/
+    api_type: zrc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OIP_ZGW_SECRET}
+  - identifier: oz-documenten
+    label: Documenten API
+    api_root: https://zaken.${BASE_DOMAIN}/documenten/api/v1/
+    api_type: drc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OIP_ZGW_SECRET}
+  - identifier: oz-catalogi
+    label: Catalogi API
+    api_root: https://zaken.${BASE_DOMAIN}/catalogi/api/v1/
+    api_type: ztc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OIP_ZGW_SECRET}
+  - identifier: notificaties
+    label: Notificaties API
+    api_root: https://notificaties.${BASE_DOMAIN}/api/v1/
+    api_type: nrc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OIP_ZGW_SECRET}
+  - identifier: openklant
+    label: Klantinteracties API
+    api_root: https://klant.${BASE_DOMAIN}/klantinteracties/api/v1/
+    api_type: kc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OIP_OK_TOKEN}
+  - identifier: objecten
+    label: Objecten API
+    api_root: https://objecten.${BASE_DOMAIN}/api/v2/
+    api_type: orc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OIP_OBJ_TOKEN}
+  - identifier: objecttypen
+    label: Objecttypen API
+    api_root: https://objecttypen.${BASE_DOMAIN}/api/v2/
+    api_type: orc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OIP_OT_TOKEN}
+  - identifier: brp
+    label: BRP (mock)
+    api_root: http://personen-mock:5010/haalcentraal/api/brp/
+    api_type: orc
+    auth_type: no_auth
+openzaak_config_enable: true
+openzaak_config:
+  zaak_max_confidentiality: openbaar
+  document_max_confidentiality: openbaar
+  max_upload_size: 50
+  allowed_file_extensions: [.pdf, .jpg, .jpeg, .png]
+  skip_notification_statustype_informeren: false
+  derive_zaak_titel_from: zaaktype_omschrijving
+  # Verplicht invullen: de standaardwaarde faalt in de validatie van 2.4.6
+  title_text: Hier vindt u een overzicht van al uw lopende en afgeronde zaken.
+  api_groups:
+  - zaken_api_identifier: oz-zaken
+    documenten_api_identifier: oz-documenten
+    catalogi_api_identifier: oz-catalogi
+klantensysteem_config_enable: true
+klantensysteem_config:
+  primary_backend: openklant2
+  register_contact_via_api: true
+  send_email_confirmation: false
+  openklant2_config:
+    service_identifier: openklant
+    mijn_vragen_actor: ${OIP_OK_ACTOR}
+    mijn_vragen_kanaal: formulier
+    mijn_vragen_organisatie_naam: Demogemeente
+    interne_taak_gevraagde_handeling: Vraag beantwoorden
+    interne_taak_toelichting: Vraag via Open Inwoner
+sites_config_enable: true
+sites_config:
+  items:
+  - domain: inwoner.${BASE_DOMAIN}
+    name: Demogemeente

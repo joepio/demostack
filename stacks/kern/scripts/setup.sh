@@ -28,14 +28,25 @@ if [ ! -f .env ]; then
   } > .env
   echo "Nieuwe .env aangemaakt."
 fi
-grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac" >> .env
+# Geheimen voor later toegevoegde onderdelen aanvullen in een bestaande .env
+for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
+# API-tokens van Objecten en Open Klant zijn maximaal 40 tekens
+for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
+# NL Portal kiest het JWT-algoritme op sleutellengte; Open Zaak accepteert alleen HS256, dus precies 32 tekens
+grep -q "^NLP_ZGW_SECRET=" .env || echo "NLP_ZGW_SECRET=$(gen 16)" >> .env
+for v in MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
+grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko" >> .env
 set -a; . ./.env; set +a
 # Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
-WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac
+WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko
 setenv() { if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 q() { grep -v -E '^\{"|Container|^$' || true; }
 
 ./scripts/render-config.sh
+docker compose up -d db redis
+for _ in $(seq 1 30); do docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1 && break; sleep 2; done
+# Databases voor later toegevoegde onderdelen ook in een bestaande installatie aanmaken (idempotent)
+docker compose exec -T db bash /docker-entrypoint-initdb.d/01-databases.sh 2>&1 | grep -vE "already exists|^CREATE|^$" || true
 docker compose up -d
 
 wait_http() { # poort pad
@@ -44,7 +55,7 @@ wait_http() { # poort pad
     case "$code" in 200|302) return 0;; esac; sleep 5
   done; echo "Timeout op poort $1"; exit 1
 }
-for p in 8101 8102 8103 8104 8105 8110; do wait_http $p /admin/login/; done
+for p in 8101 8102 8103 8104 8105 8110 8113; do wait_http $p /admin/login/; done
 
 apply() { # service template
   echo "== setup_configuration $1 ($2)"
@@ -69,6 +80,13 @@ UUIDS=$(docker compose run --rm -T -e BASE_DOMAIN -e OT_TOKEN_SEED -v "$PWD/scri
 for n in Afdeling Groep Medewerker VAC Kennisartikel; do
   setenv "KISS_OT_$(echo $n | tr a-z A-Z)" "$(echo "$UUIDS" | python3 -c "import json,sys;print(json.load(sys.stdin)['$n'])")"
 done
+setenv TAAK_OT "$(echo "$UUIDS" | python3 -c "import json,sys;print(json.load(sys.stdin)['Taak'])")"
+# Actor in Open Klant waarnamens Open Inwoner vragen registreert
+if ! grep -q '^OIP_OK_ACTOR=.' .env; then
+  setenv OIP_OK_ACTOR "$(curl -s -X POST "https://klant.$BASE_DOMAIN/klantinteracties/api/v1/actoren" -H "Authorization: Token $OK_TOKEN_KISS" \
+    -H "Content-Type: application/json" -d '{"naam":"Open Inwoner","soortActor":"geautomatiseerde_actor","indicatieActief":true,"actoridentificator":{"objectId":"open-inwoner","codeObjecttype":"app","codeRegister":"demogemeente","codeSoortObjectId":"client_id"}}' \
+    | python3 -c "import json,sys;print(json.load(sys.stdin)['uuid'])")"
+fi
 set -a; . ./.env; set +a
 ./scripts/render-config.sh
 apply objects objects-kiss
@@ -108,6 +126,19 @@ docker run --rm --network host -e BASE_DOMAIN -e ADMIN_PASSWORD -v "$PWD/scripts
   mcr.microsoft.com/playwright/python:v1.55.0-noble sh -c "pip -q install playwright==1.55.0 2>/dev/null; python /t.py" | tail -2
 apply opennotificaties opennotificaties-zac
 curl -s -o /dev/null -H "X-API-KEY: $ZAC_INTERNAL_KEY" http://127.0.0.1:8111/rest/internal/indexeren/herindexeren/ZAAK
+
+# Inwonerportalen: Keycloak (NL Portal token exchange, nep-DigiD voor Open Inwoner en MijnOverheid), portaaltaak
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e NLP_M2M_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+  python /scripts/keycloak_portalen.py 2>&1 | q
+run_seed objects seed_portaaltaak.py -e TAAK_OT -e OBJ_TOKEN_KISS -e OZ_DEMO_SECRET
+# Open Inwoner: koppelingen via setup_configuration, de rest (BRP, CMS-pagina's, abonnement) via de shell
+apply openinwoner openinwoner
+docker compose exec -T -e BASE_DOMAIN -e TAAK_OT -e OIP_NC_SECRET openinwoner python src/manage.py shell \
+  < scripts/openinwoner_inrichting.py 2>&1 | grep -E " ok|aangemaakt|geregistreerd" || true
+docker compose restart openinwoner >/dev/null
+# IKO: alleen de SSO-client; connectoren en profielen richt je in het beheerscherm in
+docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e IKO_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
+  python /scripts/keycloak_iko.py 2>&1 | q
 
 # Single sign-on: account 'demo', langere sessies, beheerschermen via Keycloak
 docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \

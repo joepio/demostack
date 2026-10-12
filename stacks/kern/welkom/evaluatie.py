@@ -31,6 +31,9 @@ APIS = {
     "pabc": ("PABC (autorisatiebeheer)", None),
     "elastic": ("Elasticsearch", None),
     "solr": ("Solr", None),
+    "taken": ("Portaaltaken (TaakV2 in Objecten)", None),
+    "lab": ("VNG API Lab: MijnZaken en MijnTaken (next)", None),
+    "iko": ("IKO aggregatie-API", None),
 }
 
 C = lambda **kw: kw  # leesbaarheid
@@ -77,7 +80,31 @@ STACKS = [
      "uitleg": "Generieke zaakafhandelcomponent op Valtimo. Dossiers, taken en processen (BPMN/DMN), ZGW-koppelingen via plugins. Hier met de voorbeeldcasus evenementenvergunning.",
      "componenten": [
         C(naam="GZAC (Valtimo)", maker="Ritense", licentie="EUPL-1.2", diensten=["gzac-backend", "gzac", "gzac-permissions"], biedt=[],
-          gebruikt=["oidc"], kan_gebruiken=["zaken", "catalogi", "documenten", "besluiten", "objecten", "objecttypen", "klantinteracties", "notificaties"]),
+          gebruikt=["oidc"], kan_gebruiken=["zaken", "catalogi", "documenten", "besluiten", "objecten", "objecttypen", "klantinteracties", "notificaties", "iko"]),
+     ]},
+    {"id": "oip", "naam": "Inwonerportaal PodiumD: Open Inwoner", "profiel": "oip",
+     "uitleg": "Mijn omgeving voor inwoners (Maykin, onderdeel van PodiumD). Mijn zaken, documenten, taken en vragen, plus een CMS voor de pagina's. Ontvangt zaaknotificaties en mailt de inwoner.",
+     "componenten": [
+        C(naam="Open Inwoner", maker="Maykin / Dimpact", licentie="EUPL-1.2", diensten=["openinwoner", "openinwoner-celery", "openinwoner-beat"],
+          biedt=[], gebruikt=["zaken", "catalogi", "documenten", "notificaties", "klantinteracties", "objecten", "objecttypen", "taken", "brp", "elastic", "oidc"]),
+     ]},
+    {"id": "nlportal", "naam": "Inwonerportaal Ritense: NL Portal", "profiel": "nlportal",
+     "uitleg": "Portaal voor inwoners en ondernemers (Ritense), hoort bij de GZAC-stack. Haalt alles live op, bewaart zelf geen zaakgegevens; het BSN komt via token exchange in Keycloak.",
+     "componenten": [
+        C(naam="NL Portal", maker="Ritense", licentie="EUPL-1.2", diensten=["nlportal-backend", "nlportal"], biedt=[],
+          gebruikt=["zaken", "catalogi", "documenten", "besluiten", "objecten", "taken", "klantinteracties", "brp", "oidc"]),
+     ]},
+    {"id": "mijnoverheid", "naam": "Overheidsbreed: MijnOverheid-demo (VNG API Lab)", "profiel": "mijnoverheid",
+     "uitleg": "Experiment van VNG Realisatie: één omgeving voor gemeente en Rijk, met de Lab-API's MijnZaken en MijnTaken. Hier met een adapter die zaken, taken en BRP-gegevens van de ingelogde inwoner uit de echte registers haalt; de rest is mockdata van het Lab.",
+     "componenten": [
+        C(naam="MijnOverheid-demo + adapter", maker="VNG Realisatie (app), DemoStack (adapter)", licentie="EUPL-1.2",
+          diensten=["mijnoverheid"], biedt=["lab"], gebruikt=["zaken", "catalogi", "documenten", "objecten", "taken", "brp", "oidc"]),
+     ]},
+    {"id": "iko", "naam": "Klant- en objectbeeld: IKO", "profiel": "iko",
+     "uitleg": "Integraal Klant- en Objectbeeld (Ritense): een aggregatielaag die gegevens uit meerdere bronnen samenvoegt tot één beeld via een eigen API. GZAC kan het tonen. De connectoren en profielen zijn hier nog niet ingericht.",
+     "componenten": [
+        C(naam="IKO", maker="Ritense", licentie="EUPL-1.2", diensten=["iko"], biedt=["iko"], gebruikt=["oidc"],
+          kan_gebruiken=["zaken", "documenten", "klantinteracties", "objecten", "brp", "bag"]),
      ]},
 ]
 
@@ -100,7 +127,8 @@ def api_version(url):
 
 def main():
     images = {}
-    cfg = json.loads(sh("docker", "compose", "--profile", "kcc", "--profile", "gzac", "--profile", "zac", "config", "--format", "json"))
+    profielen = [a for st in STACKS if st["profiel"] for a in ("--profile", st["profiel"])]
+    cfg = json.loads(sh("docker", "compose", *profielen, "config", "--format", "json"))
     for name, svc in cfg["services"].items():
         images[name] = svc.get("image")
     sizes = {}
@@ -200,8 +228,8 @@ def render(stacks):
 # Functies (rijen) per stack (kolommen). Status: "hier" = draait in deze omgeving, "niet-hier" = hoort bij de stack maar
 # is hier nog niet geïnstalleerd, "geen" = deze stack heeft er geen eigen onderdeel voor.
 STACK_KOLOMMEN = [
-    {"id": "podiumd", "naam": "PodiumD", "door": "Dimpact", "lagen": ["registers", "kcc", "zac"]},
-    {"id": "gzac", "naam": "GZAC-stack", "door": "Ritense", "lagen": ["registers", "gzac"]},
+    {"id": "podiumd", "naam": "PodiumD", "door": "Dimpact", "lagen": ["registers", "kcc", "zac", "oip"]},
+    {"id": "gzac", "naam": "GZAC-stack", "door": "Ritense", "lagen": ["registers", "gzac", "nlportal", "iko"]},
 ]
 FUNCTIES = [
     {"functie": "Melden en aanvragen", "wie": "Inwoner", "apis": ["formulieren", "zaken", "documenten", "objecten"],
@@ -209,8 +237,12 @@ FUNCTIES = [
     {"functie": "Inloggen inwoner", "wie": "Inwoner", "apis": ["oidc"],
      "podiumd": ("DigiD/eHerkenning via makelaar (hier: demo-DigiD in Keycloak)", "hier"),
      "gzac": ("DigiD/eHerkenning via makelaar (hier: demo-DigiD in Keycloak)", "hier")},
-    {"functie": "Mijn zaken bekijken", "wie": "Inwoner", "apis": ["zaken", "klantinteracties", "objecten"],
-     "podiumd": ("Open Inwoner", "niet-hier"), "gzac": ("Open Inwoner (via portaaltaken)", "niet-hier")},
+    {"functie": "Mijn zaken bekijken", "wie": "Inwoner", "apis": ["zaken", "catalogi", "documenten"],
+     "podiumd": ("Open Inwoner", "hier"), "gzac": ("NL Portal", "hier")},
+    {"functie": "Taken voor de inwoner", "wie": "Inwoner", "apis": ["objecten", "taken"],
+     "podiumd": ("Open Inwoner (TaakV2)", "hier"), "gzac": ("NL Portal (TaakV2; GZAC schrijft nog het oude formaat)", "hier")},
+    {"functie": "Gemeente en Rijk in één omgeving", "wie": "Inwoner", "apis": ["lab"],
+     "podiumd": ("Geen; hier de MijnOverheid-demo van het VNG API Lab", "geen"), "gzac": ("Geen; hier de MijnOverheid-demo van het VNG API Lab", "geen")},
     {"functie": "Zaken registreren", "wie": "Register", "apis": ["zaken", "catalogi", "documenten", "besluiten"],
      "podiumd": ("Open Zaak", "hier"), "gzac": ("Open Zaak", "hier")},
     {"functie": "Klantgegevens en contactmomenten", "wie": "Register", "apis": ["klantinteracties"],
@@ -221,6 +253,8 @@ FUNCTIES = [
      "podiumd": ("Open Notificaties", "hier"), "gzac": ("Open Notificaties", "hier")},
     {"functie": "Klantcontact (KCC)", "wie": "Medewerker", "apis": ["klantinteracties", "zaken", "brp", "kvk"],
      "podiumd": ("KISS", "hier"), "gzac": ("Geen eigen KCC-werkplek; KISS is te combineren", "geen")},
+    {"functie": "Klantbeeld over bronnen heen", "wie": "Medewerker", "apis": ["iko"],
+     "podiumd": ("KISS (eigen samenvoeging)", "hier"), "gzac": ("IKO (bronnen nog in te richten)", "hier")},
     {"functie": "Personen en bedrijven opzoeken", "wie": "Medewerker", "apis": ["brp", "kvk"],
      "podiumd": ("KISS en ZAC (Haal Centraal BRP, KvK)", "hier"), "gzac": ("Via plugins (BRP, KvK)", "niet-hier")},
     {"functie": "Zaken afhandelen", "wie": "Medewerker", "apis": ["zaken", "catalogi", "documenten", "besluiten", "notificaties"],

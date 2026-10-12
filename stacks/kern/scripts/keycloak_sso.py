@@ -24,7 +24,7 @@ realm.update({"ssoSessionIdleTimeout": 12 * 3600, "ssoSessionMaxLifespan": 7 * 8
               "ssoSessionIdleTimeoutRememberMe": 7 * 86400, "ssoSessionMaxLifespanRememberMe": 7 * 86400})
 call("PUT", R, json=realm)
 
-HOSTS = ["zaken", "formulieren", "klant", "objecten", "objecttypen", "notificaties"]
+HOSTS = ["zaken", "formulieren", "klant", "objecten", "objecttypen", "notificaties", "inwoner"]
 redirects = [f"https://{h}.{D}/*" for h in HOSTS]
 mapper = {"name": "groups", "protocol": "openid-connect", "protocolMapper": "oidc-group-membership-mapper",
           "config": {"claim.name": "groups", "full.path": "false", "id.token.claim": "true",
