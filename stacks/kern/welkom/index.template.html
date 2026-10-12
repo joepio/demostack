@@ -26,7 +26,7 @@ body { margin: 0; background: var(--bg); color: var(--text);
 a { color: var(--accent); }
 .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
 header { background: var(--band); color: var(--band-text); }
-header .wrap { padding-top: 36px; padding-bottom: 36px; position: relative; }
+header .wrap { padding-top: 28px; padding-bottom: 36px; position: relative; }
 header .lead { color: rgba(255,255,255,.86); }
 /* Accountmenu rechtsboven: wie je bent en wisselen van rol */
 .account { position: absolute; top: 20px; right: 16px; z-index: 10; }
@@ -83,6 +83,11 @@ h2 { font-size: 24px; margin: 44px 0 6px; font-weight: 700; }
 .btn small { margin-left: auto; color: var(--muted); }
 .btn.off { background: var(--soon-soft); color: var(--soon); pointer-events: none; }
 .btn small { font-weight: 500; opacity: .8; }
+/* Waarom: vier punten naast elkaar */
+.waarom { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.waarom li { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px 18px; }
+.waarom strong { display: block; margin-bottom: 4px; }
+.waarom span { color: var(--muted); font-size: 15px; }
 .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--surface);
   border: 1px solid var(--border); border-radius: 4px; padding: 16px; }
 .step { padding: 8px 12px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); font-weight: 600; }
@@ -188,9 +193,8 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
         <button type="button" id="uitloggen" hidden>Uitloggen</button>
       </div>
     </details>
-    <span class="badge">Demo-omgeving, geen echte gegevens</span>
     <h1>DemoStack</h1>
-    <p class="lead">Een werkende gemeente in het klein, gebouwd met open source Common Ground-componenten.
+    <p class="lead">Een werkende gemeente in het klein, gebouwd met open source Common Ground-componenten en fictieve gegevens.
       Kies een rol: je bent dan meteen ingelogd en ziet wat die rol ziet.</p>
   </div>
 </header>
@@ -313,6 +317,15 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
       </div>
     </section>
   </div>
+
+  <h2>Waarom DemoStack</h2>
+  <p class="sub">VNG maakt geen software, maar beheert de afspraken waarmee software van verschillende makers samenwerkt. DemoStack laat die afspraken in werking zien.</p>
+  <ul class="waarom">
+    <li><strong>Standaarden aan het werk</strong><span>ZGW-, Klantinteracties-, Objecten- en Notificatie-API's in echte flows, van melding tot afhandeling. Je ziet waar ze aansluiten en waar nog lijmcode nodig is.</span></li>
+    <li><strong>Leveranciersneutraal vergelijken</strong><span>PodiumD en de GZAC-stack op dezelfde registers, met nieuwe toetreders via dezelfde API's. Geen voorkeur, wel feiten: versies, geheugen, licenties.</span></li>
+    <li><strong>Feedback op de standaarden</strong><span>Wat een afnemer moet doen om mee te doen, wordt hier meetbaar: extra calls, ruime rechten, ontbrekende velden. Input voor de volgende versie.</span></li>
+    <li><strong>Een gedeeld beeld</strong><span>Gemeenten, leveranciers en ontwikkelaars praten over hetzelfde werkende landschap, in plaats van over plaatjes. Ook bruikbaar bij inkoop en uitleg.</span></li>
+  </ul>
 
   <h2>Zo loopt een melding</h2>
   <p class="sub">Eén verhaal door alle onderdelen heen.</p>
