@@ -16,6 +16,12 @@ vng_api_common_credentials:
       secret: ${ON_CLIENT_SECRET}
     - identifier: zac
       secret: ${ZAC_ZGW_SECRET}
+    - identifier: nl-portal
+      secret: ${NLP_ZGW_SECRET}
+    - identifier: open-inwoner
+      secret: ${OIP_ZGW_SECRET}
+    - identifier: mijnoverheid
+      secret: ${MO_ZGW_SECRET}
 vng_api_common_applicaties_config_enable: true
 vng_api_common_applicaties:
   items:
@@ -38,6 +44,19 @@ vng_api_common_applicaties:
     - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a05
       client_ids: [zac]
       label: ZAC (Dimpact)
+      heeft_alle_autorisaties: true
+    # Portalen: de inwoner ziet alleen eigen zaken, maar dat filter zit in het portaal, niet in Open Zaak
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a06
+      client_ids: [nl-portal]
+      label: NL Portal
+      heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a07
+      client_ids: [open-inwoner]
+      label: Open Inwoner
+      heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a08
+      client_ids: [mijnoverheid]
+      label: MijnOverheid-demo (adapter)
       heeft_alle_autorisaties: true
 zgw_consumers_config_enable: true
 zgw_consumers:

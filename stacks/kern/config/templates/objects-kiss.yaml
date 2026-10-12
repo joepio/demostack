@@ -16,3 +16,6 @@ objecttypes:
     - uuid: ${KISS_OT_KENNISARTIKEL}
       name: Kennisartikel
       service_identifier: objecttypes-api
+    - uuid: ${TAAK_OT}
+      name: Taak
+      service_identifier: objecttypes-api

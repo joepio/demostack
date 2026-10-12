@@ -55,3 +55,27 @@ tokenauth:
       application: ZAC
       administration: Demo
       is_superuser: true
+    - identifier: nl-portal
+      token: ${NLP_OBJ_TOKEN}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: NL Portal
+      administration: Demo
+      is_superuser: true
+    - identifier: open-inwoner
+      token: ${OIP_OBJ_TOKEN}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: Open Inwoner
+      administration: Demo
+      is_superuser: true
+    - identifier: mijnoverheid
+      token: ${MO_OBJ_TOKEN}
+      contact_person: Beheer
+      email: beheer@demogemeente.local
+      organization: Demogemeente
+      application: MijnOverheid-demo
+      administration: Demo
+      is_superuser: true

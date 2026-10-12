@@ -207,6 +207,9 @@ services:
       ON_DB_PASSWORD: ${ON_DB_PASSWORD}
       ZAC_DB_PASSWORD: ${ZAC_DB_PASSWORD}
       PABC_DB_PASSWORD: ${PABC_DB_PASSWORD}
+      NLP_DB_PASSWORD: ${NLP_DB_PASSWORD}
+      OIP_DB_PASSWORD: ${OIP_DB_PASSWORD}
+      IKO_DB_PASSWORD: ${IKO_DB_PASSWORD}
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d:ro
       - db:/var/lib/postgresql/data
@@ -240,6 +243,7 @@ services:
       - 127.0.0.1:8104:8104
       - 127.0.0.1:8105:8105
       - 127.0.0.1:8110:8110
+      - 127.0.0.1:8113:8113
 
   mailpit:
     image: axllent/mailpit:v1.31.4
@@ -365,7 +369,7 @@ services:
         condition: service_healthy
 
   elasticsearch:
-    profiles: [kcc]
+    profiles: [kcc, oip]
     image: docker.elastic.co/elasticsearch/elasticsearch:8.19.3
     restart: unless-stopped
     environment:
@@ -383,7 +387,7 @@ services:
       retries: 20
 
   personen-mock:
-    profiles: [kcc, zac]
+    profiles: [kcc, zac, nlportal, oip, mijnoverheid]
     image: ghcr.io/brp-api/personen-mock:2.7.0-latest
     restart: unless-stopped
     environment:
@@ -624,6 +628,178 @@ services:
       pabc-api:
         condition: service_started
 
+  # ---------- Inwonerportaal: Open Inwoner (Maykin), hoort bij PodiumD ----------
+  # Inwoners loggen in met nep-DigiD; zaken, documenten en taken komen live uit de registers.
+  openinwoner: &oip
+    <<: *common
+    profiles: [oip]
+    image: maykinmedia/open-inwoner:2.4.6
+    environment: &oip-env
+      <<: *base-env
+      DJANGO_SETTINGS_MODULE: open_inwoner.conf.docker
+      SECRET_KEY: ${OIP_SECRET_KEY}
+      DB_NAME: openinwoner
+      DB_USER: openinwoner
+      DB_PASSWORD: ${OIP_DB_PASSWORD}
+      ALLOWED_HOSTS: inwoner.${BASE_DOMAIN},openinwoner,localhost
+      CSRF_TRUSTED_ORIGINS: https://inwoner.${BASE_DOMAIN}
+      CACHE_DEFAULT: redis:6379/11
+      CELERY_BROKER_URL: redis://redis:6379/12
+      CELERY_RESULT_BACKEND: redis://redis:6379/12
+      ES_HOST: http://elasticsearch:9200
+      ES_USERNAME: elastic
+      ES_PASSWORD: ${ELASTIC_PASSWORD}
+      ES_INDEX_PRODUCTS: oip_products
+      ES_INDEX_CMS_PAGES: oip_cms_pages
+      DEFAULT_FROM_EMAIL: inwoner@demogemeente.local
+      DIGID_ENABLED: "True"
+      DIGID_MOCK: "False"
+      EHERKENNING_MOCK: "False"
+      LOG_STDOUT: "True"
+    command: /start.sh
+    volumes:
+      - oip-media:/app/media
+      - oip-private-media:/app/private_media
+
+  openinwoner-celery:
+    <<: *oip
+    command: /celery_worker.sh
+    volumes:
+      - oip-media:/app/media
+      - oip-private-media:/app/private_media
+
+  openinwoner-beat:
+    <<: *oip
+    command: /celery_beat.sh
+    volumes: []
+
+  # ---------- Inwonerportaal: NL Portal (Ritense), hoort bij de GZAC-stack ----------
+  # Geen eigen gegevens: haalt alles live op uit de registers. Het browsertoken bevat geen BSN;
+  # de backend wisselt het bij Keycloak om (token exchange) voor een token met aanvrager.bsn.
+  nlportal-backend:
+    profiles: [nlportal]
+    image: ghcr.io/nl-portal/nl-portal-app-backend:3.1.1
+    restart: unless-stopped
+    mem_limit: 900m
+    environment:
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75
+      DATABASE_URL: jdbc:postgresql://db:5432/nlportal
+      DATABASE_USERNAME: nlportal
+      DATABASE_PASSWORD: ${NLP_DB_PASSWORD}
+      JWKS_URI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente/protocol/openid-connect/certs
+      KEYCLOAK_TOKEN_EXCHANGE_VERSION: v2
+      KEYCLOAK_CLIENT_ID: nl-portal-m2m
+      KEYCLOAK_CLIENT_SECRET: ${NLP_M2M_SECRET}
+      CONFIGURATION_PANEL_ENABLED: "false"
+      NLPORTAL_CONFIG_ZAKENAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_URL: https://zaken.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_SECRET: ${NLP_ZGW_SECRET}
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_ZAAKDOCUMENTENCONFIG_STATUSWHITELIST: ter_vaststelling,in_bewerking,definitief,gearchiveerd
+      NLPORTAL_CONFIG_ZAKENAPI_PROPERTIES_ZAAKDOCUMENTENCONFIG_VERTROUWELIJKHEIDSAANDUIDINGWHITELIST: openbaar,beperkt_openbaar,intern,zaakvertrouwelijk
+      NLPORTAL_CONFIG_CATALOGIAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_CATALOGIAPI_PROPERTIES_URL: https://zaken.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_CATALOGIAPI_PROPERTIES_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_CATALOGIAPI_PROPERTIES_SECRET: ${NLP_ZGW_SECRET}
+      NLPORTAL_CONFIG_BESLUITENAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_BESLUITENAPI_PROPERTIES_URL: https://zaken.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_BESLUITENAPI_PROPERTIES_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_BESLUITENAPI_PROPERTIES_SECRET: ${NLP_ZGW_SECRET}
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_ENABLED: "true"
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_DEFAULTDOCUMENTAPI: openzaak
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_URL: https://zaken.${BASE_DOMAIN}/documenten/api/v1
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_CLIENTID: nl-portal
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_SECRET: ${NLP_ZGW_SECRET}
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_RSIN: "002220647"
+      NLPORTAL_CONFIG_DOCUMENTENAPIS_PROPERTIES_CONFIGURATIONS_OPENZAAK_DOCUMENTTYPEURL: https://zaken.${BASE_DOMAIN}/catalogi/api/v1/informatieobjecttypen/ebc3d5c3-8fb5-42cc-aec8-52d36bb42986
+      NLPORTAL_CONFIG_OBJECTENAPI_ENABLED: "true"
+      NLPORTAL_CONFIG_OBJECTENAPI_PROPERTIES_URL: https://objecten.${BASE_DOMAIN}
+      NLPORTAL_CONFIG_OBJECTENAPI_PROPERTIES_TOKEN: ${NLP_OBJ_TOKEN}
+      NLPORTAL_CONFIG_OPENKLANT2_ENABLED: "true"
+      NLPORTAL_CONFIG_OPENKLANT2_PROPERTIES_KLANTINTERACTIESAPIURL: https://klant.${BASE_DOMAIN}/klantinteracties/api/v1
+      NLPORTAL_CONFIG_OPENKLANT2_PROPERTIES_CONTACTGEGEVENSAPIURL: https://klant.${BASE_DOMAIN}/contactgegevens/api/v1
+      NLPORTAL_CONFIG_OPENKLANT2_PROPERTIES_TOKEN: ${NLP_OK_TOKEN}
+      NLPORTAL_CONFIG_HAALCENTRAAL2_ENABLED: "true"
+      NLPORTAL_CONFIG_HAALCENTRAAL2_PROPERTIES_BRPAPIURL: http://personen-mock:5010/haalcentraal/api/brp/
+      NLPORTAL_CONFIG_TAAK_ENABLED: "true"
+      # De sleutelnaam verschilt per versie; 3.1 leest OBJECTTYPEURL
+      NLPORTAL_CONFIG_TAAK_PROPERTIES_OBJECTTYPEURL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${TAAK_OT}
+      NLPORTAL_CONFIG_TAAK_PROPERTIES_TYPEURL: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${TAAK_OT}
+      NLPORTAL_CONFIG_TAAK_PROPERTIES_TYPEURLV2: https://objecttypen.${BASE_DOMAIN}/api/v2/objecttypes/${TAAK_OT}
+    ports:
+      - 127.0.0.1:8115:8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nlportal:
+    profiles: [nlportal]
+    image: ghcr.io/nl-portal/nl-portal-app-frontend:3.1.1
+    restart: unless-stopped
+    environment:
+      OIDC_URL: https://keycloak.${BASE_DOMAIN}
+      OIDC_REALM: demogemeente
+      OIDC_CLIENT_ID: nl-portal
+      OIDC_REDIRECT_URI: https://portaal.${BASE_DOMAIN}/oidc/callback
+      OIDC_POST_LOGOUT_REDIRECT_URI: https://portaal.${BASE_DOMAIN}
+      GRAPHQL_URI: https://portaal.${BASE_DOMAIN}/graphql
+      REST_URI: https://portaal.${BASE_DOMAIN}/api
+      OPEN_KLANT_VERSION: v2
+      USE_THEME_API: "false"
+      MESSAGE_COUNT_ENABLE: "false"
+    ports:
+      - 127.0.0.1:8114:8081
+
+  # ---------- Inwonerportaal: MijnOverheid-demo (VNG API Lab) met adapter op de registers ----------
+  # Zaken en taken van de ingelogde inwoner komen uit Open Zaak en Objecten, de rest uit de mocks van het Lab.
+  mijnoverheid:
+    profiles: [mijnoverheid]
+    build: ./services/mijnoverheid
+    image: demostack/mijnoverheid:lab-482be6e
+    restart: unless-stopped
+    mem_limit: 128m
+    environment:
+      BASE_DOMAIN: ${BASE_DOMAIN}
+      DIGID_OIDC_SECRET: ${DIGID_OIDC_SECRET}
+      MO_SESSION_SECRET: ${MO_SESSION_SECRET}
+      MO_ZGW_SECRET: ${MO_ZGW_SECRET}
+      MO_OBJ_TOKEN: ${MO_OBJ_TOKEN}
+      TAAK_OT: ${TAAK_OT}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    ports:
+      - 127.0.0.1:8117:8080
+
+  # ---------- IKO: Integraal Klant- en Objectbeeld (Ritense), aggregatielaag voor de werkplek ----------
+  # Bronnen (connectoren) en profielen worden ingericht in het beheerscherm, niet via env.
+  iko:
+    profiles: [iko]
+    image: ghcr.io/integraal-klant-en-objectbeeld/iko:1.5.1
+    restart: unless-stopped
+    mem_limit: 768m
+    # Het standaard-entrypoint reserveert 1 GB heap; hier begrensd op het containergeheugen
+    entrypoint: ["java", "-XX:MaxRAMPercentage=70", "-jar", "/app/iko.jar"]
+    environment:
+      IKO_CRYPTO_KEY: ${IKO_CRYPTO_KEY}
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_DATABASE: "13"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/iko
+      SPRING_DATASOURCE_USERNAME: iko
+      SPRING_DATASOURCE_PASSWORD: ${IKO_DB_PASSWORD}
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUERURI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENTID: iko
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENTSECRET: ${IKO_OIDC_SECRET}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI: https://keycloak.${BASE_DOMAIN}/realms/demogemeente
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+    ports:
+      - 127.0.0.1:8116:8080
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   db:
   solr-data:
@@ -637,3 +813,5 @@ volumes:
   of-media:
   of-private-media:
   of-log:
+  oip-media:
+  oip-private-media:
