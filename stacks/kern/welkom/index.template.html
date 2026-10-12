@@ -111,6 +111,20 @@ body[data-off~="gzac"] tr[data-profile="gzac"] td:last-child::after, body[data-o
 .stack table { border: 0; }
 .stack td small { color: var(--muted); }
 td.num, th.num { text-align: right; white-space: nowrap; }
+table.functies td, table.functies th { font-size: 15px; }
+table.functies tr.groep th { background: var(--bg); color: var(--accent); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+table.functies td.zelfde { color: var(--muted); }
+table.functies td.anders { font-weight: 600; background: var(--accent-soft); }
+table.functies td.geen, table.functies td.niet-hier { font-weight: 500; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+.tag.soon { background: var(--soon-soft); color: var(--soon); }
+.tag.off { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.legend { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.sw { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--border); border-radius: 3px; }
+.sw.anders { background: var(--accent-soft); margin-left: 12px; }
+.totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 16px 0 8px; }
+.stack-total { background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 4px; padding: 14px 18px; }
+.stack-total h3 { margin: 0; } .stack-total h3 small { color: var(--muted); font-weight: 500; }
 footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
 </style>
 </head>
@@ -248,8 +262,12 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     </section>
   </div>
 
-  <h2>Stacks vergelijken</h2>
-  <p class="sub">Per stack: welke standaard-API's ze bieden en gebruiken (versies live uit de OpenAPI-specificaties), wat ze kosten aan geheugen en schijf (live gemeten op deze server) en onder welke licenties ze vallen. Stacks die uit staan kosten geen geheugen.</p>
+  <h2>Stacks vergelijken per functie</h2>
+  <p class="sub">Een stack is een combinatie van onderdelen die samen alle flows van een gemeente dekt. Hieronder per functie welk onderdeel het doet in elke stack, en welke standaard-API's daarbij horen (versies live uit de OpenAPI-specificaties). De registers delen beide stacks; ze verschillen vooral in de werkplekken.</p>
+__FUNCTIES__
+
+  <h2>Details per onderdeel</h2>
+  <p class="sub">Per laag: welke API's elk onderdeel biedt en gebruikt, versie, licentie, en geheugen en schijfruimte (live gemeten op deze server). Werkplekken die uit staan kosten geen geheugen.</p>
 __STACKS__
 
   <h2>Inloggen en testgegevens</h2>
