@@ -445,6 +445,8 @@ services:
     image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:3.2.0
     restart: unless-stopped
     environment: *kiss-env
+    # Optioneel tweede register (OneGround), zie KISS_ONEGROUND in .env en scripts/render-config.sh
+    env_file: config/generated/kiss-extra.env
     ports:
       - 127.0.0.1:8108:8080
     depends_on:
