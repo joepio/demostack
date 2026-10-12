@@ -29,7 +29,7 @@ if [ ! -f .env ]; then
   echo "Nieuwe .env aangemaakt."
 fi
 # Geheimen voor later toegevoegde onderdelen aanvullen in een bestaande .env
-for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD OG_DB_ADMIN_PASSWORD OG_DB_USER_PASSWORD OG_KC_DB_PASSWORD OG_KC_ADMIN_PASSWORD OG_RABBIT_PASSWORD OG_DP_CERT_PASSWORD OG_SERVICE_SECRET; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
+for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD OG_DB_ADMIN_PASSWORD OG_DB_USER_PASSWORD OG_KC_DB_PASSWORD OG_KC_ADMIN_PASSWORD OG_RABBIT_PASSWORD OG_DP_CERT_PASSWORD OG_SERVICE_SECRET OG_OF_SECRET; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
 # API-tokens van Objecten en Open Klant zijn maximaal 40 tekens
 for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
 # NL Portal kiest het JWT-algoritme op sleutellengte; Open Zaak accepteert alleen HS256, dus precies 32 tekens
@@ -112,7 +112,9 @@ run_seed openzaak seed_meldingen.py -e OZ_DEMO_SECRET
 docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e DIGID_OIDC_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
   python /scripts/keycloak_digid.py 2>&1 | q
 docker compose exec -T -e BASE_DOMAIN -e DIGID_OIDC_SECRET openforms python src/manage.py shell < scripts/openforms_inrichting.py 2>&1 | grep " ok" || true
-run_seed openforms seed_openforms.py -e OF_TOKEN="$TOKEN" -e ZGW_GROUP_ID="$GID"
+OG_GID=$(docker compose exec -T openforms python src/manage.py shell -c \
+  "from openforms.registrations.contrib.zgw_apis.models import ZGWApiGroupConfig as Z; print(Z.objects.get(identifier='oneground').pk)" 2>/dev/null | tail -1)
+run_seed openforms seed_openforms.py -e OF_TOKEN="$TOKEN" -e ZGW_GROUP_ID="$GID" -e OG_GROUP_ID="$OG_GID"
 run_seed openforms seed_mail.py
 
 wait_http 8108 /healthz
@@ -153,10 +155,12 @@ docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e IKO_OIDC_SECRET -
 
 # OneGround: eigen Keycloak (realm, client met rsin-claim), daarna dezelfde demo-catalogus en -meldingen als in Open Zaak
 for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8137/realms/master | grep -q 200 && break; sleep 5; done
-docker compose run --rm -T --no-deps -e OG_KC_ADMIN_PASSWORD -e OG_CLIENTS="oneground-002220647=$OG_SERVICE_SECRET" \
+docker compose run --rm -T --no-deps -e OG_KC_ADMIN_PASSWORD -e OG_CLIENTS="oneground-002220647=$OG_SERVICE_SECRET,openforms=$OG_OF_SECRET" \
   -v "$PWD/scripts:/scripts:ro" openforms python /scripts/keycloak_oneground.py 2>&1 | q
 docker compose restart og-autorisaties og-catalogi og-zaken og-documenten og-besluiten og-notificaties >/dev/null
 for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' "https://og-catalogi.$BASE_DOMAIN/api/v1/catalogussen" | grep -q 401 && break; sleep 5; done
+# De Documenten-API draait als uid 1654 en schrijft bestanden naar het volume
+docker run --rm -v kern_og-documenten:/data alpine:3.23 sh -c "mkdir -p /data/drc_dms && chown -R 1654:1654 /data"
 OG="-e CATALOGI_API=https://og-catalogi.$BASE_DOMAIN/api/v1 -e ZAKEN_API=https://og-zaken.$BASE_DOMAIN/api/v1 -e ZGW_CLIENT=oneground-002220647 -e ZGW_SECRET=$OG_SERVICE_SECRET"
 run_seed openzaak seed_openzaak.py -e OZ_DEMO_SECRET $OG -e SELECTIELIJST_API="https://og-referentielijsten.$BASE_DOMAIN/api/v1"
 run_seed openzaak seed_meldingen.py -e OZ_DEMO_SECRET $OG
