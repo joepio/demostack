@@ -38,6 +38,8 @@ APIS = {
     "vtb-verzoeken": ("Verzoeken API (Open VTB)", f"https://vtb.{D}/verzoeken/api/v1/openapi.yaml"),
     "vtb-taken": ("Taken API (Open VTB)", f"https://vtb.{D}/taken/api/v1/openapi.yaml"),
     "vtb-berichten": ("Berichten API (Open VTB)", f"https://vtb.{D}/berichten/api/v1/openapi.yaml"),
+    "producttypen": ("Producttypen API (Open Product)", f"https://producten.{D}/producttypen/api/v1/openapi.yaml"),
+    "producten": ("Producten API (Open Product)", f"https://producten.{D}/producten/api/v1/openapi.yaml"),
     "og-zgw": ("ZGW-API's in OneGround: Zaken 1.5, Catalogi 1.3, Documenten 1.7, Besluiten 1.0, Autorisaties 1.1, Notificaties 1.0", None),
 }
 
@@ -127,6 +129,12 @@ STACKS = [
      "componenten": [
         C(naam="Open VTB", maker="Maykin / Platform Dienstverlening", licentie="EUPL-1.2", diensten=["openvtb", "openvtb-celery"],
           biedt=["vtb-verzoeken", "vtb-taken", "vtb-berichten"], gebruikt=["oidc"]),
+     ]},
+    {"id": "openproduct", "naam": "Producten: Open Product", "profiel": "openproduct",
+     "uitleg": "Het register van Maykin voor producttypen (zoals de parkeervergunning, met prijzen, content en de Uniforme Productnamenlijst) en de producten van inwoners. Rechten per producttype. Hier met een parkeervergunning voor Suzanne, ontstaan uit haar zaak in Open Zaak. Open Inwoner en Open Formulieren kunnen het volgens Maykin gebruiken; hier nog niet ingericht.",
+     "componenten": [
+        C(naam="Open Product", maker="Maykin", licentie="EUPL-1.2", diensten=["openproduct", "openproduct-celery", "openproduct-beat"],
+          biedt=["producttypen", "producten"], gebruikt=["oidc"], kan_gebruiken=["zaken"]),
      ]},
     {"id": "iko", "naam": "Klant- en objectbeeld: IKO", "profiel": "iko",
      "uitleg": "Integraal Klant- en Objectbeeld (Ritense): een aggregatielaag die gegevens uit meerdere bronnen samenvoegt tot één beeld via een eigen API. GZAC kan het tonen. De connectoren en profielen zijn hier nog niet ingericht.",
@@ -279,6 +287,8 @@ FUNCTIES = [
      "podiumd": ("OneGround (Visma Roxit) draait hier naast Open Zaak", "hier"), "gzac": ("OneGround (Visma Roxit) draait hier naast Open Zaak", "hier")},
     {"functie": "Verzoeken, taken en berichten", "wie": "Register", "apis": ["vtb-verzoeken", "vtb-taken", "vtb-berichten"],
      "podiumd": ("Open VTB draait hier; nog geen afnemer", "hier"), "gzac": ("Open VTB draait hier; nog geen afnemer", "hier")},
+    {"functie": "Producten en vergunningen van inwoners", "wie": "Register", "apis": ["producttypen", "producten"],
+     "podiumd": ("Open Product draait hier; nog niet gekoppeld", "hier"), "gzac": ("Open Product draait hier; nog niet gekoppeld", "hier")},
     {"functie": "Klantgegevens en contactmomenten", "wie": "Register", "apis": ["klantinteracties"],
      "podiumd": ("Open Klant", "hier"), "gzac": ("Open Klant", "hier")},
     {"functie": "Overige registraties", "wie": "Register", "apis": ["objecten", "objecttypen"],

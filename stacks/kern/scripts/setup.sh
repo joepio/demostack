@@ -29,11 +29,12 @@ if [ ! -f .env ]; then
   echo "Nieuwe .env aangemaakt."
 fi
 # Geheimen voor later toegevoegde onderdelen aanvullen in een bestaande .env
-for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD VTB_DB_PASSWORD OG_DB_ADMIN_PASSWORD OG_DB_USER_PASSWORD OG_KC_DB_PASSWORD OG_KC_ADMIN_PASSWORD OG_RABBIT_PASSWORD OG_DP_CERT_PASSWORD OG_SERVICE_SECRET OG_OF_SECRET OG_NLP_SECRET OG_KISS_SECRET; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
+for v in NLP_DB_PASSWORD OIP_DB_PASSWORD IKO_DB_PASSWORD VTB_DB_PASSWORD OP_DB_PASSWORD OG_DB_ADMIN_PASSWORD OG_DB_USER_PASSWORD OG_KC_DB_PASSWORD OG_KC_ADMIN_PASSWORD OG_RABBIT_PASSWORD OG_DP_CERT_PASSWORD OG_SERVICE_SECRET OG_OF_SECRET OG_NLP_SECRET OG_KISS_SECRET; do grep -q "^$v=" .env || echo "$v=$(gen 16)" >> .env; done
 # API-tokens van Objecten en Open Klant zijn maximaal 40 tekens
-for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN VTB_TOKEN_DEMO; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
+for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_OBJ_TOKEN VTB_TOKEN_DEMO OP_TOKEN_DEMO; do grep -q "^$v=" .env || echo "$v=$(gen 20)" >> .env; done
 # NL Portal kiest het JWT-algoritme op sleutellengte; Open Zaak accepteert alleen HS256, dus precies 32 tekens
 grep -q "^VTB_SECRET_KEY=" .env || echo "VTB_SECRET_KEY=$(gen 30)" >> .env
+grep -q "^OP_SECRET_KEY=" .env || echo "OP_SECRET_KEY=$(gen 30)" >> .env
 grep -q "^NLP_ZGW_SECRET=" .env || echo "NLP_ZGW_SECRET=$(gen 16)" >> .env
 for v in DEMO_LOGIN_SECRET ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
 # OneGround: HMAC-sleutel en certificaat voor het versleuteld opslaan van BSN's in de Zaken API
@@ -44,10 +45,10 @@ if ! grep -q "^OG_DP_CERT=" .env; then
   openssl pkcs12 -export -inkey "$T/k.pem" -in "$T/c.pem" -out "$T/dp.pfx" -passout "pass:$P"
   echo "OG_DP_CERT=$(base64 -w0 "$T/dp.pfx")" >> .env; rm -rf "$T"
 fi
-grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat,oneground,openvtb" >> .env
+grep -q '^COMPOSE_PROFILES=' .env || echo "COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat,oneground,openvtb,openproduct" >> .env
 set -a; . ./.env; set +a
 # Tijdens de setup draaien alle werkplekken; aan het eind gelden weer de profielen uit .env
-WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat,oneground,openvtb
+WANTED_PROFILES=$COMPOSE_PROFILES; export COMPOSE_PROFILES=kcc,gzac,zac,oip,nlportal,mijnoverheid,iko,zaakchat,oneground,openvtb,openproduct
 setenv() { if grep -q "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 q() { grep -v -E '^\{"|Container|^$' || true; }
 
@@ -171,10 +172,16 @@ wait_http 8121 /admin/login/
 docker compose exec -T -e VTB_TOKEN_DEMO -e BASE_DOMAIN openvtb python src/manage.py shell < scripts/seed_openvtb.py 2>&1 \
   | grep -E "^aangemaakt|^/" || true
 
+# Open Product: de Uniforme Productnamenlijst, daarna een producttype en voor Suzanne een parkeervergunning
+wait_http 8122 /admin/login/
+docker compose exec -T openproduct src/manage.py load_upl --url https://standaarden.overheid.nl/owms/oquery/UPL-actueel.csv 2>&1 | tail -1 || true
+docker compose exec -T -e OP_TOKEN_DEMO -e OZ_DEMO_SECRET -e BASE_DOMAIN openproduct python src/manage.py shell < scripts/seed_openproduct.py 2>&1 \
+  | grep -E "^aangemaakt|^/|^geen zaak" || true
+
 # Single sign-on: account 'demo', langere sessies, beheerschermen via Keycloak
 docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e BEHEER_OIDC_SECRET -e DEMO_LOGIN_SECRET -v "$PWD/scripts:/scripts:ro" openforms \
   python /scripts/keycloak_sso.py 2>&1 | q
-for s in openzaak openklant objects objecttypes opennotificaties openvtb; do apply $s oidc; done
+for s in openzaak openklant objects objecttypes opennotificaties openvtb openproduct; do apply $s oidc; done
 apply openforms oidc-openforms
 
 python3 welkom/evaluatie.py || true

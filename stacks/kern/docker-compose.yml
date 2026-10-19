@@ -79,6 +79,23 @@ x-openvtb-env: &openvtb-env
   NOTIFICATIONS_DISABLED: "true"
   ENABLE_CLOUD_EVENTS: "false"
 
+x-openproduct-env: &openproduct-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: openproduct.conf.docker
+  SECRET_KEY: ${OP_SECRET_KEY:-}
+  DB_NAME: openproduct
+  DB_USER: openproduct
+  DB_PASSWORD: ${OP_DB_PASSWORD:-}
+  ALLOWED_HOSTS: producten.${BASE_DOMAIN},openproduct,localhost
+  CSRF_TRUSTED_ORIGINS: https://producten.${BASE_DOMAIN}
+  CACHE_DEFAULT: redis:6379/15
+  CACHE_AXES: redis:6379/15
+  CELERY_BROKER_URL: redis://redis:6379/15
+  CELERY_RESULT_BACKEND: redis://redis:6379/15
+  CELERY_WORKER_NAME: celery@openproduct
+  DEFAULT_FROM_EMAIL: producten@demogemeente.local
+  NOTIFICATIONS_DISABLED: "true"
+
 x-objects-env: &objects-env
   <<: *base-env
   DJANGO_SETTINGS_MODULE: objects.conf.docker
@@ -272,6 +289,7 @@ services:
       OIP_DB_PASSWORD: ${OIP_DB_PASSWORD}
       IKO_DB_PASSWORD: ${IKO_DB_PASSWORD}
       VTB_DB_PASSWORD: ${VTB_DB_PASSWORD:-}
+      OP_DB_PASSWORD: ${OP_DB_PASSWORD:-}
       OG_DB_ADMIN_PASSWORD: ${OG_DB_ADMIN_PASSWORD:-}
       OG_DB_USER_PASSWORD: ${OG_DB_USER_PASSWORD:-}
       OG_KC_DB_PASSWORD: ${OG_KC_DB_PASSWORD:-}
@@ -310,6 +328,7 @@ services:
       - 127.0.0.1:8110:8110
       - 127.0.0.1:8113:8113
       - 127.0.0.1:8121:8121
+      - 127.0.0.1:8122:8122
 
   mailpit:
     image: axllent/mailpit:v1.31.4
@@ -368,6 +387,29 @@ services:
     image: maykinmedia/open-vtb:0.2.0
     command: /celery_worker.sh
     environment: *openvtb-env
+
+  # Open Product (Maykin): producttypen en producten van inwoners (zoals vergunningen)
+  openproduct:
+    <<: *common
+    profiles: [openproduct]
+    image: maykinmedia/open-product:1.9.0
+    environment: *openproduct-env
+    volumes:
+      - op-media:/app/media
+      - op-private-media:/app/private_media
+  openproduct-celery:
+    <<: *common
+    profiles: [openproduct]
+    image: maykinmedia/open-product:1.9.0
+    command: /celery_worker.sh
+    environment: *openproduct-env
+  # Zet producten op actief of verlopen volgens hun start- en einddatum
+  openproduct-beat:
+    <<: *common
+    profiles: [openproduct]
+    image: maykinmedia/open-product:1.9.0
+    command: /celery_beat.sh
+    environment: *openproduct-env
 
   # Objecten
   objects:
@@ -1184,6 +1226,8 @@ volumes:
   db:
   vtb-media:
   vtb-private-media:
+  op-media:
+  op-private-media:
   solr-data:
   es:
   redis:

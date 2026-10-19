@@ -129,7 +129,8 @@ body[data-off~="gzac"] .btn[data-profile="gzac"], body[data-off~="zac"] .btn[dat
 body[data-off~="oip"] .btn[data-profile="oip"], body[data-off~="nlportal"] .btn[data-profile="nlportal"],
 body[data-off~="mijnoverheid"] .btn[data-profile="mijnoverheid"], body[data-off~="iko"] .btn[data-profile="iko"],
 body[data-off~="zaakchat"] .btn[data-profile="zaakchat"], body[data-off~="oneground"] .btn[data-profile="oneground"],
-body[data-off~="openvtb"] .btn[data-profile="openvtb"] { opacity: .45; pointer-events: none; }
+body[data-off~="openvtb"] .btn[data-profile="openvtb"],
+body[data-off~="openproduct"] .btn[data-profile="openproduct"] { opacity: .45; pointer-events: none; }
 body[data-off~="gzac"] .btn[data-profile="gzac"] small::after, body[data-off~="zac"] .btn[data-profile="zac"] small::after,
 body[data-off~="oip"] .btn[data-profile="oip"] small::after, body[data-off~="nlportal"] .btn[data-profile="nlportal"] small::after,
 body[data-off~="mijnoverheid"] .btn[data-profile="mijnoverheid"] small::after, body[data-off~="iko"] .btn[data-profile="iko"] small::after,
@@ -289,6 +290,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
         <a class="btn" data-shot="beheer-3.jpg" href="https://zaken.__BASE__/oidc/authenticate/?next=/admin/">Open Zaak <small>zaaktypen, catalogi</small></a>
         <a class="btn" data-shot="beheer-openklant.jpg" href="https://klant.__BASE__/oidc/authenticate/?next=/admin/">Open Klant <small>klantcontacten</small></a>
         <a class="btn" data-profile="openvtb" href="https://vtb.__BASE__/auth/oidc/authenticate/?next=/admin/">Open VTB <small>verzoeken, taken, berichten</small></a>
+        <a class="btn" data-profile="openproduct" href="https://producten.__BASE__/auth/oidc/authenticate/?next=/admin/">Open Product <small>producttypen en producten</small></a>
         <a class="btn" data-shot="beheer-objecten.jpg" href="https://objecten.__BASE__/oidc/authenticate/?next=/admin/">Objecten <small>registraties</small></a>
         <a class="btn" data-shot="beheer-objecttypen.jpg" href="https://objecttypen.__BASE__/oidc/authenticate/?next=/admin/">Objecttypen <small>schema's</small></a>
         <a class="btn" data-profile="iko" data-shot="beheer-iko.jpg" href="https://iko.__BASE__/admin">IKO <small>klant- en objectbeeld</small></a>
@@ -317,6 +319,7 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
         <a class="btn" data-profile="oneground" href="https://og-zaken.__BASE__/swagger/index.html">Zaken API in OneGround <small>tweede implementatie</small></a>
         <a class="btn" data-profile="openvtb" href="https://vtb.__BASE__/taken/api/v1/schema/">Taken API in Open VTB <small>OAS</small></a>
         <a class="btn" data-profile="openvtb" href="https://vtb.__BASE__/berichten/api/v1/schema/">Berichten API in Open VTB <small>OAS</small></a>
+        <a class="btn" data-profile="openproduct" href="https://producten.__BASE__/producten/api/v1/schema/">Producten API <small>OAS</small></a>
         <a class="btn" data-shot="ontwikkelaar-notificaties.jpg" href="https://notificaties.__BASE__/oidc/authenticate/?next=/admin/datamodel/notificatie/">Open Notificaties <small>berichtenverkeer</small></a>
         <a class="btn" data-shot="ontwikkelaar-mailpit.jpg" href="https://mail.__BASE__/">Mailpit <small>uitgaande mail</small></a>
       </div>

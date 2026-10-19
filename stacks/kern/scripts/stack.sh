@@ -8,10 +8,10 @@
 # Profielen: kcc (KISS, Elasticsearch, BRP-mock), gzac (GZAC/Valtimo), zac (ZAC van Dimpact met Solr, OPA, PABC),
 #            oip (Open Inwoner), nlportal (NL Portal), mijnoverheid (MijnOverheid-demo VNG API Lab), iko (IKO),
 #            zaakchat (ZaakChat met koppeling), oneground (OneGround: ZGW-API's van Visma Roxit), oneground-nlportal (NL Portal op OneGround, compatibiliteitstest),
-#            openvtb (Open VTB: verzoeken, taken en berichten)
+#            openvtb (Open VTB: verzoeken, taken en berichten), openproduct (Open Product: producttypen en producten)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ALL="kcc gzac zac oip nlportal mijnoverheid iko zaakchat oneground oneground-nlportal openvtb"
+ALL="kcc gzac zac oip nlportal mijnoverheid iko zaakchat oneground oneground-nlportal openvtb openproduct"
 cur=$(grep '^COMPOSE_PROFILES=' .env | cut -d= -f2 | tr ',' ' ')
 want="$cur"
 case "${1:-status}" in
