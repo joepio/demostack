@@ -39,6 +39,27 @@ else:
     call("PUT", f"{R}/clients/{c['id']}", json={**c, "redirectUris": redirects})
 beheerders = group("beheerders")
 
+# Inloggen zonder wachtwoord voor de demo-accounts (services/demo-login): serviceaccount met de rol 'impersonation'
+dl = {"clientId": "demo-login", "name": "Demo: inloggen zonder wachtwoord", "publicClient": False, "secret": os.environ["DEMO_LOGIN_SECRET"],
+      "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False}
+if not client("demo-login"):
+    call("POST", f"{R}/clients", json=dl)
+c_dl = client("demo-login"); rm = client("realm-management")
+sa = call("GET", f"{R}/clients/{c_dl['id']}/service-account-user")
+call("POST", f"{R}/users/{sa['id']}/role-mappings/clients/{rm['id']}",
+     json=[call("GET", f"{R}/clients/{rm['id']}/roles/{n}") for n in ("impersonation", "view-users")])
+
+# Welkomstpagina: public client die alleen toont wie er ingelogd is en wisselen van gebruiker mogelijk maakt
+W = f"https://{D}"
+welkom = {"clientId": "welkom", "name": "Welkomstpagina", "publicClient": True, "standardFlowEnabled": True,
+          "directAccessGrantsEnabled": False, "redirectUris": [f"{W}/*"], "webOrigins": [W],
+          "attributes": {"post.logout.redirect.uris": f"{W}/*", "pkce.code.challenge.method": "S256"}}
+w = client("welkom")
+if not w:
+    call("POST", f"{R}/clients", json=welkom)
+else:
+    call("PUT", f"{R}/clients/{w['id']}", json={**w, **welkom, "attributes": {**w.get("attributes", {}), **welkom["attributes"]}})
+
 # Eén account voor alles
 u = call("GET", f"{R}/users", params={"username": "demo", "exact": "true"})
 if not u:

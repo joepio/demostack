@@ -1,0 +1,70 @@
+[
+    {
+        "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d01",
+        "Label": "DemoStack (beheer en rooktests)",
+        "HeeftAlleAutorisaties": true,
+        "CreationTime": "2026-10-12T08:00:00Z",
+        "CreatedBy": "data-seed",
+        "Owner": "002220647",
+        "ClientIds": [
+            {
+                "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d02",
+                "ApplicatieId": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d01",
+                "ClientId": "oneground-002220647",
+                "CreationTime": "2026-10-12T08:00:00Z",
+                "CreatedBy": "data-seed"
+            }
+        ]
+    },
+    {
+        "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d11",
+        "Label": "Open Formulieren",
+        "HeeftAlleAutorisaties": true,
+        "CreationTime": "2026-10-12T08:00:00Z",
+        "CreatedBy": "data-seed",
+        "Owner": "002220647",
+        "ClientIds": [
+            {
+                "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d12",
+                "ApplicatieId": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d11",
+                "ClientId": "openforms",
+                "CreationTime": "2026-10-12T08:00:00Z",
+                "CreatedBy": "data-seed"
+            }
+        ]
+    },
+    {
+        "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d21",
+        "Label": "NL Portal",
+        "HeeftAlleAutorisaties": true,
+        "CreationTime": "2026-10-12T08:00:00Z",
+        "CreatedBy": "data-seed",
+        "Owner": "002220647",
+        "ClientIds": [
+            {
+                "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d22",
+                "ApplicatieId": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d21",
+                "ClientId": "nl-portal",
+                "CreationTime": "2026-10-12T08:00:00Z",
+                "CreatedBy": "data-seed"
+            }
+        ]
+    },
+    {
+        "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d31",
+        "Label": "KISS",
+        "HeeftAlleAutorisaties": true,
+        "CreationTime": "2026-10-12T08:00:00Z",
+        "CreatedBy": "data-seed",
+        "Owner": "002220647",
+        "ClientIds": [
+            {
+                "Id": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d32",
+                "ApplicatieId": "6a1d3c2e-0b4f-4c8e-9a7d-2e5f1b3c4d31",
+                "ClientId": "kiss",
+                "CreationTime": "2026-10-12T08:00:00Z",
+                "CreatedBy": "data-seed"
+            }
+        ]
+    }
+]

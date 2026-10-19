@@ -36,6 +36,27 @@ zgw_consumers:
     auth_type: zgw
     client_id: openforms
     secret: ${OZ_OPENFORMS_SECRET}
+  - identifier: og-zaken
+    label: Zaken API (OneGround)
+    api_root: https://og-zaken.${BASE_DOMAIN}/api/v1/
+    api_type: zrc
+    auth_type: zgw
+    client_id: openforms
+    secret: ${OG_OF_SECRET}
+  - identifier: og-documenten
+    label: Documenten API (OneGround)
+    api_root: https://og-documenten.${BASE_DOMAIN}/api/v1/
+    api_type: drc
+    auth_type: zgw
+    client_id: openforms
+    secret: ${OG_OF_SECRET}
+  - identifier: og-catalogi
+    label: Catalogi API (OneGround)
+    api_root: https://og-catalogi.${BASE_DOMAIN}/api/v1/
+    api_type: ztc
+    auth_type: zgw
+    client_id: openforms
+    secret: ${OG_OF_SECRET}
 objects_api_config_enable: true
 objects_api:
   groups:
@@ -54,6 +75,15 @@ zgw_api:
     zaken_service_identifier: zaken
     documenten_service_identifier: documenten
     catalogi_service_identifier: catalogi
+    organisatie_rsin: "002220647"
+    zaak_vertrouwelijkheidaanduiding: zaakvertrouwelijk
+    doc_vertrouwelijkheidaanduiding: openbaar
+    auteur: Demogemeente
+  - name: OneGround
+    identifier: oneground
+    zaken_service_identifier: og-zaken
+    documenten_service_identifier: og-documenten
+    catalogi_service_identifier: og-catalogi
     organisatie_rsin: "002220647"
     zaak_vertrouwelijkheidaanduiding: zaakvertrouwelijk
     doc_vertrouwelijkheidaanduiding: openbaar

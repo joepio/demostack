@@ -72,3 +72,19 @@ else:
     call("POST", f"forms/{form['uuid']}/steps", json={"formDefinition": fd["url"], "index": 0,
          "translations": {"nl": STEP_NL}})
     print("klaar:", f"https://formulieren.{os.environ['BASE_DOMAIN']}/melding-openbare-ruimte")
+
+# Hetzelfde formulier, maar met OneGround als register: zo wordt dezelfde melding in de tweede ZGW-implementatie een zaak
+og_group = os.environ.get("OG_GROUP_ID")
+if og_group:
+    og_fields = {**form_fields, "name": "Melding openbare ruimte (OneGround)", "internalName": "Melding openbare ruimte (OneGround)",
+                 "slug": "melding-openbare-ruimte-oneground",
+                 "registrationBackends": [{"key": "zaak", "name": "OneGround", "backend": "zgw-create-zaak",
+                                           "options": {**options, "zgwApiGroup": int(og_group)}}]}
+    og_fields["translations"] = {"nl": {**form_fields["translations"]["nl"], "name": "Melding openbare ruimte (OneGround)"}}
+    og_form = next((f for f in results(call("GET", "forms")) if f["slug"] == og_fields["slug"]), None)
+    if og_form:
+        call("PATCH", og_form["url"], json=og_fields); print("formulier OneGround bijgewerkt")
+    else:
+        og_form = call("POST", "forms", json=og_fields)
+        call("POST", f"forms/{og_form['uuid']}/steps", json={"formDefinition": fd["url"], "index": 0, "translations": {"nl": STEP_NL}})
+        print("klaar:", f"https://formulieren.{os.environ['BASE_DOMAIN']}/{og_fields['slug']}")

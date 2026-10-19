@@ -7,7 +7,7 @@
 - Alle andere API's van de app gaan ongewijzigd door naar de mockserver van het API Lab.
 - De chatassistent werkt alleen als OPENROUTER_API_KEY gezet is.
 """
-import base64, hashlib, hmac, json, mimetypes, os, secrets, time, urllib.parse
+import base64, hashlib, hmac, html, json, mimetypes, os, secrets, time, urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import jwt, requests
 
@@ -145,6 +145,16 @@ def gegevens_partij(bsn):
             "_expand": {"digitale_adressen": []}}
 
 
+GEEN_BSN = """<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inloggen als inwoner</title><style>body{{font:16px/1.5 system-ui,sans-serif;max-width:560px;margin:10vh auto;padding:0 16px;color:#1b1f27}}
+a.b{{display:inline-block;margin:6px 8px 0 0;padding:10px 16px;background:#154273;color:#fff;border-radius:4px;text-decoration:none}}</style></head>
+<body><h1>Inloggen als inwoner</h1>
+<p>Je bent ingelogd als <strong>{wie}</strong>. Dat is een medewerkersaccount zonder BSN, en MijnOverheid laat de gegevens van een inwoner zien.
+Kies een testinwoner (DigiD demo, één klik):</p>
+<p><a class="b" href="{klik}?als=suzanne&terug={terug}">Suzanne Moulin</a><a class="b" href="{klik}?als=lukas&terug={terug}">Lukas Klamer</a><a class="b" href="{klik}?als=merel&terug={terug}">Merel Kooyman</a></p>
+</body></html>"""
+
+
 class H(BaseHTTPRequestHandler):
     server_version = "mijnoverheid-adapter"
 
@@ -207,10 +217,23 @@ class H(BaseHTTPRequestHandler):
     def route(self):
         path = urllib.parse.urlsplit(self.path).path
         if path == "/login":
+            # ?als=suzanne: opnieuw inloggen (ook als er al een sessie is, bijvoorbeeld als 'demo') met die gebruiker voorgevuld
+            args = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(self.path).query))
             state = secrets.token_urlsafe(16)
-            q = urllib.parse.urlencode({"client_id": CLIENT, "response_type": "code", "scope": "openid",
-                                        "redirect_uri": f"{ORIGIN}/oidc/callback", "state": state})
+            params = {"client_id": CLIENT, "response_type": "code", "scope": "openid",
+                      "redirect_uri": f"{ORIGIN}/oidc/callback", "state": state}
+            if args.get("als"):
+                params.update({"prompt": "login", "login_hint": args["als"]})
+            q = urllib.parse.urlencode(params)
             return self.redirect(f"{KC}/auth?{q}", [f"mo_state={state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600"])
+        if path == "/wissel":
+            # Eerst de Keycloak-sessie van de huidige gebruiker beëindigen, dan inloggen als de gekozen testinwoner
+            als = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(self.path).query)).get("als", "suzanne")
+            q = {"client_id": CLIENT, "post_logout_redirect_uri": f"{ORIGIN}/login?als={urllib.parse.quote(als)}"}
+            if self.cookie("mo_idt"):
+                q["id_token_hint"] = self.cookie("mo_idt")
+            return self.redirect(f"{KC}/logout?{urllib.parse.urlencode(q)}",
+                                 ["mo_idt=; Path=/; Max-Age=0", "mo_session=; Path=/; Max-Age=0"])
         if path == "/oidc/callback":
             return self.callback()
         if path == "/logout":
@@ -237,7 +260,12 @@ class H(BaseHTTPRequestHandler):
         idt = r.json()["id_token"]
         claims = jwt.decode(idt, jwks.get_signing_key_from_jwt(idt).key, algorithms=["RS256"], audience=CLIENT)
         if not claims.get("bsn"):
-            return self.send(403, "Dit account heeft geen BSN (log in als testinwoner)", "text/plain; charset=utf-8")
+            # id_token bewaren zodat /wissel de Keycloak-sessie zonder bevestigingsscherm kan beëindigen
+            return self.send(403, GEEN_BSN.format(wie=html.escape(claims.get("preferred_username", "dit account")),
+                                                  klik=f"https://keycloak.{D}/demo-login",
+                                                  terug=urllib.parse.quote(f"{ORIGIN}/login", safe="")),
+                             "text/html; charset=utf-8",
+                             {"Set-Cookie": f"mo_idt={idt}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600"})
         naam = " ".join(x for x in [claims.get("given_name"), claims.get("family_name")] if x) or "inwoner"
         sess = sign({"bsn": claims["bsn"], "naam": naam, "exp": int(time.time()) + 8 * 3600})
         self.redirect("/", [f"mo_session={sess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800",
