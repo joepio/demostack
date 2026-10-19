@@ -17,7 +17,7 @@ Bedoeld om de componenten en standaarden te laten zien, te analyseren en (later)
 
 | Stack | Inhoud | Map |
 | --- | --- | --- |
-| kern | Open Formulieren, Open Zaak, OneGround, Open Klant, Objecten, Objecttypen, Open Notificaties, KISS, ZAC, GZAC, Open Inwoner, NL Portal, MijnOverheid-demo, IKO, ZaakChat (met Keycloak, Elasticsearch, BRP-mock), Mailpit | [`stacks/kern`](stacks/kern) |
+| kern | Open Formulieren, Open Zaak, OneGround, Open Klant, Open VTB, Objecten, Objecttypen, Open Notificaties, KISS, ZAC, GZAC, Open Inwoner, NL Portal, MijnOverheid-demo, IKO, ZaakChat (met Keycloak, Elasticsearch, BRP-mock), Mailpit | [`stacks/kern`](stacks/kern) |
 
 Gepland: compliance-tests tegen de API-specificaties (ZGW, Klantinteracties, Objecten) met een rapport per component en versie.
 

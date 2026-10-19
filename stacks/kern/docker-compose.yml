@@ -61,6 +61,24 @@ x-openklant-env: &openklant-env
   DEFAULT_FROM_EMAIL: klant@demogemeente.local
   NOTIFICATIONS_DISABLED: "true"
 
+x-openvtb-env: &openvtb-env
+  <<: *base-env
+  DJANGO_SETTINGS_MODULE: openvtb.conf.docker
+  SECRET_KEY: ${VTB_SECRET_KEY:-}
+  DB_NAME: openvtb
+  DB_USER: openvtb
+  DB_PASSWORD: ${VTB_DB_PASSWORD:-}
+  ALLOWED_HOSTS: vtb.${BASE_DOMAIN},openvtb,localhost
+  CSRF_TRUSTED_ORIGINS: https://vtb.${BASE_DOMAIN}
+  CACHE_DEFAULT: redis:6379/13
+  CACHE_AXES: redis:6379/13
+  CELERY_BROKER_URL: redis://redis:6379/14
+  CELERY_RESULT_BACKEND: redis://redis:6379/14
+  CELERY_WORKER_NAME: celery@openvtb
+  DEFAULT_FROM_EMAIL: vtb@demogemeente.local
+  NOTIFICATIONS_DISABLED: "true"
+  ENABLE_CLOUD_EVENTS: "false"
+
 x-objects-env: &objects-env
   <<: *base-env
   DJANGO_SETTINGS_MODULE: objects.conf.docker
@@ -253,6 +271,7 @@ services:
       NLP_DB_PASSWORD: ${NLP_DB_PASSWORD}
       OIP_DB_PASSWORD: ${OIP_DB_PASSWORD}
       IKO_DB_PASSWORD: ${IKO_DB_PASSWORD}
+      VTB_DB_PASSWORD: ${VTB_DB_PASSWORD:-}
       OG_DB_ADMIN_PASSWORD: ${OG_DB_ADMIN_PASSWORD:-}
       OG_DB_USER_PASSWORD: ${OG_DB_USER_PASSWORD:-}
       OG_KC_DB_PASSWORD: ${OG_KC_DB_PASSWORD:-}
@@ -290,6 +309,7 @@ services:
       - 127.0.0.1:8105:8105
       - 127.0.0.1:8110:8110
       - 127.0.0.1:8113:8113
+      - 127.0.0.1:8121:8121
 
   mailpit:
     image: axllent/mailpit:v1.31.4
@@ -332,6 +352,22 @@ services:
     image: maykinmedia/open-klant:2.19.1
     command: /celery_worker.sh
     environment: *openklant-env
+
+  # Open VTB (Maykin): verzoeken, taken en berichten (Platform Dienstverlening)
+  openvtb:
+    <<: *common
+    profiles: [openvtb]
+    image: maykinmedia/open-vtb:0.2.0
+    environment: *openvtb-env
+    volumes:
+      - vtb-media:/app/media
+      - vtb-private-media:/app/private_media
+  openvtb-celery:
+    <<: *common
+    profiles: [openvtb]
+    image: maykinmedia/open-vtb:0.2.0
+    command: /celery_worker.sh
+    environment: *openvtb-env
 
   # Objecten
   objects:
@@ -1146,6 +1182,8 @@ services:
 
 volumes:
   db:
+  vtb-media:
+  vtb-private-media:
   solr-data:
   es:
   redis:
