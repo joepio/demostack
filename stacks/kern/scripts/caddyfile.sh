@@ -16,7 +16,7 @@ $BASE_DOMAIN {
 	file_server
 }
 CADDY
-for pair in zaken:8101 klant:8102 objecten:8103 objecttypen:8104 formulieren:8105 kiss:8108 gzac:8109 notificaties:8110 zac:8111 pabc:8112 inwoner:8113 iko:8116 mijnoverheid:8117; do
+for pair in zaken:8101 klant:8102 objecten:8103 objecttypen:8104 formulieren:8105 kiss:8108 gzac:8109 notificaties:8110 zac:8111 pabc:8112 inwoner:8113 iko:8116 mijnoverheid:8117 vtb:8121; do
   printf '%s.%s {\n\timport proxy\n\treverse_proxy 127.0.0.1:%s\n}\n' "${pair%%:*}" "$BASE_DOMAIN" "${pair##*:}"
 done
 # NL Portal: frontend en backend op één adres; de nginx in het frontend-image verwacht de backend op localhost
