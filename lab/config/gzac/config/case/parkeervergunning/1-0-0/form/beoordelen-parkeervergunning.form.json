@@ -1,0 +1,11 @@
+{
+  "display": "form",
+  "components": [
+    {"key": "kenteken", "type": "textfield", "input": true, "label": "Kenteken", "disabled": true},
+    {"key": "zone", "type": "textfield", "input": true, "label": "Zone", "disabled": true},
+    {"key": "besluit", "type": "radio", "input": true, "label": "Besluit",
+     "values": [{"label": "Toekennen", "value": "toekennen"}, {"label": "Afwijzen", "value": "afwijzen"}],
+     "validate": {"required": true}},
+    {"key": "submit", "type": "button", "input": true, "label": "Afronden", "disableOnInvalid": true}
+  ]
+}

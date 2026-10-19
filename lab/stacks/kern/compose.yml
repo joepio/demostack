@@ -1,0 +1,388 @@
+# Stack "kern" (variant 1): MijnServices-kern.
+# Open Zaak (Zaken, Catalogi, Besluiten, Documenten, Autorisaties),
+# Open Notificaties, Open Object (Objecten + Objecttypen), Open Klant 2,
+# Open Product, Referentielijsten en de VNG Selectielijst.
+# Versies volgen de VCG-basisset (code.overheid.nl/CommonGround/vcg-basisset).
+#
+# Andere stacks hergebruiken dit bestand (STACK_COMPOSE in hun stack.env) en kiezen
+# een andere versie met IMAGE_<COMPONENT> in hun stack.env, bijvoorbeeld
+# IMAGE_OPENZAAK=openzaak/open-zaak:1.29.3. Een service uitzetten kan in een
+# override met "profiles: [uit]".
+
+x-django-env: &django-env
+  IS_HTTPS: "no"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_PASSWORD: ${DB_APP_PASSWORD:?zie .env}
+  DB_CONN_MAX_AGE: "0"
+  DB_POOL_ENABLED: "False"
+  DISABLE_2FA: "true"
+  OTEL_SDK_DISABLED: "true"
+  LOG_NOTIFICATIONS_IN_DB: "yes"
+  LOG_STDOUT: "yes"
+  DJANGO_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD:?zie .env}
+  UWSGI_PROCESSES: ${UWSGI_PROCESSES:-2}
+  UWSGI_THREADS: ${UWSGI_THREADS:-4}
+  CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-2}
+  CELERY_LOGLEVEL: INFO
+  CORS_ALLOW_ALL_ORIGINS: "True"
+
+x-healthcheck: &django-healthcheck
+  test: ["CMD", "python", "-c", "import requests,sys; sys.exit(requests.head('http://localhost:8000/admin/', timeout=4).status_code not in (200, 302))"]
+  interval: 10s
+  timeout: 5s
+  retries: 30
+  start_period: 30s
+
+x-secrets-env: &secrets-env
+  ZGW_BEHEER_SECRET: ${ZGW_BEHEER_SECRET:?zie .env}
+  ZGW_PORTAAL_SECRET: ${ZGW_PORTAAL_SECRET:?zie .env}
+  ZGW_OPENZAAK_SECRET: ${ZGW_OPENZAAK_SECRET:?zie .env}
+  ZGW_OPENNOTIFICATIES_SECRET: ${ZGW_OPENNOTIFICATIES_SECRET:?zie .env}
+  ZGW_OPENOBJECT_SECRET: ${ZGW_OPENOBJECT_SECRET:?zie .env}
+  ZGW_OPENKLANT_SECRET: ${ZGW_OPENKLANT_SECRET:?zie .env}
+  ZGW_OPENPRODUCT_SECRET: ${ZGW_OPENPRODUCT_SECRET:?zie .env}
+
+services:
+  # ---------------------------------------------------------------- Open Zaak
+  openzaak-init:
+    image: ${IMAGE_OPENZAAK:-openzaak/open-zaak:1.29.0}
+    command: /setup_configuration.sh
+    environment: &openzaak-env
+      <<: [*django-env, *secrets-env]
+      DJANGO_SETTINGS_MODULE: openzaak.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENZAAK:?zie .env}
+      DB_NAME: openzaak
+      DB_USER: openzaak
+      ALLOWED_HOSTS: openzaak.local,openzaak,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENZAAK:-8001},http://127.0.0.1:${PORT_OPENZAAK:-8001}
+      SITE_DOMAIN: localhost:${PORT_OPENZAAK:-8001}
+      CACHE_DEFAULT: redis:6379/0
+      CACHE_AXES: redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      OPENZAAK_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OPENZAAK_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      SENDFILE_BACKEND: django_sendfile.backends.simple
+      NOTIFICATIONS_SOURCE: openzaak
+      OPENOBJECT_OPENZAAK_HEADER: Token ${OPENOBJECT_OPENZAAK_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openzaak:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openzaak:
+    image: ${IMAGE_OPENZAAK:-openzaak/open-zaak:1.29.0}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [openzaak.local]
+    environment: *openzaak-env
+    volumes: &openzaak-volumes
+      - openzaak-media:/app/media
+      - openzaak-private-media:/app/private-media
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENZAAK:-8001}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openzaak-init: {condition: service_completed_successfully}
+      selectielijst: {condition: service_healthy}
+    restart: unless-stopped
+
+  openzaak-celery:
+    image: ${IMAGE_OPENZAAK:-openzaak/open-zaak:1.29.0}
+    command: /celery_worker.sh
+    environment: *openzaak-env
+    volumes: *openzaak-volumes
+    depends_on:
+      openzaak: {condition: service_healthy}
+    restart: unless-stopped
+
+  # -------------------------------------------------------- Open Notificaties
+  opennotificaties-init:
+    image: ${IMAGE_OPENNOTIFICATIES:-openzaak/open-notificaties:1.16.1}
+    command: /setup_configuration.sh
+    environment: &opennotificaties-env
+      <<: [*django-env, *secrets-env]
+      DJANGO_SETTINGS_MODULE: nrc.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENNOTIFICATIES:?zie .env}
+      DB_NAME: opennotificaties
+      DB_USER: opennotificaties
+      ALLOWED_HOSTS: opennotificaties.local,opennotificaties,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENNOTIFICATIES:-8002}
+      SITE_DOMAIN: localhost:${PORT_OPENNOTIFICATIES:-8002}
+      CACHE_DEFAULT: redis:6379/2
+      CACHE_AXES: redis:6379/2
+      CELERY_BROKER_URL: redis://redis:6379/3
+      CELERY_RESULT_BACKEND: redis://redis:6379/3
+      OPENNOTIFICATIES_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OPENNOTIFICATIES_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      NOTIFICATION_SEC_INTERVAL: "5"
+      NOTIFICATIE_SINK_AUTH: Token ${NOTIFICATIE_SINK_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/opennotificaties:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  opennotificaties:
+    image: ${IMAGE_OPENNOTIFICATIES:-openzaak/open-notificaties:1.16.1}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [opennotificaties.local]
+    environment: *opennotificaties-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENNOTIFICATIES:-8002}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      opennotificaties-init: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  opennotificaties-celery:
+    image: ${IMAGE_OPENNOTIFICATIES:-openzaak/open-notificaties:1.16.1}
+    command: /celery_worker.sh
+    environment: *opennotificaties-env
+    depends_on:
+      opennotificaties: {condition: service_healthy}
+    restart: unless-stopped
+
+  # Vanaf 1.16 plant Open Notificaties de aflevering in; celery-beat start de
+  # periodieke taak die de ingeplande notificaties verstuurt.
+  opennotificaties-celery-beat:
+    image: ${IMAGE_OPENNOTIFICATIES:-openzaak/open-notificaties:1.16.1}
+    command: /celery_beat.sh
+    environment: *opennotificaties-env
+    depends_on:
+      opennotificaties: {condition: service_healthy}
+    restart: unless-stopped
+
+  # -------------------------------------------- Open Object (Objecten+typen)
+  openobject-init:
+    image: ${IMAGE_OPENOBJECT:-maykinmedia/open-object:4.1.0}
+    command: /setup_configuration.sh
+    environment: &openobject-env
+      <<: [*django-env, *secrets-env]
+      DJANGO_SETTINGS_MODULE: objects.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENOBJECT:?zie .env}
+      DB_NAME: openobject
+      DB_USER: openobject
+      ALLOWED_HOSTS: openobject.local,openobject,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENOBJECT:-8003}
+      SITE_DOMAIN: localhost:${PORT_OPENOBJECT:-8003}
+      CACHE_DEFAULT: redis:6379/4
+      CACHE_AXES: redis:6379/4
+      CELERY_BROKER_URL: redis://redis:6379/5
+      CELERY_RESULT_BACKEND: redis://redis:6379/5
+      OBJECTS_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OBJECTS_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      OBJECTS_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      OPENOBJECT_BEHEER_TOKEN: ${OPENOBJECT_BEHEER_TOKEN:?zie .env}
+      OPENOBJECT_PORTAAL_TOKEN: ${OPENOBJECT_PORTAAL_TOKEN:?zie .env}
+      OPENOBJECT_OPENZAAK_TOKEN: ${OPENOBJECT_OPENZAAK_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openobject:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openobject:
+    image: ${IMAGE_OPENOBJECT:-maykinmedia/open-object:4.1.0}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [openobject.local]
+    environment: *openobject-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENOBJECT:-8003}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openobject-init: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openobject-celery:
+    image: ${IMAGE_OPENOBJECT:-maykinmedia/open-object:4.1.0}
+    command: /celery_worker.sh
+    environment: *openobject-env
+    depends_on:
+      openobject: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ Open Klant 2
+  openklant-init:
+    image: ${IMAGE_OPENKLANT:-maykinmedia/open-klant:2.17.0}
+    command: /setup_configuration.sh
+    environment: &openklant-env
+      <<: [*django-env, *secrets-env]
+      DJANGO_SETTINGS_MODULE: openklant.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENKLANT:?zie .env}
+      DB_NAME: openklant
+      DB_USER: openklant
+      ALLOWED_HOSTS: openklant.local,openklant,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENKLANT:-8004}
+      SITE_DOMAIN: localhost:${PORT_OPENKLANT:-8004}
+      CACHE_DEFAULT: redis:6379/6
+      CACHE_AXES: redis:6379/6
+      CELERY_BROKER_URL: redis://redis:6379/7
+      CELERY_RESULT_BACKEND: redis://redis:6379/7
+      OPENKLANT_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OPENKLANT_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      OPENKLANT_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      OPENKLANT_BEHEER_TOKEN: ${OPENKLANT_BEHEER_TOKEN:?zie .env}
+      OPENKLANT_PORTAAL_TOKEN: ${OPENKLANT_PORTAAL_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openklant:/app/setup_configuration:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openklant:
+    image: ${IMAGE_OPENKLANT:-maykinmedia/open-klant:2.17.0}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [openklant.local]
+    environment: *openklant-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENKLANT:-8004}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openklant-init: {condition: service_completed_successfully}
+      referentielijsten: {condition: service_healthy}
+    restart: unless-stopped
+
+  openklant-celery:
+    image: ${IMAGE_OPENKLANT:-maykinmedia/open-klant:2.17.0}
+    command: /celery_worker.sh
+    environment: *openklant-env
+    depends_on:
+      openklant: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ Open Product
+  openproduct-init:
+    image: ${IMAGE_OPENPRODUCT:-maykinmedia/open-product:1.8.0}
+    command: /app/init/init.sh
+    environment: &openproduct-env
+      <<: [*django-env, *secrets-env]
+      DJANGO_SETTINGS_MODULE: openproduct.conf.docker
+      SECRET_KEY: ${SECRET_KEY_OPENPRODUCT:?zie .env}
+      DB_NAME: openproduct
+      DB_USER: openproduct
+      ALLOWED_HOSTS: openproduct.local,openproduct,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_OPENPRODUCT:-8005}
+      SITE_DOMAIN: localhost:${PORT_OPENPRODUCT:-8005}
+      CACHE_DEFAULT: redis:6379/8
+      CACHE_AXES: redis:6379/8
+      CELERY_BROKER_URL: redis://redis:6379/9
+      CELERY_RESULT_BACKEND: redis://redis:6379/9
+      OPENPRODUCT_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      OPENPRODUCT_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      OPENPRODUCT_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      OPENPRODUCT_BEHEER_TOKEN: ${OPENPRODUCT_BEHEER_TOKEN:?zie .env}
+      RUN_SETUP_CONFIG: "true"
+    volumes:
+      - ./config/openproduct/data.yaml:/app/setup_configuration/data.yaml:ro
+      - ./config/openproduct:/app/init:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  openproduct:
+    image: ${IMAGE_OPENPRODUCT:-maykinmedia/open-product:1.8.0}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [openproduct.local]
+    environment: *openproduct-env
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_OPENPRODUCT:-8005}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      openproduct-init: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  openproduct-celery:
+    image: ${IMAGE_OPENPRODUCT:-maykinmedia/open-product:1.8.0}
+    command: /celery_worker.sh
+    environment: *openproduct-env
+    depends_on:
+      openproduct: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ------------------------------------------------------- Referentielijsten
+  referentielijsten:
+    image: ${IMAGE_REFERENTIELIJSTEN:-maykinmedia/referentielijsten-api:0.7.3}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [referentielijsten.local]
+    environment:
+      <<: *django-env
+      DJANGO_SETTINGS_MODULE: referentielijsten.conf.docker
+      SECRET_KEY: ${SECRET_KEY_REFERENTIELIJSTEN:?zie .env}
+      DB_NAME: referentielijsten
+      DB_USER: referentielijsten
+      ALLOWED_HOSTS: referentielijsten.local,referentielijsten,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:${PORT_REFERENTIELIJSTEN:-8006}
+      CACHE_DEFAULT: redis:6379/10
+      CACHE_AXES: redis:6379/10
+      REFERENTIELIJSTEN_SUPERUSER_USERNAME: ${ADMIN_USERNAME:-admin}
+      REFERENTIELIJSTEN_SUPERUSER_EMAIL: admin@voorbeeldstad.example
+      FIXTURES_DIR: /app/fixtures
+    volumes:
+      - ./config/referentielijsten/fixtures:/app/fixtures:ro
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_REFERENTIELIJSTEN:-8006}:8000"
+    healthcheck: *django-healthcheck
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+
+  # ------------------------------------------------------- VNG Selectielijst
+  selectielijst:
+    image: ${IMAGE_SELECTIELIJST:-openzaak/vng-selectielijst:1.0.5}
+    networks:
+      default:
+        # Django accepteert alleen URL's met een punt in de hostnaam
+        aliases: [selectielijst.local]
+    environment:
+      DJANGO_SETTINGS_MODULE: selectielijst.conf.docker
+      SECRET_KEY: ${SECRET_KEY_SELECTIELIJST:?zie .env}
+      DB_HOST: postgres
+      DB_NAME: selectielijst
+      DB_USER: selectielijst
+      DB_PASSWORD: ${DB_APP_PASSWORD}
+      PGUSER: selectielijst
+      ALLOWED_HOSTS: selectielijst.local,selectielijst,localhost,127.0.0.1
+      IS_HTTPS: "no"
+      CACHE_DEFAULT: redis:6379/11
+      CACHE_AXES: redis:6379/11
+      FIXTURES_DIR: /app/src/fixtures
+      UWSGI_PROCESSES: "2"
+    volumes:
+      # Generieke resultaattypeomschrijvingen ontbreken in het image; deze
+      # fixture vult ze aan (zelfde UUID's als selectielijst.openzaak.nl).
+      - ./config/selectielijst/resultaattypeomschrijvingen.json:/app/src/fixtures/resultaattypeomschrijvingen.json:ro
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT_SELECTIELIJST:-8007}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/procestypen?jaar=2020', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+
+volumes:
+  openzaak-media:
+  openzaak-private-media:

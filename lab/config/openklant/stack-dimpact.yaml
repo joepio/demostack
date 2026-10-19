@@ -1,0 +1,51 @@
+# Open Klant, aanvulling voor stack "dimpact": tokens voor Open Inwoner (Mijn vragen),
+# KISS (klantcontacten registreren, contactverzoeken), ITA (interne taken afhandelen),
+# OMC (contactgegevens voor berichten) en Open Archiefbeheer (externe registers).
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: open-inwoner
+      token:
+        value_from:
+          env: OPENKLANT_OPENINWONER_TOKEN
+      contact_person: Open Inwoner
+      email: inwonerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Inwoner
+      administration: Demogemeente
+    - identifier: kiss
+      token:
+        value_from:
+          env: OPENKLANT_KISS_TOKEN
+      contact_person: KISS
+      email: kcc@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: KISS
+      administration: Demogemeente
+    - identifier: ita
+      token:
+        value_from:
+          env: OPENKLANT_ITA_TOKEN
+      contact_person: ITA
+      email: kcc@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Interne Taak Afhandeling
+      administration: Demogemeente
+    - identifier: omc
+      token:
+        value_from:
+          env: OPENKLANT_OMC_TOKEN
+      contact_person: NotifyNL OMC
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: NotifyNL OMC
+      administration: Demogemeente
+    - identifier: open-archiefbeheer
+      token:
+        value_from:
+          env: OPENKLANT_OPENARCHIEFBEHEER_TOKEN
+      contact_person: Open Archiefbeheer
+      email: archief@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Archiefbeheer
+      administration: Demogemeente

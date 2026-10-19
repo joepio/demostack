@@ -17,9 +17,19 @@ Bedoeld om de componenten en standaarden te laten zien, te analyseren en (later)
 
 | Stack | Inhoud | Map |
 | --- | --- | --- |
-| kern | Open Formulieren, Open Zaak, OneGround, Open Klant, Objecten, Objecttypen, Open Notificaties, KISS, ZAC, GZAC, Open Inwoner, NL Portal, MijnOverheid-demo, IKO, ZaakChat (met Keycloak, Elasticsearch, BRP-mock), Mailpit | [`stacks/kern`](stacks/kern) |
+| kern | Open Formulieren, Open Zaak, OneGround, Open Klant, Open VTB, Objecten, Objecttypen, Open Notificaties, KISS, ZAC, GZAC, Open Inwoner, NL Portal, MijnOverheid-demo, IKO, ZaakChat (met Keycloak, Elasticsearch, BRP-mock), Mailpit | [`stacks/kern`](stacks/kern) |
 
 Gepland: compliance-tests tegen de API-specificaties (ZGW, Klantinteracties, Objecten) met een rapport per component en versie.
+
+## Lab: alle stacks met de testsuite
+
+[`lab/`](lab) is de test- en analysekant. Daar staan vijf complete landschappen zoals gemeenten die kiezen (`kern`, `maykin`, `dimpact`, `g4` met GZAC/Valtimo en `vcg`), een gedeelde seed en een testsuite die elke stack toetst aan de ZGW API's, de Mijn-API's en de aansluitprofielen uit het VNG API Lab. Een leverancier kan een eigen component als plug-in aansluiten en tegen dezelfde criteria laten testen ([`lab/docs/PLUGINS.md`](lab/docs/PLUGINS.md)).
+
+    cd lab
+    scripts/stack.sh up maykin
+    scripts/stack.sh test maykin      # results/maykin.md
+
+Er draait steeds één lab-stack tegelijk, los van de live omgeving hierboven. De vergelijking van de stacks staat in [`lab/docs/STACKS.md`](lab/docs/STACKS.md). Het lab bevat ook configuratie voor Open Notificaties en GZAC die de live omgeving kan overnemen.
 
 ## Snel starten
 

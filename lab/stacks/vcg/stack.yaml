@@ -1,0 +1,103 @@
+# Manifest van stack "vcg" (formaat: stacks/basis/stack.yaml). De VCG-basisset bovenop
+# de kern: de componenten die een gemeente kiest als ze "de VCG-spullen" wil hebben.
+# Versies zoals in de basisset genoemd (docs/VARIANTEN.md, variant 4); afwijkingen staan
+# bij het component en in stacks/vcg/README.md.
+naam: vcg
+titel: VCG-basisset
+erft: kern
+
+componenten:
+  - id: keycloak-vcg
+    naam: Keycloak-realm vcg (medewerkers Voorbeeldstad)
+    rol: infra
+    services: [keycloak]
+    health: {url: "http://keycloak.local:8080/realms/vcg/.well-known/openid-configuration", status: [200]}
+    seed: false
+  - id: openorganisatie
+    naam: Open Organisatie 0.2.0
+    rol: register
+    services: [openorganisatie, openorganisatie-celery]
+    health: {url: "http://openorganisatie.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: publicatiebank
+    naam: GPP-publicatiebank 2.1.0 (woo-publications)
+    rol: register
+    services: [publicatiebank, publicatiebank-celery]
+    health: {url: "http://publicatiebank.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: openbeheer
+    naam: Open Beheer 0.9.0
+    rol: medewerker
+    services: [openbeheer, openbeheer-ui]
+    health: {url: "http://openbeheer.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: operaton
+    naam: Operaton 2.1.5 (procesengine) met procesworker naar Open Zaak
+    rol: proces
+    services: [operaton, operaton-worker]
+    health: {url: "http://operaton.local:8080/engine-rest/engine", status: [200, 401]}
+    seed: false
+  - id: openplan
+    naam: OpenPlan 0.1.0 (uit broncode)
+    rol: register
+    services: [openplan]
+    health: {url: "http://openplan.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: openpdc
+    naam: OpenPDC 3.18.1 (WordPress 6.8.3)
+    rol: burger-api
+    services: [mariadb, wordpress]
+    health: {url: "http://wordpress.local/wp-json/owc/pdc/v1/items", status: [200]}
+    seed: false
+  - id: openpub
+    naam: OpenPub 3.8.7 (WordPress 6.8.3)
+    rol: burger-api
+    services: [mariadb, wordpress]
+    health: {url: "http://wordpress.local/wp-json/owc/openpub/v1/items", status: [200]}
+    seed: false
+  - id: openregister
+    naam: OpenRegister 1.0.3 (Nextcloud 31.0.9)
+    rol: register
+    services: [nextcloud]
+    health: {url: "http://openregister.local/status.php", status: [200]}
+    seed: false
+  - id: openfsc
+    naam: OpenFSC 2.4.0 (directory, manager, controller, inway, outway, txlog)
+    rol: integratie
+    services: [fsc-directory, fsc-directory-controller, fsc-vbs-manager, fsc-vbs-controller, fsc-vbs-outway,
+               fsc-vbs-txlog, fsc-brp-manager, fsc-brp-controller, fsc-brp-inway, fsc-brp-txlog]
+    health: {url: "http://outway.voorbeeldstad.fsc.local:8081/health/ready", status: [200]}
+    seed: false
+
+# Onderdelen van de basisset die hier niet draaien, met de reden
+gepland:
+  - id: operaton-modeler
+    naam: Operaton Modeler 1.2.0
+    opmerking: >-
+      niet draaibaar: een desktopapplicatie (Electron) voor het tekenen van BPMN/DMN, geen
+      server of container. Het proces in config/operaton/resources/ is met de hand
+      geschreven en wordt bij de start in Operaton gezet.
+  - id: openftv
+    naam: OpenFTV 1.26.14
+    opmerking: >-
+      niet draaibaar: geen implementatie gevonden. De link in de basisset wijst naar
+      ZaakBrug en 1.26.14 is een versienummer van ZaakBrug; FTV (Federatieve
+      Toegangsverlening) is een standaard (AuthZEN), geen product. Nodig: een bron of
+      image van de bedoelde component.
+
+burgerkanalen:
+  # Openbare kanalen zonder inlog: mogen geen persoonsgegevens van testburgers tonen
+  - id: openpdc
+    type: openbaar
+    urls: ["http://wordpress.local/wp-json/owc/pdc/v1/items", "http://wordpress.local/wp-json/owc/pdc/v1/themas"]
+  - id: openpub
+    type: openbaar
+    urls: ["http://wordpress.local/wp-json/owc/openpub/v1/items"]
+  - id: publicatiebank
+    type: openbaar
+    urls: ["http://publicatiebank.local:8000/api/v2/publicaties", "http://publicatiebank.local:8000/api/v2/documenten"]
+    token_env: PUBLICATIEBANK_PUBLIEK_TOKEN
+  - id: openregister
+    type: openbaar
+    urls: ["http://openregister.local/index.php/apps/openregister/api/objects/openbare-ruimte/speelplek"]
+    beheer: true

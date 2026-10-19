@@ -1,0 +1,64 @@
+# Manifest van stack "kern" voor de testsuite (tests/). Zie stacks/basis/stack.yaml
+# voor het formaat. De infra (Postgres, Redis, Keycloak, BRP-mock, notificatie-sink)
+# komt uit de basis.
+naam: kern
+titel: "MijnServices-kern (variant 1): registers en API's"
+
+componenten:
+  - id: openzaak
+    naam: Open Zaak
+    rol: register
+    services: [openzaak, openzaak-celery]
+    health: {url: "http://openzaak.local:8000/admin/", status: [200, 302]}
+  - id: opennotificaties
+    naam: Open Notificaties
+    rol: register
+    services: [opennotificaties, opennotificaties-celery, opennotificaties-celery-beat]
+    health: {url: "http://opennotificaties.local:8000/admin/", status: [200, 302]}
+  - id: openobject
+    naam: Open Object (Objecten en Objecttypen)
+    rol: register
+    services: [openobject, openobject-celery]
+    health: {url: "http://openobject.local:8000/admin/", status: [200, 302]}
+  - id: openklant
+    naam: Open Klant
+    rol: register
+    services: [openklant, openklant-celery]
+    health: {url: "http://openklant.local:8000/admin/", status: [200, 302]}
+  - id: openproduct
+    naam: Open Product
+    rol: register
+    services: [openproduct, openproduct-celery]
+    health: {url: "http://openproduct.local:8000/admin/", status: [200, 302]}
+  - id: referentielijsten
+    naam: Referentielijsten
+    rol: register
+    services: [referentielijsten]
+    health: {url: "http://referentielijsten.local:8000/admin/", status: [200, 302]}
+  - id: selectielijst
+    naam: VNG Selectielijst
+    rol: register
+    services: [selectielijst]
+    health: {url: "http://selectielijst.local:8000/api/v1/procestypen?jaar=2020", status: [200]}
+
+# Burgerkanalen: elk portaal of elke burger-API waarvoor de testsuite controleert of
+# burger A gegevens van burger B kan zien (tests/checks/isolatie.py, per type). De kern
+# heeft zelf geen portaal; een plug-in kan kanalen toevoegen (docs/PLUGINS.md).
+burgerkanalen: []
+
+# ZGW-aansluitprofiel (Arazzo) rechtstreeks op Open Zaak
+zgw:
+  zaken: http://openzaak.local:8000/zaken/api/v1
+  profiel: aansluitprofielen/mijnzaken/zgw.openzaak.arazzo.yaml
+
+# Bekende afwijkingen: falen telt mee in de telling, maar niet in de exitcode.
+bekende_fouten:
+  zgw/gedrag/burger-a-haalt-zaak-van-burger-b: >-
+    ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke
+    zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md).
+  zgw/gedrag/burger-a-zoekt-op-bsn-van-burger-b: >-
+    In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet
+    wie de burger is (aansluitprofielen/README.md).
+  zgw/strikt/*: >-
+    Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als
+    application/json, opdrachtgevendeOrganisatie ""), zie aansluitprofielen/README.md.

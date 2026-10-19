@@ -8,11 +8,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 DIR=${DEMO_BASIS:-/var/lib/demostack/basis}
-DBS="openzaak openklant objects objecttypes openforms opennotificaties kiss zac gzac openinwoner og_ac og_ztc og_zrc og_drc og_brc og_nrc"
+DBS="openzaak openklant objects objecttypes openforms opennotificaties kiss zac gzac openinwoner openvtb og_ac og_ztc og_zrc og_drc og_brc og_nrc"
 # Diensten die deze databases gebruiken (alleen de draaiende worden gestopt en weer gestart)
 APPS="openzaak openzaak-celery openzaak-beat openklant openklant-celery objects objects-celery objecttypes
   openforms openforms-celery openforms-beat opennotificaties opennotificaties-celery opennotificaties-beat
-  kiss zac gzac-backend gzac openinwoner openinwoner-celery openinwoner-beat zaakchat zaakchat-koppeling
+  kiss zac gzac-backend gzac openinwoner openinwoner-celery openinwoner-beat zaakchat zaakchat-koppeling openvtb openvtb-celery
   og-autorisaties og-catalogi og-zaken og-documenten og-documenten-listener og-besluiten og-notificaties og-notificaties-listener"
 
 case "${1:-}" in

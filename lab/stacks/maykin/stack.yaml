@@ -1,0 +1,45 @@
+# Manifest van stack "maykin" (formaat: stacks/basis/stack.yaml). Neemt alles van kern
+# over (Open Zaak, Open Notificaties, Open Object, Open Klant, Open Product,
+# Referentielijsten, Selectielijst) en voegt de Maykin-componenten toe.
+naam: maykin
+titel: Maykin-landschap
+erft: kern
+
+componenten:
+  - id: brp-api
+    naam: BRP-vertaler (BRP API Personen 2, officieel formaat)
+    rol: infra
+    services: [brp-api]
+    health: {url: "http://brp-api.local:8080/health", status: [200]}
+    seed: false
+  - id: openvtb
+    naam: Open VTB (Verzoeken, Taken, Berichten)
+    rol: register
+    services: [openvtb, openvtb-celery]
+    health: {url: "http://openvtb.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: openformulieren
+    naam: Open Formulieren
+    rol: portaal
+    services: [openformulieren, openformulieren-celery, openformulieren-celery-beat]
+    health: {url: "http://openformulieren.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: openinwoner
+    naam: Open Inwoner (met Elasticsearch)
+    rol: portaal
+    services: [openinwoner, openinwoner-celery, elasticsearch]
+    health: {url: "http://openinwoner.local:8000/", status: [200]}
+    seed: false
+
+# Maykin-producten die niet in deze stack zitten (zie stacks/maykin/README.md)
+gepland:
+  - id: openarchiefbeheer
+    naam: Open Archiefbeheer
+    opmerking: "zit in stack dimpact (PodiumD); hoort ook bij Maykin, nog niet hier"
+  - id: openbeheer
+    naam: Open Beheer
+    opmerking: "zit in stack dimpact en vcg; hoort ook bij Maykin, nog niet hier"
+
+burgerkanalen:
+  - {id: openinwoner, type: openinwoner, url: "http://openinwoner.local:8000"}
+  - {id: openformulieren, type: openformulieren, url: "http://openformulieren.local:8000"}

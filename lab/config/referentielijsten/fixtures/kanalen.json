@@ -1,0 +1,87 @@
+[
+  {
+    "model": "api.tabel",
+    "pk": 1,
+    "fields": {
+      "code": "KANAAL",
+      "naam": "Contactkanalen",
+      "einddatum_geldigheid": null,
+      "beheerder_naam": "Team Dienstverlening",
+      "beheerder_email": "dienstverlening@voorbeeldstad.example",
+      "beheerder_afdeling": "Dienstverlening",
+      "beheerder_organisatie": "Gemeente Voorbeeldstad"
+    }
+  },
+  {
+    "model": "api.item",
+    "pk": 1,
+    "fields": {
+      "tabel": 1,
+      "code": "email",
+      "naam": "E-mail",
+      "begindatum_geldigheid": "2020-01-01T00:00:00Z",
+      "einddatum_geldigheid": null,
+      "aanvullende_gegevens": null
+    }
+  },
+  {
+    "model": "api.item",
+    "pk": 2,
+    "fields": {
+      "tabel": 1,
+      "code": "telefoon",
+      "naam": "Telefoon",
+      "begindatum_geldigheid": "2020-01-01T00:00:00Z",
+      "einddatum_geldigheid": null,
+      "aanvullende_gegevens": null
+    }
+  },
+  {
+    "model": "api.item",
+    "pk": 3,
+    "fields": {
+      "tabel": 1,
+      "code": "balie",
+      "naam": "Balie",
+      "begindatum_geldigheid": "2020-01-01T00:00:00Z",
+      "einddatum_geldigheid": null,
+      "aanvullende_gegevens": null
+    }
+  },
+  {
+    "model": "api.item",
+    "pk": 4,
+    "fields": {
+      "tabel": 1,
+      "code": "post",
+      "naam": "Post",
+      "begindatum_geldigheid": "2020-01-01T00:00:00Z",
+      "einddatum_geldigheid": null,
+      "aanvullende_gegevens": null
+    }
+  },
+  {
+    "model": "api.item",
+    "pk": 5,
+    "fields": {
+      "tabel": 1,
+      "code": "webformulier",
+      "naam": "Webformulier",
+      "begindatum_geldigheid": "2020-01-01T00:00:00Z",
+      "einddatum_geldigheid": null,
+      "aanvullende_gegevens": null
+    }
+  },
+  {
+    "model": "api.item",
+    "pk": 6,
+    "fields": {
+      "tabel": 1,
+      "code": "chat",
+      "naam": "Chat",
+      "begindatum_geldigheid": "2020-01-01T00:00:00Z",
+      "einddatum_geldigheid": null,
+      "aanvullende_gegevens": null
+    }
+  }
+]

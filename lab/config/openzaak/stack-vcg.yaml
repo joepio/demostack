@@ -1,0 +1,65 @@
+# Open Zaak, aanvulling voor stack "vcg" (setup-configuration, na config/openzaak/data.yaml).
+#
+# JWT-clients:
+#   open-organisatie    publiceert notificaties (kanaal medewerkers) via Open Notificaties,
+#                       dat de autorisatie bij Open Zaak opvraagt
+#   gpp-publicatiebank  bewaart de documenten van Woo-publicaties in de Documenten API.
+#                       Het informatieobjecttype is een informatiecategorie uit de
+#                       publicatiebank zelf (een eigen, minimale Catalogi API); Open Zaak
+#                       haalt die op via de service hieronder.
+#   open-beheer         beheert de zaaktypecatalogus
+#   operaton            de procesworker (tools/operaton_worker.py) zet statussen,
+#                       resultaten en rollen op zaken
+#
+# Setup-configuration kent alleen "alle autorisaties" of geen; per-scope autorisaties
+# zet je in de admin of via de Autorisaties API. Zoals in de kern krijgen deze
+# componenten alle autorisaties (zie stacks/vcg/README.md, bevindingen).
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: gpp-publicatiebank-catalogi
+      label: GPP-publicatiebank (informatiecategorieen als informatieobjecttypen)
+      api_root: http://publicatiebank.local:8000/catalogi/api/v1/
+      api_type: ztc
+      auth_type: no_auth
+
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: open-organisatie
+      secret:
+        value_from:
+          env: ZGW_OPENORGANISATIE_SECRET
+    - identifier: gpp-publicatiebank
+      secret:
+        value_from:
+          env: ZGW_PUBLICATIEBANK_SECRET
+    - identifier: open-beheer
+      secret:
+        value_from:
+          env: ZGW_OPENBEHEER_SECRET
+    - identifier: operaton
+      secret:
+        value_from:
+          env: ZGW_OPERATON_SECRET
+
+vng_api_common_applicaties_config_enable: true
+vng_api_common_applicaties:
+  items:
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4e01
+      client_ids: [open-organisatie]
+      label: Open Organisatie (publiceert notificaties)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4e02
+      client_ids: [gpp-publicatiebank]
+      label: GPP-publicatiebank (documenten van Woo-publicaties)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4e03
+      client_ids: [open-beheer]
+      label: Open Beheer (catalogusbeheer)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4e04
+      client_ids: [operaton]
+      label: Operaton (procesworker zaakafhandeling)
+      heeft_alle_autorisaties: true

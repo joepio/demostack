@@ -1,0 +1,21 @@
+# Onderzoeksklonen (niet committen)
+.research/
+# Lokale geheimen
+.env
+*.secret
+# Lokale data en caches
+volumes/
+data/
+__pycache__/
+*.pyc
+# Uitvoer van de aansluitprofielen (bevat tokens)
+aansluitprofielen/resultaten/
+# Ruwe testuitvoer (bevat tokens) en Node-modules van de testsuite
+results/raw/
+tests/respect/node_modules/
+.bron/
+stacks/dimpact/.tls/
+.tmp/
+stacks/vcg/.fsc-pki/
+# Actieve plug-ins per stack (scripts/stack.sh)
+.demostack/

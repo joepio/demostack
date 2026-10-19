@@ -1,0 +1,76 @@
+# Open Object (Objecten + Objecttypen in een applicatie, vanaf 4.0).
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: notificaties-api
+      label: Open Notificaties
+      api_root: http://opennotificaties.local:8000/api/v1/
+      api_connection_check_path: kanaal
+      api_type: nrc
+      auth_type: zgw
+      client_id: open-object
+      secret:
+        value_from:
+          env: ZGW_OPENOBJECT_SECRET
+      user_id: open-object
+      user_representation: Open Object
+
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notificaties-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 2
+  notification_delivery_retry_backoff_max: 30
+
+# Vaste UUID's, zodat token-permissies ernaar kunnen verwijzen. Het JSON-schema
+# (de objecttype-versie) voegt seed/seed.py toe.
+objecttypes_config_enable: true
+objecttypes:
+  items:
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+      name: Melding openbare ruimte
+    - uuid: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a2
+      name: Parkeervergunning
+
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: demogemeente-beheer
+      token:
+        value_from:
+          env: OPENOBJECT_BEHEER_TOKEN
+      contact_person: Beheerder Demogemeente
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Seed-scripts
+      administration: Demogemeente
+      is_superuser: true
+    - identifier: burgerportaal
+      token:
+        value_from:
+          env: OPENOBJECT_PORTAAL_TOKEN
+      contact_person: Burgerportaal (plug-in)
+      email: burgerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Burgerportaal
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a2
+          mode: read_only
+    - identifier: open-zaak
+      token:
+        value_from:
+          env: OPENOBJECT_OPENZAAK_TOKEN
+      contact_person: Open Zaak
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Open Zaak
+      administration: Demogemeente
+      permissions:
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a1
+          mode: read_only
+        - object_type: 7c1d4a0e-5a7b-4c1e-8f00-0000000000a2
+          mode: read_only

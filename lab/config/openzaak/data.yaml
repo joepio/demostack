@@ -1,0 +1,114 @@
+# Open Zaak: django-setup-configuration voor de demogemeente.
+# Geheimen komen uit omgevingsvariabelen (value_from), zie .env.
+
+sites_config_enable: true
+sites_config:
+  items:
+    - domain: openzaak.local:8000
+      name: Open Zaak (Gemeente Voorbeeldstad)
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: notificaties-api
+      label: Open Notificaties
+      api_root: http://opennotificaties.local:8000/api/v1/
+      api_connection_check_path: kanaal
+      api_type: nrc
+      auth_type: zgw
+      client_id: open-zaak
+      secret:
+        value_from:
+          env: ZGW_OPENZAAK_SECRET
+      user_id: open-zaak
+      user_representation: Open Zaak
+    - identifier: selectielijst-api
+      label: VNG Selectielijst (lokaal)
+      api_root: http://selectielijst.local:8000/api/v1/
+      api_connection_check_path: procestypen
+      api_type: orc
+      auth_type: no_auth
+    # Open Zaak controleert URL's van zaakobjecten door ze op te halen
+    - identifier: objecten-api
+      label: Open Object (Objecten API)
+      api_root: http://openobject.local:8000/api/v2/
+      api_connection_check_path: objecttypes
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OPENOBJECT_OPENZAAK_HEADER
+
+openzaak_selectielijst_config_enable: true
+openzaak_selectielijst_config:
+  selectielijst_api_service_identifier: selectielijst-api
+  allowed_years:
+    - 2020
+  default_year: 2020
+
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notificaties-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 2
+  notification_delivery_retry_backoff_max: 30
+
+# JWT-secrets van de afnemers die Open Zaak mogen bevragen
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: demogemeente-beheer
+      secret:
+        value_from:
+          env: ZGW_BEHEER_SECRET
+    - identifier: burgerportaal
+      secret:
+        value_from:
+          env: ZGW_PORTAAL_SECRET
+    - identifier: open-notificaties
+      secret:
+        value_from:
+          env: ZGW_OPENNOTIFICATIES_SECRET
+    - identifier: open-zaak
+      secret:
+        value_from:
+          env: ZGW_OPENZAAK_SECRET
+
+# Applicaties (autorisaties). De applicatie burgerportaal met alleen-lezen-rechten per
+# zaaktype maakt seed/seed.py aan, omdat de zaaktype-URL's pas dan bestaan.
+# De componenten zelf hebben alle autorisaties nodig om notificaties te mogen
+# publiceren via Open Notificaties (die de autorisaties hier opvraagt).
+vng_api_common_applicaties_config_enable: true
+vng_api_common_applicaties:
+  items:
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b01
+      client_ids:
+        - demogemeente-beheer
+      label: Demogemeente beheer (seed-scripts)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b02
+      client_ids:
+        - open-notificaties
+      label: Open Notificaties
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b03
+      client_ids:
+        - open-zaak
+      label: Open Zaak (publiceert notificaties)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b04
+      client_ids:
+        - open-object
+      label: Open Object (publiceert notificaties)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b05
+      client_ids:
+        - open-klant
+      label: Open Klant (publiceert notificaties)
+      heeft_alle_autorisaties: true
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b06
+      client_ids:
+        - open-product
+      label: Open Product (publiceert notificaties)
+      heeft_alle_autorisaties: true

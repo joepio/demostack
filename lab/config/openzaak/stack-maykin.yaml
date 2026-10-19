@@ -1,0 +1,30 @@
+# Open Zaak, aanvulling voor stack "maykin" (na config/openzaak/data.yaml).
+# JWT-secrets van de Maykin-afnemers. Hun applicaties (autorisaties per zaaktype) maakt
+# stacks/maykin/seed.py aan, omdat de zaaktype-URL's pas dan bestaan. Open VTB
+# publiceert alleen notificaties en krijgt daarom een applicatie zoals de andere
+# componenten.
+
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: open-formulieren
+      secret:
+        value_from:
+          env: ZGW_OPENFORMULIEREN_SECRET
+    - identifier: open-inwoner
+      secret:
+        value_from:
+          env: ZGW_OPENINWONER_SECRET
+    - identifier: open-vtb
+      secret:
+        value_from:
+          env: ZGW_OPENVTB_SECRET
+
+vng_api_common_applicaties_config_enable: true
+vng_api_common_applicaties:
+  items:
+    - uuid: 0b6f2ab5-6e4f-4c0e-9b1e-7d1d2f3a4b21
+      client_ids:
+        - open-vtb
+      label: Open VTB (publiceert notificaties)
+      heeft_alle_autorisaties: true

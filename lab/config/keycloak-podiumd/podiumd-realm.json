@@ -1,0 +1,314 @@
+{
+  "realm": "podiumd",
+  "displayName": "Gemeente Voorbeeldstad (medewerkers)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "nl"
+  ],
+  "defaultLocale": "nl",
+  "roles": {
+    "realm": [
+      {
+        "name": "Klantcontactmedewerker",
+        "description": "PodiumD-rol Klantcontactmedewerker"
+      },
+      {
+        "name": "Redacteur",
+        "description": "PodiumD-rol Redacteur"
+      },
+      {
+        "name": "Kennisbank",
+        "description": "PodiumD-rol Kennisbank"
+      },
+      {
+        "name": "Beheerder",
+        "description": "PodiumD-rol Beheerder"
+      },
+      {
+        "name": "ITA-Toegang",
+        "description": "PodiumD-rol ITA-Toegang"
+      },
+      {
+        "name": "ITA-Functioneel-Beheerder",
+        "description": "PodiumD-rol ITA-Functioneel-Beheerder"
+      },
+      {
+        "name": "PABC-Functioneel-Beheerder",
+        "description": "PodiumD-rol PABC-Functioneel-Beheerder"
+      },
+      {
+        "name": "Superuser",
+        "description": "PodiumD-rol Superuser"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "kiss",
+      "name": "KISS",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_KISS_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:${PORT_KISS}/*",
+        "http://127.0.0.1:${PORT_KISS}/*",
+        "http://kiss.local:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "rollen",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "ita",
+      "name": "Interne Taak Afhandeling",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_ITA_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:${PORT_ITA}/*",
+        "http://127.0.0.1:${PORT_ITA}/*",
+        "http://ita.local:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "rollen",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "pabc",
+      "name": "PABC",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_PABC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [
+        "http://localhost:${PORT_PABC}/*",
+        "http://127.0.0.1:${PORT_PABC}/*",
+        "http://pabc.local:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "rollen",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "openarchiefbeheer",
+      "name": "Open Archiefbeheer",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_OPENARCHIEFBEHEER_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:${PORT_OPENARCHIEFBEHEER}/*",
+        "http://127.0.0.1:${PORT_OPENARCHIEFBEHEER}/*",
+        "http://openarchiefbeheer.local:8000/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "rollen",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "openbeheer",
+      "name": "Open Beheer",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_OPENBEHEER_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:${PORT_OPENBEHEER}/*",
+        "http://127.0.0.1:${PORT_OPENBEHEER}/*",
+        "http://openbeheer.local:8000/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "rollen",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "kcm.jansen",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Karin",
+      "lastName": "Jansen",
+      "email": "kcm.jansen@voorbeeldstad.example",
+      "realmRoles": [
+        "Klantcontactmedewerker",
+        "Kennisbank",
+        "ITA-Toegang"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${MEDEWERKER_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "behandelaar.desai",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ravi",
+      "lastName": "Desai",
+      "email": "behandelaar.desai@voorbeeldstad.example",
+      "realmRoles": [
+        "ITA-Toegang"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${MEDEWERKER_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "beheer.devries",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Mila",
+      "lastName": "de Vries",
+      "email": "beheer.devries@voorbeeldstad.example",
+      "realmRoles": [
+        "Beheerder",
+        "Redacteur",
+        "Klantcontactmedewerker",
+        "ITA-Toegang",
+        "ITA-Functioneel-Beheerder",
+        "PABC-Functioneel-Beheerder",
+        "Superuser"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${MEDEWERKER_WACHTWOORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "service-account-pabc",
+      "enabled": true,
+      "serviceAccountClientId": "pabc",
+      "clientRoles": {
+        "realm-management": [
+          "view-realm",
+          "view-users",
+          "view-groups",
+          "query-groups",
+          "query-users"
+        ]
+      }
+    }
+  ]
+}

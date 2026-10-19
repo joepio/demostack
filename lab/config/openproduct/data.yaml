@@ -1,0 +1,24 @@
+# Open Product: django-setup-configuration voor de demogemeente.
+# Het API-token van de beheerder maakt het init-commando aan (zie compose).
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: notificaties-api
+      label: Open Notificaties
+      api_root: http://opennotificaties.local:8000/api/v1/
+      api_type: nrc
+      auth_type: zgw
+      client_id: open-product
+      secret:
+        value_from:
+          env: ZGW_OPENPRODUCT_SECRET
+      user_id: open-product
+      user_representation: Open Product
+
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notificaties-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 2
+  notification_delivery_retry_backoff_max: 30

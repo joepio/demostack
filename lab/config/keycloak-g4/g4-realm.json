@@ -1,0 +1,102 @@
+{
+  "realm": "g4",
+  "displayName": "Gemeente Voorbeeldstad (medewerkers, G4-platform)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["nl", "en"],
+  "defaultLocale": "nl",
+  "accessTokenLifespan": 1800,
+  "roles": {
+    "realm": [
+      {"name": "ROLE_USER", "description": "Medewerker: zaken en taken behandelen in GZAC"},
+      {"name": "ROLE_ADMIN", "description": "Functioneel beheer GZAC en IKO"},
+      {"name": "ROLE_DEVELOPER", "description": "Inrichting (processen, formulieren) in GZAC"}
+    ],
+    "client": {
+      "iko": [
+        {"name": "ROLE_ADMIN", "description": "IKO-beheer"},
+        {"name": "ROLE_KLANTBEELD", "description": "IKO-profielen opvragen (klantbeeld)"}
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "valtimo-console",
+      "name": "GZAC (Valtimo-frontend)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:${PORT_GZAC}/*", "http://127.0.0.1:${PORT_GZAC}/*"],
+      "webOrigins": ["+"],
+      "attributes": {"post.logout.redirect.uris": "+", "pkce.code.challenge.method": ""},
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email", "acr", "basic"]
+    },
+    {
+      "clientId": "valtimo-user-m2m-client",
+      "name": "GZAC (gebruikers opvragen)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_GZAC_M2M_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": ["http://localhost:${PORT_GZAC_BACKEND}/*"],
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email", "basic"]
+    },
+    {
+      "clientId": "iko",
+      "name": "IKO (Integraal Klant- en Objectbeeld)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_IKO_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "redirectUris": ["http://localhost:${PORT_IKO}/*", "http://127.0.0.1:${PORT_IKO}/*"],
+      "webOrigins": ["+"],
+      "attributes": {"post.logout.redirect.uris": "+"},
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email", "basic"],
+      "protocolMappers": [
+        {"name": "realmrollen-als-roles", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-realm-role-mapper",
+         "config": {"claim.name": "roles", "multivalued": "true", "jsonType.label": "String",
+                    "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true"}},
+        {"name": "audience-iko", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
+         "config": {"included.client.audience": "iko", "id.token.claim": "false", "access.token.claim": "true"}}
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "behandelaar.bakker", "enabled": true, "emailVerified": true,
+      "firstName": "Sanne", "lastName": "Bakker", "email": "s.bakker@voorbeeldstad.example",
+      "credentials": [{"type": "password", "value": "${MEDEWERKER_WACHTWOORD}", "temporary": false}],
+      "realmRoles": ["ROLE_USER", "default-roles-g4"],
+      "clientRoles": {"iko": ["ROLE_KLANTBEELD"]}
+    },
+    {
+      "username": "beheer.yilmaz", "enabled": true, "emailVerified": true,
+      "firstName": "Deniz", "lastName": "Yilmaz", "email": "d.yilmaz@voorbeeldstad.example",
+      "credentials": [{"type": "password", "value": "${MEDEWERKER_WACHTWOORD}", "temporary": false}],
+      "realmRoles": ["ROLE_USER", "ROLE_ADMIN", "ROLE_DEVELOPER", "default-roles-g4"],
+      "clientRoles": {"iko": ["ROLE_ADMIN", "ROLE_KLANTBEELD"]}
+    },
+    {
+      "username": "service-account-valtimo-user-m2m-client", "enabled": true,
+      "serviceAccountClientId": "valtimo-user-m2m-client",
+      "realmRoles": ["default-roles-g4"],
+      "clientRoles": {"realm-management": ["view-users", "query-users", "query-groups", "view-realm", "view-clients", "query-clients"]}
+    },
+    {
+      "username": "service-account-iko", "enabled": true,
+      "serviceAccountClientId": "iko",
+      "realmRoles": ["ROLE_ADMIN", "default-roles-g4"],
+      "clientRoles": {"iko": ["ROLE_KLANTBEELD"]}
+    }
+  ]
+}

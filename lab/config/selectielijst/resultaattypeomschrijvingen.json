@@ -1,0 +1,122 @@
+[
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 1,
+    "fields": {
+      "uuid": "fb65d251-1518-4185-865f-b8bdcfad07b1",
+      "omschrijving": "Toegekend",
+      "definitie": "Generieke resultaattypeomschrijving 'Toegekend'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 2,
+    "fields": {
+      "uuid": "e6a0c939-3404-45b0-88e3-76c94fb80ea7",
+      "omschrijving": "Afgewezen",
+      "definitie": "Generieke resultaattypeomschrijving 'Afgewezen'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 3,
+    "fields": {
+      "uuid": "a6a0bd73-262a-401a-b629-9c4a908c69b5",
+      "omschrijving": "Ingetrokken",
+      "definitie": "Generieke resultaattypeomschrijving 'Ingetrokken'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 4,
+    "fields": {
+      "uuid": "ce8cf476-0b59-496f-8eee-957a7c6e2506",
+      "omschrijving": "Afgebroken",
+      "definitie": "Generieke resultaattypeomschrijving 'Afgebroken'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 5,
+    "fields": {
+      "uuid": "1f750958-431c-4916-bc01-af5d3a753b41",
+      "omschrijving": "Geweigerd",
+      "definitie": "Generieke resultaattypeomschrijving 'Geweigerd'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 6,
+    "fields": {
+      "uuid": "3c23a936-ab4b-4715-a05b-b122d62ff050",
+      "omschrijving": "Niet nodig",
+      "definitie": "Generieke resultaattypeomschrijving 'Niet nodig'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 7,
+    "fields": {
+      "uuid": "1118c52c-5445-4d32-91cd-e9efbac24ccd",
+      "omschrijving": "Niet ontvankelijk",
+      "definitie": "Generieke resultaattypeomschrijving 'Niet ontvankelijk'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 8,
+    "fields": {
+      "uuid": "9c180d8b-2dd7-4a6f-89fa-7ba4d2f0cd8d",
+      "omschrijving": "Niet vastgesteld",
+      "definitie": "Generieke resultaattypeomschrijving 'Niet vastgesteld'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 9,
+    "fields": {
+      "uuid": "43ac0469-e0c0-4985-a6ce-8ec285d2df47",
+      "omschrijving": "Vastgesteld",
+      "definitie": "Generieke resultaattypeomschrijving 'Vastgesteld'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 10,
+    "fields": {
+      "uuid": "f7d2dc14-1b71-4179-aed3-4e7abcfbeb0d",
+      "omschrijving": "Verleend",
+      "definitie": "Generieke resultaattypeomschrijving 'Verleend'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 11,
+    "fields": {
+      "uuid": "7cb315fb-4f7b-4a43-aca1-e4522e4c73b3",
+      "omschrijving": "Afgehandeld",
+      "definitie": "Generieke resultaattypeomschrijving 'Afgehandeld'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  },
+  {
+    "model": "selectielijst.resultaattypeomschrijvinggeneriek",
+    "pk": 12,
+    "fields": {
+      "uuid": "f33dbd16-68ae-4820-acb5-5f437bca5edb",
+      "omschrijving": "Verwerkt",
+      "definitie": "Generieke resultaattypeomschrijving 'Verwerkt'.",
+      "opmerking": "Demogemeente: UUID gelijk aan selectielijst.openzaak.nl"
+    }
+  }
+]

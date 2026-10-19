@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Proces "Parkeervergunning behandelen" van Gemeente Voorbeeldstad (stack vcg).
+     De zaak staat in Open Zaak; het proces krijgt haar URL mee (variabele zaakUrl).
+     De externe taken voert tools/operaton_worker.py uit:
+       zaak-in-behandeling  status "In behandeling" op de zaak, behandelaar uit Open Organisatie
+       zaak-afhandelen      resultaat (Geleverd of Niet geleverd) en status "Afgehandeld"
+     De gebruikerstaak "Aanvraag beoordelen" staat bij groep "parkeren" (Lotte Smits). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:operaton="http://operaton.org/schema/1.0/bpmn"
+                  id="Definitions_parkeervergunning" targetNamespace="http://voorbeeldstad.example/bpmn">
+  <bpmn:process id="parkeervergunning-behandelen" name="Parkeervergunning behandelen" isExecutable="true"
+                operaton:historyTimeToLive="P180D">
+    <bpmn:startEvent id="aanvraag_ontvangen" name="Aanvraag ontvangen">
+      <bpmn:outgoing>f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="zaak_in_behandeling" name="Zaak in behandeling nemen"
+                      operaton:type="external" operaton:topic="zaak-in-behandeling">
+      <bpmn:incoming>f1</bpmn:incoming>
+      <bpmn:outgoing>f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="aanvraag_beoordelen" name="Aanvraag beoordelen" operaton:candidateGroups="parkeren">
+      <bpmn:documentation>Beoordeel of de aanvrager in het vergunningsgebied woont en of er plek is. Zet de variabele besluit op "verleend" of "geweigerd".</bpmn:documentation>
+      <bpmn:incoming>f2</bpmn:incoming>
+      <bpmn:outgoing>f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="zaak_afhandelen" name="Zaak afhandelen"
+                      operaton:type="external" operaton:topic="zaak-afhandelen">
+      <bpmn:incoming>f3</bpmn:incoming>
+      <bpmn:outgoing>f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="afgehandeld" name="Afgehandeld">
+      <bpmn:incoming>f4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f1" sourceRef="aanvraag_ontvangen" targetRef="zaak_in_behandeling"/>
+    <bpmn:sequenceFlow id="f2" sourceRef="zaak_in_behandeling" targetRef="aanvraag_beoordelen"/>
+    <bpmn:sequenceFlow id="f3" sourceRef="aanvraag_beoordelen" targetRef="zaak_afhandelen"/>
+    <bpmn:sequenceFlow id="f4" sourceRef="zaak_afhandelen" targetRef="afgehandeld"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram">
+    <bpmndi:BPMNPlane id="plane" bpmnElement="parkeervergunning-behandelen">
+      <bpmndi:BPMNShape id="s_start" bpmnElement="aanvraag_ontvangen"><dc:Bounds x="152" y="102" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_t1" bpmnElement="zaak_in_behandeling"><dc:Bounds x="240" y="80" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_t2" bpmnElement="aanvraag_beoordelen"><dc:Bounds x="410" y="80" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_t3" bpmnElement="zaak_afhandelen"><dc:Bounds x="580" y="80" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_end" bpmnElement="afgehandeld"><dc:Bounds x="752" y="102" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e1" bpmnElement="f1"><di:waypoint x="188" y="120"/><di:waypoint x="240" y="120"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e2" bpmnElement="f2"><di:waypoint x="360" y="120"/><di:waypoint x="410" y="120"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e3" bpmnElement="f3"><di:waypoint x="530" y="120"/><di:waypoint x="580" y="120"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e4" bpmnElement="f4"><di:waypoint x="700" y="120"/><di:waypoint x="752" y="120"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

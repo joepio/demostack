@@ -1,0 +1,13 @@
+# Open Notificaties: aanvulling voor stack g4. Open VTB publiceert notificaties; GZAC
+# abonneert zich (Notificaties API-plugin) om ingediende portaaltaken te verwerken.
+vng_api_common_credentials_config_enable: true
+vng_api_common_credentials:
+  items:
+    - identifier: open-vtb
+      secret:
+        value_from:
+          env: ZGW_OPENVTB_SECRET
+    - identifier: gzac
+      secret:
+        value_from:
+          env: ZGW_GZAC_SECRET

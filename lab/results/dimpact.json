@@ -1,0 +1,1191 @@
+{
+  "stack": "dimpact",
+  "titel": "Dimpact PodiumD 4.9.3",
+  "plugins": [],
+  "afgeleid": "Afgeleid van de run van 2026-10-08 (commit 0ab0bd073347): die draaide met een ingebouwde portaallaag. De checks van die laag zijn weggelaten, de leesclient heet nu burgerportaal, en de categorie mijn-apis is overgeslagen zonder plug-in. Opnieuw draaien met scripts/stack.sh test dimpact geeft een rapport uit een echte run.",
+  "gestart": "2026-10-08T12:13:13+0000",
+  "gegenereerd": "2026-10-08T12:14:58+0000",
+  "commit": "0ab0bd073347",
+  "alleen": null,
+  "samenvatting": {
+    "pass": 85,
+    "fail": 8,
+    "skip": 11,
+    "fail_bekend": 8,
+    "fail_onverwacht": 0,
+    "totaal": 104
+  },
+  "per_categorie": {
+    "gezondheid": {
+      "pass": 23,
+      "fail": 0,
+      "skip": 7,
+      "fail_bekend": 0,
+      "fail_onverwacht": 0,
+      "totaal": 30
+    },
+    "rook": {
+      "pass": 46,
+      "fail": 1,
+      "skip": 3,
+      "fail_bekend": 1,
+      "fail_onverwacht": 0,
+      "totaal": 50
+    },
+    "zgw": {
+      "pass": 3,
+      "fail": 7,
+      "skip": 0,
+      "fail_bekend": 7,
+      "fail_onverwacht": 0,
+      "totaal": 10
+    },
+    "burger-isolatie": {
+      "pass": 13,
+      "fail": 0,
+      "skip": 0,
+      "fail_bekend": 0,
+      "fail_onverwacht": 0,
+      "totaal": 13
+    },
+    "mijn-apis": {
+      "pass": 0,
+      "fail": 0,
+      "skip": 1,
+      "fail_bekend": 0,
+      "fail_onverwacht": 0,
+      "totaal": 1
+    }
+  },
+  "omgeving": {
+    "services": {
+      "brp-api": {
+        "image": "openzaak/open-zaak:1.29.0",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "brp-mock": {
+        "image": "iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6",
+        "status": "Up 6 minutes"
+      },
+      "clamav": {
+        "image": "clamav/clamav:1.5.4",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "elasticsearch": {
+        "image": "elasticsearch:9.0.3",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "ita": {
+        "image": "demogemeente/ita-web:3.3.2",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "ita-poller": {
+        "image": "demogemeente/ita-poller:3.3.2",
+        "status": "Up 4 minutes"
+      },
+      "keycloak": {
+        "image": "keycloak/keycloak:26.4.7",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "keycloak-clients": {
+        "image": "keycloak/keycloak:26.4.7",
+        "status": "Exited (0) 4 minutes ago"
+      },
+      "keycloak-podiumd": {
+        "image": "keycloak/keycloak:26.4.7",
+        "status": "Exited (0) 4 minutes ago"
+      },
+      "kiss": {
+        "image": "demogemeente/kiss:3.1.3",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "mailpit": {
+        "image": "axllent/mailpit:v1.31.4",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "notificatie-sink": {
+        "image": "openzaak/open-zaak:1.29.0",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "notify-mock": {
+        "image": "openzaak/open-zaak:1.29.0",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "objecten": {
+        "image": "maykinmedia/objects-api:3.6.2",
+        "status": "Up 5 minutes (healthy)"
+      },
+      "objecten-celery": {
+        "image": "maykinmedia/objects-api:3.6.2",
+        "status": "Up 5 minutes"
+      },
+      "objecten-init": {
+        "image": "maykinmedia/objects-api:3.6.2",
+        "status": "Exited (0) 5 minutes ago"
+      },
+      "objecttypen": {
+        "image": "maykinmedia/objecttypes-api:3.4.2",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "objecttypen-init": {
+        "image": "maykinmedia/objecttypes-api:3.4.2",
+        "status": "Exited (0) 6 minutes ago"
+      },
+      "omc": {
+        "image": "worthnl/notifynl-omc:1.17.19",
+        "status": "Up 5 minutes"
+      },
+      "openarchiefbeheer": {
+        "image": "maykinmedia/open-archiefbeheer:2.0.0",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "openarchiefbeheer-celery": {
+        "image": "maykinmedia/open-archiefbeheer:2.0.0",
+        "status": "Up 3 minutes"
+      },
+      "openarchiefbeheer-celery-beat": {
+        "image": "maykinmedia/open-archiefbeheer:2.0.0",
+        "status": "Up 3 minutes"
+      },
+      "openarchiefbeheer-init": {
+        "image": "maykinmedia/open-archiefbeheer:2.0.0",
+        "status": "Exited (0) 5 minutes ago"
+      },
+      "openbeheer": {
+        "image": "maykinmedia/open-beheer:0.9.1",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "openbeheer-init": {
+        "image": "maykinmedia/open-beheer:0.9.1",
+        "status": "Exited (0) 5 minutes ago"
+      },
+      "openformulieren": {
+        "image": "openformulieren/open-forms:3.5.8",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "openformulieren-celery": {
+        "image": "openformulieren/open-forms:3.5.8",
+        "status": "Up 3 minutes"
+      },
+      "openformulieren-celery-beat": {
+        "image": "openformulieren/open-forms:3.5.8",
+        "status": "Up 3 minutes"
+      },
+      "openformulieren-init": {
+        "image": "openformulieren/open-forms:3.5.8",
+        "status": "Exited (0) 4 minutes ago"
+      },
+      "openinwoner": {
+        "image": "maykinmedia/open-inwoner:2.4.3",
+        "status": "Up 2 minutes (healthy)"
+      },
+      "openinwoner-celery": {
+        "image": "maykinmedia/open-inwoner:2.4.3",
+        "status": "Up 2 minutes"
+      },
+      "openinwoner-init": {
+        "image": "maykinmedia/open-inwoner:2.4.3",
+        "status": "Exited (0) 2 minutes ago"
+      },
+      "openklant": {
+        "image": "maykinmedia/open-klant:2.15.0",
+        "status": "Up 5 minutes (healthy)"
+      },
+      "openklant-celery": {
+        "image": "maykinmedia/open-klant:2.15.0",
+        "status": "Up 5 minutes"
+      },
+      "openklant-init": {
+        "image": "maykinmedia/open-klant:2.15.0",
+        "status": "Exited (0) 5 minutes ago"
+      },
+      "opennotificaties": {
+        "image": "openzaak/open-notificaties:1.16.2",
+        "status": "Up 5 minutes (healthy)"
+      },
+      "opennotificaties-celery": {
+        "image": "openzaak/open-notificaties:1.16.2",
+        "status": "Up 5 minutes"
+      },
+      "opennotificaties-celery-beat": {
+        "image": "openzaak/open-notificaties:1.16.2",
+        "status": "Up 5 minutes"
+      },
+      "opennotificaties-init": {
+        "image": "openzaak/open-notificaties:1.16.2",
+        "status": "Exited (0) 5 minutes ago"
+      },
+      "openzaak": {
+        "image": "openzaak/open-zaak:1.29.3",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "openzaak-celery": {
+        "image": "openzaak/open-zaak:1.29.3",
+        "status": "Up 3 minutes"
+      },
+      "openzaak-init": {
+        "image": "openzaak/open-zaak:1.29.3",
+        "status": "Exited (0) 4 minutes ago"
+      },
+      "pabc": {
+        "image": "demogemeente/pabc-api:1.1.1",
+        "status": "Up 4 minutes (healthy)"
+      },
+      "pabc-migrations": {
+        "image": "demogemeente/pabc-migrations:1.1.1",
+        "status": "Exited (0) 6 minutes ago"
+      },
+      "postgres": {
+        "image": "postgis/postgis:17-3.5-alpine",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "redis": {
+        "image": "redis:8.10.2-alpine",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "referentielijsten": {
+        "image": "maykinmedia/referentielijsten-api:0.7.4",
+        "status": "Up 6 minutes (healthy)"
+      },
+      "selectielijst": {
+        "image": "openzaak/vng-selectielijst:1.0.5",
+        "status": "Up 6 minutes (healthy)"
+      }
+    }
+  },
+  "checks": [
+    {
+      "id": "gezondheid/postgres",
+      "categorie": "gezondheid",
+      "component": "postgres",
+      "naam": "Postgres/PostGIS draait en antwoordt",
+      "status": "pass",
+      "detail": "postgres healthy [postgis/postgis:17-3.5-alpine]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/redis",
+      "categorie": "gezondheid",
+      "component": "redis",
+      "naam": "Redis draait en antwoordt",
+      "status": "pass",
+      "detail": "redis healthy [redis:8.10.2-alpine]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/keycloak",
+      "categorie": "gezondheid",
+      "component": "keycloak",
+      "naam": "Keycloak (DigiD-simulatie) draait en antwoordt",
+      "status": "pass",
+      "detail": "keycloak healthy; HTTP 200 [keycloak/keycloak:26.4.7]",
+      "duur_s": 0.07
+    },
+    {
+      "id": "gezondheid/brp-mock",
+      "categorie": "gezondheid",
+      "component": "brp-mock",
+      "naam": "BRP-mock (Haal Centraal BRP personen) draait en antwoordt",
+      "status": "pass",
+      "detail": "brp-mock running; HTTP 405 [iswish/haal-centraal-brp-bevragen-gba-mock:2.0.6]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/notificatie-sink",
+      "categorie": "gezondheid",
+      "component": "notificatie-sink",
+      "naam": "Notificatie-sink draait en antwoordt",
+      "status": "pass",
+      "detail": "notificatie-sink healthy; HTTP 200 [openzaak/open-zaak:1.29.0]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/openzaak",
+      "categorie": "gezondheid",
+      "component": "openzaak",
+      "naam": "Open Zaak draait en antwoordt",
+      "status": "pass",
+      "detail": "openzaak healthy; openzaak-celery running; HTTP 302 [openzaak/open-zaak:1.29.3]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/opennotificaties",
+      "categorie": "gezondheid",
+      "component": "opennotificaties",
+      "naam": "Open Notificaties draait en antwoordt",
+      "status": "pass",
+      "detail": "opennotificaties healthy; opennotificaties-celery running; opennotificaties-celery-beat running; HTTP 302 [openzaak/open-notificaties:1.16.2]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/openobject",
+      "categorie": "gezondheid",
+      "component": "openobject",
+      "naam": "Objecten API 3.6.2 (los, zoals PodiumD) draait en antwoordt",
+      "status": "pass",
+      "detail": "objecten healthy; objecten-celery running; HTTP 302 [maykinmedia/objects-api:3.6.2]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/openklant",
+      "categorie": "gezondheid",
+      "component": "openklant",
+      "naam": "Open Klant draait en antwoordt",
+      "status": "pass",
+      "detail": "openklant healthy; openklant-celery running; HTTP 302 [maykinmedia/open-klant:2.15.0]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/referentielijsten",
+      "categorie": "gezondheid",
+      "component": "referentielijsten",
+      "naam": "Referentielijsten draait en antwoordt",
+      "status": "pass",
+      "detail": "referentielijsten healthy; HTTP 302 [maykinmedia/referentielijsten-api:0.7.4]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/selectielijst",
+      "categorie": "gezondheid",
+      "component": "selectielijst",
+      "naam": "VNG Selectielijst draait en antwoordt",
+      "status": "pass",
+      "detail": "selectielijst healthy; HTTP 200 [openzaak/vng-selectielijst:1.0.5]",
+      "duur_s": 0.02
+    },
+    {
+      "id": "gezondheid/objecttypen",
+      "categorie": "gezondheid",
+      "component": "objecttypen",
+      "naam": "Objecttypen API 3.4.2 draait en antwoordt",
+      "status": "pass",
+      "detail": "objecttypen healthy; HTTP 302 [maykinmedia/objecttypes-api:3.4.2]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/brp-api",
+      "categorie": "gezondheid",
+      "component": "brp-api",
+      "naam": "BRP-vertaler (BRP API Personen 2, officieel formaat) draait en antwoordt",
+      "status": "pass",
+      "detail": "brp-api healthy; HTTP 200 [openzaak/open-zaak:1.29.0]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/mailpit",
+      "categorie": "gezondheid",
+      "component": "mailpit",
+      "naam": "Mailpit (SMTP-opvang) draait en antwoordt",
+      "status": "pass",
+      "detail": "mailpit healthy; HTTP 200 [axllent/mailpit:v1.31.4]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/openformulieren",
+      "categorie": "gezondheid",
+      "component": "openformulieren",
+      "naam": "Open Formulieren 3.5.8 draait en antwoordt",
+      "status": "pass",
+      "detail": "openformulieren healthy; openformulieren-celery running; openformulieren-celery-beat running; HTTP 302 [openformulieren/open-forms:3.5.8]",
+      "duur_s": 0.03
+    },
+    {
+      "id": "gezondheid/clamav",
+      "categorie": "gezondheid",
+      "component": "clamav",
+      "naam": "ClamAV 1.5.4 (virusscan voor Open Formulieren) draait en antwoordt",
+      "status": "pass",
+      "detail": "clamav healthy [clamav/clamav:1.5.4]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/openinwoner",
+      "categorie": "gezondheid",
+      "component": "openinwoner",
+      "naam": "Open Inwoner 2.4.3 (met Elasticsearch) draait en antwoordt",
+      "status": "pass",
+      "detail": "openinwoner healthy; openinwoner-celery running; elasticsearch healthy; HTTP 200 [elasticsearch:9.0.3, maykinmedia/open-inwoner:2.4.3]",
+      "duur_s": 0.38
+    },
+    {
+      "id": "gezondheid/openarchiefbeheer",
+      "categorie": "gezondheid",
+      "component": "openarchiefbeheer",
+      "naam": "Open Archiefbeheer 2.0.0 draait en antwoordt",
+      "status": "pass",
+      "detail": "openarchiefbeheer healthy; openarchiefbeheer-celery running; openarchiefbeheer-celery-beat running; HTTP 302 [maykinmedia/open-archiefbeheer:2.0.0]",
+      "duur_s": 0.01
+    },
+    {
+      "id": "gezondheid/openbeheer",
+      "categorie": "gezondheid",
+      "component": "openbeheer",
+      "naam": "Open Beheer 0.9.1 draait en antwoordt",
+      "status": "pass",
+      "detail": "openbeheer healthy; HTTP 302 [maykinmedia/open-beheer:0.9.1]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/kiss",
+      "categorie": "gezondheid",
+      "component": "kiss",
+      "naam": "KISS 3.1.3 (Klantinteractie-Servicesysteem) draait en antwoordt",
+      "status": "pass",
+      "detail": "kiss healthy; HTTP 200 [demogemeente/kiss:3.1.3]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/ita",
+      "categorie": "gezondheid",
+      "component": "ita",
+      "naam": "ITA 3.3.2 (Interne Taak Afhandeling, web en poller) draait en antwoordt",
+      "status": "pass",
+      "detail": "ita healthy; ita-poller running; HTTP 200 [demogemeente/ita-poller:3.3.2, demogemeente/ita-web:3.3.2]",
+      "duur_s": 0.0
+    },
+    {
+      "id": "gezondheid/pabc",
+      "categorie": "gezondheid",
+      "component": "pabc",
+      "naam": "PABC 1.1.1 (Platform Autorisatie Beheer Component) draait en antwoordt",
+      "status": "pass",
+      "detail": "pabc healthy; HTTP 200 [demogemeente/pabc-api:1.1.1]",
+      "duur_s": 0.02
+    },
+    {
+      "id": "gezondheid/omc",
+      "categorie": "gezondheid",
+      "component": "omc",
+      "naam": "NotifyNL OMC 1.17.19 (met Notify-mock) draait en antwoordt",
+      "status": "pass",
+      "detail": "omc running; notify-mock healthy; HTTP 200 [openzaak/open-zaak:1.29.0, worthnl/notifynl-omc:1.17.19]",
+      "duur_s": 0.08
+    },
+    {
+      "id": "gezondheid/zac",
+      "categorie": "gezondheid",
+      "component": "zac",
+      "naam": "Zaakafhandelcomponent (ZAC) 5.4.5",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: niet draaibaar hier: image alleen op ghcr.io (geblokkeerd), bouwen uit broncode vraagt Gradle, JDK 21 en Node met enkele GB cache, plus Solr, OPA, Gotenberg, SmartDocuments en KVK/BAG; past niet in de vrije schijfruimte van deze machine"
+    },
+    {
+      "id": "gezondheid/podiumd-adapter",
+      "categorie": "gezondheid",
+      "component": "podiumd-adapter",
+      "naam": "PodiumD-adapter 0.6.7",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: niet nodig: koppelt KISS en ITA aan de e-Suite (licentie), niet aan Open Zaak en Open Klant"
+    },
+    {
+      "id": "gezondheid/zaakbrug",
+      "categorie": "gezondheid",
+      "component": "zaakbrug",
+      "naam": "ZaakBrug 2.3.32",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: optioneel in PodiumD (StUF-ZKN naar ZGW voor oude zaaksystemen); geen StUF-afnemer in deze stack"
+    },
+    {
+      "id": "gezondheid/zgw-office-addin",
+      "categorie": "gezondheid",
+      "component": "zgw-office-addin",
+      "naam": "ZGW Office Add-in 0.11.0",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: niet draaibaar hier: alleen op ghcr.io en vraagt Microsoft 365 (Word/Outlook-invoegtoepassing)"
+    },
+    {
+      "id": "gezondheid/kiss-elastic-sync",
+      "categorie": "gezondheid",
+      "component": "kiss-elastic-sync",
+      "naam": "KISS Elastic Sync en Elastic Open Crawler",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: niet opgenomen: vult de zoekindexen van KISS (kennisbank, website, smoelenboek) uit externe bronnen (SDG, website, SharePoint); crawler staat op docker.elastic.co (geblokkeerd)"
+    },
+    {
+      "id": "gezondheid/frank-gateway",
+      "categorie": "gezondheid",
+      "component": "frank-gateway",
+      "naam": "Frank!Gateway (APISIX) met OpenBao",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: niet opgenomen: uitgaande gateway naar landelijke registers (BRP, KVK, BAG); hier praat alles direct met de mocks"
+    },
+    {
+      "id": "gezondheid/brp-personen-mock",
+      "categorie": "gezondheid",
+      "component": "brp-personen-mock",
+      "naam": "BRP personen-mock 2.7.0 (officieel)",
+      "status": "skip",
+      "reden": "gepland, nog niet in de stack: niet draaibaar hier: ghcr.io geblokkeerd; vervangen door de iswish-mock met tools/brp_vertaler.py"
+    },
+    {
+      "id": "rook/brp-mock/testpersoon-raadplegen",
+      "categorie": "rook",
+      "component": "brp-mock",
+      "naam": "testpersoon raadplegen",
+      "status": "pass",
+      "detail": "Stephan Janssen",
+      "duur_s": 0.08
+    },
+    {
+      "id": "rook/keycloak/digid-simulatie-inloggen-als-inwoner-claim-bsn",
+      "categorie": "rook",
+      "component": "keycloak",
+      "naam": "DigiD-simulatie: inloggen als inwoner, claim bsn",
+      "status": "pass",
+      "detail": "bsn=999990627, loa=urn:etoegang:core:assurance-class:loa2plus",
+      "duur_s": 0.14
+    },
+    {
+      "id": "rook/keycloak/client-credentials-voor-burgerportaal",
+      "categorie": "rook",
+      "component": "keycloak",
+      "naam": "client credentials voor burgerportaal",
+      "status": "pass",
+      "detail": "token ontvangen",
+      "duur_s": 0.09
+    },
+    {
+      "id": "rook/openzaak/zaken-van-burger-a-opvragen-applicatie-burgerportaal",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "zaken van burger A opvragen (applicatie burgerportaal)",
+      "status": "pass",
+      "detail": "2 zaken: VBS-2026-000101, VBS-2026-000102",
+      "duur_s": 0.13
+    },
+    {
+      "id": "rook/openzaak/zaak-ophalen-met-zaaktype-en-resultaat",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "zaak ophalen met zaaktype en resultaat",
+      "status": "pass",
+      "detail": "VBS-2026-000102 (Melding openbare ruimte), einddatum 2026-09-09, resultaat 'Uitgevoerd'",
+      "duur_s": 0.34
+    },
+    {
+      "id": "rook/openzaak/statussen",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "statussen",
+      "status": "pass",
+      "detail": "Ontvangen > Ingepland > Afgehandeld",
+      "duur_s": 0.28
+    },
+    {
+      "id": "rook/openzaak/rollen-natuurlijk-persoon-met-bsn",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "rollen (natuurlijk persoon met BSN)",
+      "status": "pass",
+      "detail": "Aanvrager: Janssen",
+      "duur_s": 0.12
+    },
+    {
+      "id": "rook/openzaak/documenten-metadata-en-inhoud",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "documenten (metadata en inhoud)",
+      "status": "pass",
+      "detail": "Foto burgerportaaltegels (835 bytes); Melding losliggende burgerportaaltegels (850 bytes)",
+      "duur_s": 0.35
+    },
+    {
+      "id": "rook/openzaak/zaakobject-verwijst-naar-open-object",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "zaakobject verwijst naar Open Object",
+      "status": "pass",
+      "detail": "http://objecten.local:8000/api/v2/objects/e6bad707-c33d-443d-a993-10cdda35fb49",
+      "duur_s": 0.1
+    },
+    {
+      "id": "rook/openzaak/applicatie-burgerportaal-mag-niet-schrijven",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "applicatie burgerportaal mag niet schrijven",
+      "status": "pass",
+      "detail": "POST /zaken gaf 403",
+      "duur_s": 0.05
+    },
+    {
+      "id": "rook/openzaak/applicatie-burgerportaal-heeft-geen-toegang-tot-autorisaties",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "applicatie burgerportaal heeft geen toegang tot autorisaties",
+      "status": "pass",
+      "detail": "GET /applicaties gaf 403",
+      "duur_s": 0.03
+    },
+    {
+      "id": "rook/openzaak/catalogus-met-gepubliceerde-zaaktypen",
+      "categorie": "rook",
+      "component": "openzaak",
+      "naam": "catalogus met gepubliceerde zaaktypen",
+      "status": "pass",
+      "detail": "Melding openbare ruimte, Omgevingsvergunning aanvragen, Parkeervergunning bewoners aanvragen, Wmo-maatwerkvoorziening aanvragen",
+      "duur_s": 0.07
+    },
+    {
+      "id": "rook/opennotificaties/kanalen",
+      "categorie": "rook",
+      "component": "opennotificaties",
+      "naam": "kanalen",
+      "status": "pass",
+      "detail": "autorisaties, besluiten, besluittypen, documenten, informatieobjecttypen, internetaken, klantcontacten, objecten, partijen, producten, zaaktypen, zaken",
+      "duur_s": 0.05
+    },
+    {
+      "id": "rook/opennotificaties/keten-open-zaak-open-notificaties-abonnee",
+      "categorie": "rook",
+      "component": "opennotificaties",
+      "naam": "keten Open Zaak > Open Notificaties > abonnee",
+      "status": "pass",
+      "detail": "'zaken/partial_update' afgeleverd na 4.4s",
+      "duur_s": 4.35
+    },
+    {
+      "id": "rook/openklant/partij-en-klantcontacten-van-burger-a-token-burgerportaal",
+      "categorie": "rook",
+      "component": "openklant",
+      "naam": "partij en klantcontacten van burger A (token burgerportaal)",
+      "status": "pass",
+      "detail": "Stephan Janssen: 3 klantcontact(en), via telefoon",
+      "duur_s": 0.1
+    },
+    {
+      "id": "rook/openobject/melding-openbare-ruimte-token-burgerportaal",
+      "categorie": "rook",
+      "component": "openobject",
+      "naam": "melding openbare ruimte (token burgerportaal)",
+      "status": "pass",
+      "detail": "2 meldingen; deze: Bestrating",
+      "duur_s": 0.11
+    },
+    {
+      "id": "rook/selectielijst/procestypen-2020",
+      "categorie": "rook",
+      "component": "selectielijst",
+      "naam": "procestypen 2020",
+      "status": "pass",
+      "detail": "29 procestypen",
+      "duur_s": 0.02
+    },
+    {
+      "id": "rook/referentielijsten/tabel-kanaal",
+      "categorie": "rook",
+      "component": "referentielijsten",
+      "naam": "tabel KANAAL",
+      "status": "pass",
+      "detail": "6 kanalen: chat, webformulier, post, balie, telefoon, email",
+      "duur_s": 0.03
+    },
+    {
+      "id": "rook/openinwoner/digid-login-en-mijn-aanvragen-van-burger-a",
+      "categorie": "rook",
+      "component": "openinwoner",
+      "naam": "DigiD-login en Mijn aanvragen van burger A",
+      "status": "pass",
+      "detail": "VBS-2026-000101, VBS-2026-000102; 2 links naar een zaak",
+      "duur_s": 2.56
+    },
+    {
+      "id": "rook/openinwoner/zaakdetail-met-status-en-documenten",
+      "categorie": "rook",
+      "component": "openinwoner",
+      "naam": "zaakdetail met status en documenten",
+      "status": "pass",
+      "detail": "VBS-2026-000102: statushistorie tot 'afgehandeld', 2 documenten, download is een PDF (850 bytes)",
+      "duur_s": 2.11
+    },
+    {
+      "id": "rook/openinwoner/mijn-taken-uit-open-object-externe-taken",
+      "categorie": "rook",
+      "component": "openinwoner",
+      "naam": "Mijn taken uit Open Object (externe taken)",
+      "status": "pass",
+      "detail": "taken van A op de homepage: Aanvullende tekening dakkapel aanleveren, Leges omgevingsvergunning betalen",
+      "duur_s": 0.27
+    },
+    {
+      "id": "rook/openinwoner/mijn-profiel-met-brp-gegevens",
+      "categorie": "rook",
+      "component": "openinwoner",
+      "naam": "Mijn profiel met BRP-gegevens",
+      "status": "pass",
+      "detail": "Stephan Janssen, Mandelaplein 2, geboren 06 april 1975",
+      "duur_s": 0.2
+    },
+    {
+      "id": "rook/openinwoner/mijn-vragen-uit-open-klant",
+      "categorie": "rook",
+      "component": "openinwoner",
+      "naam": "Mijn vragen uit Open Klant",
+      "status": "pass",
+      "detail": "Mijn vragen (1): 'Wanneer wordt de grofvuilpas verstuurd?'",
+      "duur_s": 0.37
+    },
+    {
+      "id": "rook/openformulieren/formulier-melding-openbare-ruimte-digid-zaak-in-open-zaak",
+      "categorie": "rook",
+      "component": "openformulieren",
+      "naam": "formulier Melding openbare ruimte (DigiD, zaak in Open Zaak)",
+      "status": "pass",
+      "detail": "Melding openbare ruimte: 1 stap(pen), login DigiD",
+      "duur_s": 0.09
+    },
+    {
+      "id": "rook/openformulieren/inwoner-logt-in-brp-prefill-verstuurt-melding-zaak-in-open-z",
+      "categorie": "rook",
+      "component": "openformulieren",
+      "naam": "inwoner logt in, BRP-prefill, verstuurt melding: zaak in Open Zaak",
+      "status": "pass",
+      "detail": "Paula Prins (uit de BRP) > zaak ZAAK-2026-0000000001 (Melding openbare ruimte), 1 document(en)",
+      "duur_s": 8.55
+    },
+    {
+      "id": "rook/brp-api/brp-api-personen-2-in-officieel-formaat",
+      "categorie": "rook",
+      "component": "brp-api",
+      "naam": "BRP API Personen 2 in officieel formaat",
+      "status": "pass",
+      "detail": "geboorte.datum als Datum-object, verblijfplaats.verblijfadres genest",
+      "duur_s": 0.17
+    },
+    {
+      "id": "rook/objecttypen/podiumd-objecttypen-met-vaste-uuid-s-melding-tot-en-met-acti",
+      "categorie": "rook",
+      "component": "objecttypen",
+      "naam": "PodiumD-objecttypen met vaste UUID's (Melding tot en met Activiteitenlog)",
+      "status": "pass",
+      "detail": "7 objecttypen aanwezig; zonder token 401",
+      "duur_s": 0.05
+    },
+    {
+      "id": "rook/openobject/afdelingen-groepen-en-medewerkers-van-voorbeeldstad-objecten",
+      "categorie": "rook",
+      "component": "openobject",
+      "naam": "afdelingen, groepen en medewerkers van Voorbeeldstad (Objecten API)",
+      "status": "pass",
+      "detail": "3 afdeling, 2 groep, 3 medewerker",
+      "duur_s": 0.19
+    },
+    {
+      "id": "rook/kiss/klantcontactmedewerker-logt-in-via-keycloak-realm-podiumd",
+      "categorie": "rook",
+      "component": "kiss",
+      "naam": "klantcontactmedewerker logt in via Keycloak (realm podiumd)",
+      "status": "pass",
+      "detail": "ingelogd, rol klantcontactmedewerker, rechten: afdelingen, groepen, skillsread, berichtenread, ...",
+      "duur_s": 0.67
+    },
+    {
+      "id": "rook/kiss/afdelingen-en-groepen-uit-de-objecten-api",
+      "categorie": "rook",
+      "component": "kiss",
+      "naam": "afdelingen en groepen uit de Objecten API",
+      "status": "pass",
+      "detail": "3 afdelingen (Klantcontactcentrum, Vergunningen, Zorg en Welzijn), 2 groepen",
+      "duur_s": 0.29
+    },
+    {
+      "id": "rook/kiss/zaak-opzoeken-in-open-zaak",
+      "categorie": "rook",
+      "component": "kiss",
+      "naam": "zaak opzoeken in Open Zaak",
+      "status": "pass",
+      "detail": "VBS-2026-000101: Plaatsen dakkapel achterzijde woning",
+      "duur_s": 0.18
+    },
+    {
+      "id": "rook/kiss/contactverzoek-opzoeken-in-open-klant",
+      "categorie": "rook",
+      "component": "kiss",
+      "naam": "contactverzoek opzoeken in Open Klant",
+      "status": "pass",
+      "detail": "klantcontact 8000000001: Terugbelverzoek over de dakkapel",
+      "duur_s": 0.07
+    },
+    {
+      "id": "rook/kiss/persoon-zoeken-in-de-brp",
+      "categorie": "rook",
+      "component": "kiss",
+      "naam": "persoon zoeken in de BRP",
+      "status": "pass",
+      "detail": "Stephan Janssen",
+      "duur_s": 0.1
+    },
+    {
+      "id": "rook/kiss/zonder-login-geen-zaken-en-geen-klantcontacten",
+      "categorie": "rook",
+      "component": "kiss",
+      "naam": "zonder login geen zaken en geen klantcontacten",
+      "status": "pass",
+      "detail": "302 naar Keycloak, 302 naar Keycloak",
+      "duur_s": 0.01
+    },
+    {
+      "id": "rook/ita/werkvoorraad-per-medewerker-contactverzoeken-uit-open-klant",
+      "categorie": "rook",
+      "component": "ita",
+      "naam": "werkvoorraad per medewerker (contactverzoeken uit Open Klant)",
+      "status": "pass",
+      "detail": "Desai ziet ['8000000001'], Jansen ziet ['8000000002']",
+      "duur_s": 1.64
+    },
+    {
+      "id": "rook/ita/medewerker-opent-eigen-taak-niet-die-van-een-andere-afdeling",
+      "categorie": "rook",
+      "component": "ita",
+      "naam": "medewerker opent eigen taak, niet die van een andere afdeling",
+      "status": "pass",
+      "detail": "eigen taak 200 (Terugbelverzoek over de dakkapel), taak van KCC 403",
+      "duur_s": 1.0
+    },
+    {
+      "id": "rook/ita/functioneel-beheerder-ziet-alle-taken-zonder-login-401",
+      "categorie": "rook",
+      "component": "ita",
+      "naam": "functioneel beheerder ziet alle taken; zonder login 401",
+      "status": "pass",
+      "detail": "beheerder [200, 200]; zonder login 401",
+      "duur_s": 1.13
+    },
+    {
+      "id": "rook/pabc/applicatierollen-per-zaaktype-voor-een-functionele-rol",
+      "categorie": "rook",
+      "component": "pabc",
+      "naam": "applicatierollen per zaaktype voor een functionele rol",
+      "status": "pass",
+      "detail": "Team Wmo: Wmo-maatwerkvoorziening aanvragen met rollen behandelaar; zonder sleutel 401",
+      "duur_s": 1.02
+    },
+    {
+      "id": "rook/openarchiefbeheer/afgesloten-zaken-uit-open-zaak-klaar-voor-een-vernietigingsl",
+      "categorie": "rook",
+      "component": "openarchiefbeheer",
+      "naam": "afgesloten zaken uit Open Zaak klaar voor een vernietigingslijst",
+      "status": "pass",
+      "detail": "4 afgesloten zaken: VBS-2026-000102, VBS-2026-000103, VBS-2026-000105, VBS-2026-000108",
+      "duur_s": 0.69
+    },
+    {
+      "id": "rook/openarchiefbeheer/medewerker-logt-in-via-keycloak-realm-podiumd",
+      "categorie": "rook",
+      "component": "openarchiefbeheer",
+      "naam": "medewerker logt in via Keycloak (realm podiumd)",
+      "status": "pass",
+      "detail": "ingelogd als beheer.devries",
+      "duur_s": 1.15
+    },
+    {
+      "id": "rook/openbeheer/zaaktypen-van-voorbeeldstad-uit-open-zaak",
+      "categorie": "rook",
+      "component": "openbeheer",
+      "naam": "zaaktypen van Voorbeeldstad uit Open Zaak",
+      "status": "pass",
+      "detail": "service catalogi-api: 4 zaaktypen (Melding openbare ruimte, Omgevingsvergunning aanvragen, ...)",
+      "duur_s": 0.49
+    },
+    {
+      "id": "rook/openbeheer/oidc-configuratie-wijst-naar-keycloak-realm-podiumd",
+      "categorie": "rook",
+      "component": "openbeheer",
+      "naam": "OIDC-configuratie wijst naar Keycloak (realm podiumd)",
+      "status": "pass",
+      "detail": "{\"enabled\":true,\"loginUrl\":\"http://openbeheer.local:8000/auth/oidc/authenticate/\"}",
+      "duur_s": 0.02
+    },
+    {
+      "id": "rook/omc/keten-zaak-in-open-zaak-open-notificaties-omc-e-mail-via-not",
+      "categorie": "rook",
+      "component": "omc",
+      "naam": "keten: zaak in Open Zaak, Open Notificaties, OMC, e-mail via Notify",
+      "status": "fail",
+      "reden": "geen bericht over VBS-OMC-1461624064 binnen 45 s: OMC 1.17.19 weigert de notificatie van Open Notificaties 1.16 (veld 'source', 206/422), zie README",
+      "duur_s": 46.05,
+      "bekend": "NotifyNL OMC 1.17.19 (de versie in PodiumD 4.9.3) weigert de notificaties van Open Notificaties 1.16.2 met 206 en statuscode 422: die bevatten het veld \"source\", dat het model van OMC niet kent. OMC zelf werkt (zie de rooktest met een notificatie in het OMC-formaat); de koppeling tussen deze twee versies niet."
+    },
+    {
+      "id": "rook/omc/notificatie-in-het-omc-formaat-wordt-een-e-mail-aan-de-inwon",
+      "categorie": "rook",
+      "component": "omc",
+      "naam": "notificatie in het OMC-formaat wordt een e-mail aan de inwoner",
+      "status": "pass",
+      "detail": "zonder JWT 401; 202, e-mail (template zaak aangemaakt) aan 999995406@inwoner.voorbeeldstad.example voor Paula Prins",
+      "duur_s": 3.82
+    },
+    {
+      "id": "rook/clamav/clamd-herkent-het-eicar-testbestand-en-laat-een-gewoon-besta",
+      "categorie": "rook",
+      "component": "clamav",
+      "naam": "clamd herkent het EICAR-testbestand en laat een gewoon bestand door",
+      "status": "pass",
+      "detail": "stream: Eicar-Test-Signature FOUND; schoon bestand: stream: OK",
+      "duur_s": 0.03
+    },
+    {
+      "id": "rook/openformulieren/upload-met-het-eicar-testvirus-wordt-geweigerd-clamav",
+      "categorie": "rook",
+      "component": "openformulieren",
+      "naam": "upload met het EICAR-testvirus wordt geweigerd (ClamAV)",
+      "status": "pass",
+      "detail": "EICAR 400 (Er is een virus gedetecteerd in het bestand: 'Eicar-Test-Signature'.), schoon bestand 200",
+      "duur_s": 0.9
+    },
+    {
+      "id": "rook/mailpit/smtp-opvang-ontvangt-en-toont-een-bericht",
+      "categorie": "rook",
+      "component": "mailpit",
+      "naam": "SMTP-opvang ontvangt en toont een bericht",
+      "status": "pass",
+      "detail": "bericht 'Rooktest demogemeente 1791461674' zichtbaar in Mailpit",
+      "duur_s": 0.02
+    },
+    {
+      "id": "rook/postgres",
+      "categorie": "rook",
+      "component": "postgres",
+      "naam": "Postgres/PostGIS",
+      "status": "skip",
+      "reden": "infrastructuur: alleen gezondheid"
+    },
+    {
+      "id": "rook/redis",
+      "categorie": "rook",
+      "component": "redis",
+      "naam": "Redis",
+      "status": "skip",
+      "reden": "infrastructuur: alleen gezondheid"
+    },
+    {
+      "id": "rook/notificatie-sink",
+      "categorie": "rook",
+      "component": "notificatie-sink",
+      "naam": "Notificatie-sink",
+      "status": "skip",
+      "reden": "infrastructuur: alleen gezondheid"
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/gedrag/overzicht-naar-detail",
+      "naam": "ZGW-aansluitprofiel (gedrag): overzicht-naar-detail",
+      "duur_s": 0.55,
+      "status": "pass",
+      "detail": "4 stap(pen), 2 waarschuwing(en), o.a. MINLENGTH must NOT have fewer than 9 characters 69 | \"archiefactiedatum\": \"2031-09-09\", 70 | \"resultaat\": \"http://openzaak.local:8000/zaken/api/v1/resultaten/84"
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/gedrag/zonder-token",
+      "naam": "ZGW-aansluitprofiel (gedrag): zonder-token",
+      "duur_s": 0.02,
+      "status": "pass",
+      "detail": "1 stap(pen), 1 waarschuwing(en), o.a. Content type application/json for 403 response is not described in the schema. Expected content types: application/problem+json."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/gedrag/onbekende-zaak",
+      "naam": "ZGW-aansluitprofiel (gedrag): onbekende-zaak",
+      "duur_s": 0.07,
+      "status": "pass",
+      "detail": "1 stap(pen), 1 waarschuwing(en), o.a. Content type application/json for 404 response is not described in the schema. Expected content types: application/problem+json."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/gedrag/burger-a-haalt-zaak-van-burger-b",
+      "naam": "ZGW-aansluitprofiel (gedrag): burger-a-haalt-zaak-van-burger-b",
+      "duur_s": 0.23,
+      "status": "fail",
+      "reden": "stap a-haalt-zaak-van-b: success criteria check: Checking simple criteria: {\"condition\":\"$statusCode == 403 || $statusCode == 404\"}",
+      "bekend": "ZGW 1.x autoriseert per applicatie, niet per burger: het applicatietoken mag elke zaak van de geautoriseerde zaaktypen lezen (aansluitprofielen/README.md)."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/gedrag/burger-a-zoekt-op-bsn-van-burger-b",
+      "naam": "ZGW-aansluitprofiel (gedrag): burger-a-zoekt-op-bsn-van-burger-b",
+      "duur_s": 0.13,
+      "status": "fail",
+      "reden": "stap a-zoekt-op-bsn-van-b: success criteria check: Checking simple criteria: {\"condition\":\"$statusCode == 403 || $response.body#/count == 0\"}",
+      "bekend": "In ZGW is het BSN een queryfilter dat de client kiest; Open Zaak controleert niet wie de burger is (aansluitprofielen/README.md)."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/strikt/overzicht-naar-detail",
+      "naam": "ZGW-aansluitprofiel (strikt): overzicht-naar-detail",
+      "duur_s": 0.16,
+      "status": "fail",
+      "reden": "stap zoek-zaken: schema check: MINLENGTH must NOT have fewer than 9 characters 69 | \"archiefactiedatum\": \"2031-09-09\", 70 | \"resultaat\": \"http://openzaak.local:8000/zaken/api/v1/resultaten/8417759a-811f-4f9b-9e0b-b37ad49e0d6a\", > 71 | \"opdrachtgevendeOrganisatie\": \"\", | ^^ 👈🏽 minLength must NOT have fewer than 9 characters 72 | \"",
+      "bekend": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/strikt/zonder-token",
+      "naam": "ZGW-aansluitprofiel (strikt): zonder-token",
+      "duur_s": 0.03,
+      "status": "fail",
+      "reden": "stap zoek-zonder-token: content-type check: Content type application/json for 403 response is not described in the schema. Expected content types: application/problem+json.",
+      "bekend": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/strikt/onbekende-zaak",
+      "naam": "ZGW-aansluitprofiel (strikt): onbekende-zaak",
+      "duur_s": 0.06,
+      "status": "fail",
+      "reden": "stap haal-onbekende-zaak: content-type check: Content type application/json for 404 response is not described in the schema. Expected content types: application/problem+json.",
+      "bekend": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/strikt/burger-a-haalt-zaak-van-burger-b",
+      "naam": "ZGW-aansluitprofiel (strikt): burger-a-haalt-zaak-van-burger-b",
+      "duur_s": 0.14,
+      "status": "fail",
+      "reden": "stap b-zoekt-eigen-zaken: schema check: MINLENGTH must NOT have fewer than 9 characters 60 | \"archiefactiedatum\": null, 61 | \"resultaat\": null, > 62 | \"opdrachtgevendeOrganisatie\": \"\", | ^^ 👈🏽 minLength must NOT have fewer than 9 characters 63 | \"processobjectaard\": \"\", 64 | \"startdatumBewaartermijn\": null, 65 | \"processobject\": { MINLENG",
+      "bekend": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+    },
+    {
+      "categorie": "zgw",
+      "component": "openzaak",
+      "id": "zgw/strikt/burger-a-zoekt-op-bsn-van-burger-b",
+      "naam": "ZGW-aansluitprofiel (strikt): burger-a-zoekt-op-bsn-van-burger-b",
+      "duur_s": 0.14,
+      "status": "fail",
+      "reden": "stap a-zoekt-op-bsn-van-b: success criteria check: Checking simple criteria: {\"condition\":\"$statusCode == 403 || $response.body#/count == 0\"}",
+      "bekend": "Open Zaak 1.29 wijkt op schema en content-type af van het profiel (403/404 als application/json, opdrachtgevendeOrganisatie \"\"), zie aansluitprofielen/README.md."
+    },
+    {
+      "id": "burger-isolatie/openinwoner/b-heeft-data",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "burger B heeft eigen zaken, taak en vraag (voorwaarde)",
+      "status": "pass",
+      "detail": "B ziet zaken VBS-2026-000103, VBS-2026-000104, 3 document(en), een eigen taak en een eigen vraag",
+      "duur_s": 4.54
+    },
+    {
+      "id": "burger-isolatie/openinwoner/lijst",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "Mijn aanvragen van A bevat geen zaken van B",
+      "status": "pass",
+      "detail": "A ziet VBS-2026-000101, VBS-2026-000102, geen van B",
+      "duur_s": 0.09
+    },
+    {
+      "id": "burger-isolatie/openinwoner/detail",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "A kan een zaak van B niet openen via de URL",
+      "status": "pass",
+      "detail": "zaken van B via directe URL: 404, 404",
+      "duur_s": 0.22
+    },
+    {
+      "id": "burger-isolatie/openinwoner/document",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "A kan een document van B niet downloaden",
+      "status": "pass",
+      "detail": "404 op een document van B",
+      "duur_s": 0.11
+    },
+    {
+      "id": "burger-isolatie/openinwoner/taken",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "Mijn taken van A bevat geen taak van B",
+      "status": "pass",
+      "detail": "taak van B niet zichtbaar (Open Inwoner filtert zelf op BSN, zie README)",
+      "duur_s": 0.29
+    },
+    {
+      "id": "burger-isolatie/openinwoner/vragen",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "Mijn vragen van A bevat geen vraag van B",
+      "status": "pass",
+      "detail": "vraag van B niet zichtbaar",
+      "duur_s": 0.28
+    },
+    {
+      "id": "burger-isolatie/openinwoner/profiel",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "Mijn gegevens van A tonen geen BRP-gegevens van B",
+      "status": "pass",
+      "detail": "alleen eigen BRP-gegevens",
+      "duur_s": 0.2
+    },
+    {
+      "id": "burger-isolatie/openinwoner/zonder-login",
+      "categorie": "burger-isolatie",
+      "component": "openinwoner",
+      "naam": "zonder login geen zaken",
+      "status": "pass",
+      "detail": "302 naar /accounts/login/?next=/cases/",
+      "duur_s": 0.05
+    },
+    {
+      "id": "burger-isolatie/openformulieren/b-heeft-data",
+      "categorie": "burger-isolatie",
+      "component": "openformulieren",
+      "naam": "burger B heeft een eigen inzending met eigen prefill (voorwaarde)",
+      "status": "pass",
+      "detail": "B heeft inzending 6b2b90ea..., prefill Eleonora de Crooy",
+      "duur_s": 0.75
+    },
+    {
+      "id": "burger-isolatie/openformulieren/prefill",
+      "categorie": "burger-isolatie",
+      "component": "openformulieren",
+      "naam": "prefill van A bevat alleen gegevens van A",
+      "status": "pass",
+      "detail": "A krijgt alleen eigen BRP-gegevens",
+      "duur_s": 0.07
+    },
+    {
+      "id": "burger-isolatie/openformulieren/inzending",
+      "categorie": "burger-isolatie",
+      "component": "openformulieren",
+      "naam": "A kan de inzending van B niet ophalen",
+      "status": "pass",
+      "detail": "404",
+      "duur_s": 0.05
+    },
+    {
+      "id": "burger-isolatie/openformulieren/stap",
+      "categorie": "burger-isolatie",
+      "component": "openformulieren",
+      "naam": "A kan de stapgegevens van B niet ophalen",
+      "status": "pass",
+      "detail": "403",
+      "duur_s": 0.06
+    },
+    {
+      "id": "burger-isolatie/openformulieren/zonder-login",
+      "categorie": "burger-isolatie",
+      "component": "openformulieren",
+      "naam": "zonder DigiD-login geen inzending",
+      "status": "pass",
+      "detail": "403",
+      "duur_s": 0.1
+    },
+    {
+      "id": "mijn-apis/geen",
+      "categorie": "mijn-apis",
+      "component": null,
+      "naam": "Mijn-API's van plug-ins",
+      "status": "skip",
+      "reden": "geen plug-in met een Mijn-API in deze stack: start met `scripts/stack.sh up <stack> --plugin <map>` (docs/PLUGINS.md)"
+    }
+  ]
+}

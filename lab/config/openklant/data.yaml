@@ -1,0 +1,56 @@
+# Open Klant 2.x: django-setup-configuration voor de demogemeente.
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: notificaties-api
+      label: Open Notificaties
+      api_root: http://opennotificaties.local:8000/api/v1/
+      api_type: nrc
+      auth_type: zgw
+      client_id: open-klant
+      secret:
+        value_from:
+          env: ZGW_OPENKLANT_SECRET
+      user_id: open-klant
+      user_representation: Open Klant
+    - identifier: referentielijsten-api
+      label: Referentielijsten API
+      api_root: http://referentielijsten.local:8000/api/v1/
+      api_type: orc
+      auth_type: no_auth
+
+notifications_config_enable: true
+notifications_config:
+  notifications_api_service_identifier: notificaties-api
+  notification_delivery_max_retries: 3
+  notification_delivery_retry_backoff: 2
+  notification_delivery_retry_backoff_max: 30
+
+tokenauth_config_enable: true
+tokenauth:
+  items:
+    - identifier: demogemeente-beheer
+      token:
+        value_from:
+          env: OPENKLANT_BEHEER_TOKEN
+      contact_person: Beheerder Demogemeente
+      email: beheer@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Seed-scripts
+      administration: Demogemeente
+    - identifier: burgerportaal
+      token:
+        value_from:
+          env: OPENKLANT_PORTAAL_TOKEN
+      contact_person: Burgerportaal (plug-in)
+      email: burgerportaal@voorbeeldstad.example
+      organization: Gemeente Voorbeeldstad
+      application: Burgerportaal
+      administration: Demogemeente
+
+referentielijsten_config_enable: true
+referentielijsten_config:
+  enabled: true
+  referentielijsten_api_service_identifier: referentielijsten-api
+  kanalen_tabel_code: KANAAL

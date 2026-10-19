@@ -1,0 +1,124 @@
+# Open Formulieren: django-setup-configuration (stack maykin).
+# Geheimen uit omgevingsvariabelen (value_from). Wat setup-configuration van Open
+# Formulieren 4.0 niet kent (BRP-prefill, catalogus van de ZGW-groep, API-token van de
+# beheerder) zet config/openformulieren/configureer.py; de formulieren zelf maakt
+# stacks/maykin/seed.py via de API.
+
+# DigiD via OpenID Connect: Keycloak (realm voorbeeldstad) als DigiD-simulatie. De
+# browser gaat naar localhost:8080, de server praat met keycloak.local:8080.
+oidc_db_config_enable: true
+oidc_db_config_admin_auth:
+  providers:
+    - identifier: keycloak-digid-simulatie
+      oidc_use_nonce: true
+      oidc_nonce_size: 32
+      oidc_state_size: 32
+      endpoint_config:
+        oidc_op_authorization_endpoint: http://localhost:8080/realms/voorbeeldstad/protocol/openid-connect/auth
+        oidc_op_token_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/token
+        oidc_op_user_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/userinfo
+        oidc_op_jwks_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/certs
+        oidc_op_logout_endpoint: http://keycloak.local:8080/realms/voorbeeldstad/protocol/openid-connect/logout
+  items:
+    - identifier: oidc-digid
+      enabled: true
+      oidc_provider_identifier: keycloak-digid-simulatie
+      oidc_rp_client_id: openformulieren
+      oidc_rp_client_secret:
+        value_from:
+          env: KEYCLOAK_OPENFORMULIEREN_CLIENT_SECRET
+      oidc_rp_sign_algo: RS256
+      oidc_rp_scopes_list:
+        - openid
+      userinfo_claims_source: id_token
+      options:
+        identity_settings:
+          bsn_claim_path:
+            - bsn
+        loa_settings:
+          claim_path:
+            - loa
+          default: urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract
+          value_mapping: []
+
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+    - identifier: zaken-api
+      label: Open Zaak - Zaken API
+      api_root: http://openzaak.local:8000/zaken/api/v1/
+      api_connection_check_path: zaken
+      api_type: zrc
+      auth_type: zgw
+      client_id: open-formulieren
+      secret:
+        value_from:
+          env: ZGW_OPENFORMULIEREN_SECRET
+      user_id: open-formulieren
+      user_representation: Open Formulieren
+    - identifier: documenten-api
+      label: Open Zaak - Documenten API
+      api_root: http://openzaak.local:8000/documenten/api/v1/
+      api_connection_check_path: enkelvoudiginformatieobjecten
+      api_type: drc
+      auth_type: zgw
+      client_id: open-formulieren
+      secret:
+        value_from:
+          env: ZGW_OPENFORMULIEREN_SECRET
+      user_id: open-formulieren
+      user_representation: Open Formulieren
+    - identifier: catalogi-api
+      label: Open Zaak - Catalogi API
+      api_root: http://openzaak.local:8000/catalogi/api/v1/
+      api_connection_check_path: zaaktypen
+      api_type: ztc
+      auth_type: zgw
+      client_id: open-formulieren
+      secret:
+        value_from:
+          env: ZGW_OPENFORMULIEREN_SECRET
+      user_id: open-formulieren
+      user_representation: Open Formulieren
+    - identifier: objecten-api
+      label: Open Object (Objecten en Objecttypen API)
+      api_root: http://openobject.local:8000/api/v2/
+      # Open Object 4 levert Objecten en Objecttypen onder dezelfde api_root, en
+      # zgw-consumers staat maar één service per api_root toe: deze dient voor beide.
+      api_connection_check_path: objects
+      api_type: orc
+      auth_type: api_key
+      header_key: Authorization
+      header_value:
+        value_from:
+          env: OPENOBJECT_OPENFORMULIEREN_HEADER
+    - identifier: brp-personen
+      label: BRP API Personen 2 (BRP-mock via tools/brp_vertaler.py)
+      api_root: http://brp-api.local:8080/haalcentraal/api/brp/
+      api_type: orc
+      auth_type: no_auth
+
+zgw_api_config_enable: true
+zgw_api:
+  groups:
+    - name: Open Zaak Voorbeeldstad
+      identifier: open-zaak-voorbeeldstad
+      zaken_service_identifier: zaken-api
+      documenten_service_identifier: documenten-api
+      catalogi_service_identifier: catalogi-api
+      organisatie_rsin: "999990007"
+      zaak_vertrouwelijkheidaanduiding: openbaar
+      doc_vertrouwelijkheidaanduiding: openbaar
+      auteur: Open Formulieren
+      objects_api_json_content_template: ""
+
+objects_api_config_enable: true
+objects_api:
+  groups:
+    - name: Open Object Voorbeeldstad
+      identifier: open-object-voorbeeldstad
+      objects_service_identifier: objecten-api
+      objecttypes_service_identifier: objecten-api
+      documenten_service_identifier: documenten-api
+      catalogi_service_identifier: catalogi-api
+      organisatie_rsin: "999990007"

@@ -1,0 +1,63 @@
+# Manifest van stack "g4" (formaat: stacks/basis/stack.yaml). Neemt de registers van de
+# kern over (zonder Open Product) en voegt de G4-componenten toe.
+naam: g4
+titel: G4 Platform Dienstverlening
+erft: kern
+zonder: [openproduct]
+
+componenten:
+  - id: brp-api
+    naam: BRP-vertaler (BRP API Personen 2, officieel formaat)
+    rol: infra
+    services: [brp-api]
+    health: {url: "http://brp-api.local:8080/health", status: [200]}
+    seed: false
+  - id: openvtb
+    naam: Open VTB 0.2.0 (Verzoeken, Taken, Berichten)
+    rol: register
+    services: [openvtb, openvtb-celery]
+    health: {url: "http://openvtb.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: openformulieren
+    naam: Open Formulieren 3.5.8
+    rol: portaal
+    services: [openformulieren, openformulieren-celery, openformulieren-celery-beat]
+    health: {url: "http://openformulieren.local:8000/admin/", status: [200, 302]}
+    seed: false
+  - id: nlportal
+    naam: NL Portal 3.0 (backend 3.0.4, frontend 3.0.3)
+    rol: portaal
+    services: [nlportal-backend-net, nlportal-backend, nlportal]
+    health: {url: "http://nlportal-backend.local:8000/actuator/health", status: [200]}
+    seed: false
+  - id: gzac
+    naam: Valtimo/GZAC 13.48.0 (backend en frontend)
+    rol: medewerker
+    services: [gzac-backend-net, gzac-backend, gzac]
+    health: {url: "http://gzac-backend.local:8000/actuator/health", status: [200]}
+    seed: false
+  - id: iko
+    naam: IKO 1.5.1 (Integraal Klant- en Objectbeeld)
+    rol: medewerker
+    services: [iko-net, iko]
+    health: {url: "http://iko.local:9090/actuator/health", status: [200]}
+    seed: false
+
+gepland:
+  - id: brp-personen-mock
+    naam: BRP personen-mock 2.7.0 (officieel)
+    opmerking: "niet draaibaar hier: ghcr.io geblokkeerd; vervangen door de iswish-mock met tools/brp_vertaler.py"
+
+burgerkanalen:
+  - {id: nlportal, type: nlportal, url: "http://nlportal-backend.local:8000"}
+  - {id: openformulieren, type: openformulieren, url: "http://openformulieren.local:8000"}
+
+
+# testburger D (Jeroen Altena) heeft de aanvraag parkeervergunning die via GZAC loopt;
+# A, B en C houden precies hun seedzaken (vaste verwachtingen van de gedeelde suite)
+bekende_fouten:
+  rook/nlportal/gzac-portaaltaak-zichtbaar-als-taak-in-nl-portal: >-
+    GZAC 13.48 (core-plugin Portaaltaak) schrijft taken in het oude formaat (taak v1:
+    title, identificatie, formulier, verwerker_taak_id). NL Portal 3.0 leest alleen taak v2
+    (titel, soort, koppeling, portaalformulier). De portaaltaak staat daarom wel in Open
+    Object (objecttype Portaaltaak), maar niet in Mijn taken van NL Portal.

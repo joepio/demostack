@@ -27,3 +27,4 @@ mk pabc "$PABC_DB_PASSWORD"
 mk nlportal "$NLP_DB_PASSWORD"
 mk openinwoner "$OIP_DB_PASSWORD" postgis pg_trgm
 mk iko "$IKO_DB_PASSWORD"
+mk openvtb "$VTB_DB_PASSWORD" postgis pg_trgm

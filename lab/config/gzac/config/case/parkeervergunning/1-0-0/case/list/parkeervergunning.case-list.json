@@ -1,0 +1,8 @@
+[
+    {"title": "Kenteken", "key": "kenteken", "path": "doc:kenteken",
+     "displayType": {"type": "text", "displayTypeParameters": {}}, "sortable": true, "order": 0},
+    {"title": "Zone", "key": "zone", "path": "doc:zone",
+     "displayType": {"type": "text", "displayTypeParameters": {}}, "sortable": true, "order": 1},
+    {"title": "Aanvrager", "key": "aanvrager", "path": "doc:aanvrager.naam",
+     "displayType": {"type": "text", "displayTypeParameters": {}}, "sortable": false, "order": 2}
+]

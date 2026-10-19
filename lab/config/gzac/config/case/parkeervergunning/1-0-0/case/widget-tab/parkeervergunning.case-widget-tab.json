@@ -1,0 +1,28 @@
+[
+  {
+    "key": "gegevens",
+    "widgets": [
+      {
+        "type": "fields",
+        "key": "aanvraag",
+        "title": "Aanvraag parkeervergunning",
+        "width": 2,
+        "highContrast": false,
+        "actions": [],
+        "properties": {
+          "columns": [
+            [
+              {"key": "aanvrager", "title": "Aanvrager", "value": "doc:aanvrager.naam"},
+              {"key": "bsn", "title": "BSN", "value": "doc:aanvrager.bsn"}
+            ],
+            [
+              {"key": "kenteken", "title": "Kenteken", "value": "doc:kenteken"},
+              {"key": "zone", "title": "Zone", "value": "doc:zone"},
+              {"key": "toelichting", "title": "Toelichting", "value": "doc:toelichting"}
+            ]
+          ]
+        }
+      }
+    ]
+  }
+]
