@@ -166,7 +166,8 @@ ROLLEN = [
         {"id": "iko", "naam": "IKO", "maker": "Ritense", "profiel": "iko", "nodig": ["zaakregister", "klantregister"]}]},
     {"id": "zaakregister", "naam": "Zaakregister (ZGW)", "wie": "Register", "opties": [
         {"id": "openzaak", "naam": "Open Zaak", "maker": "Maykin / Dimpact", "profiel": None, "nodig": []},
-        {"id": "oneground", "naam": "OneGround", "maker": "Visma Roxit", "profiel": "oneground", "nodig": []}]},
+        {"id": "oneground", "naam": "OneGround", "maker": "Visma Roxit", "profiel": "oneground", "nodig": []},
+        {"id": "openregister", "naam": "OpenRegister + Dossiq", "maker": "Conduction (Nextcloud)", "profiel": "openregister", "nodig": []}]},
     {"id": "taken", "naam": "Taken en berichten voor de inwoner", "wie": "Register", "opties": [
         {"id": "taakv2", "naam": "Objecten (TaakV2)", "maker": "Maykin", "profiel": None, "nodig": []},
         {"id": "openvtb", "naam": "Open VTB", "maker": "Maykin", "profiel": "openvtb", "nodig": []}]},
@@ -209,6 +210,13 @@ KOPPELINGEN = [
     ("zac", "openklant", "werkt", "Klantgegevens bij de zaak."),
     ("gzac", "openzaak", "werkt", "Demo-casus evenementenvergunning."),
     ("gzac", "taakv2", "deels", "GZAC schrijft portaaltaken in het oude formaat; die verschijnen niet in de portalen."),
+    # OpenRegister + Dossiq (bèta, 21-10-2026): los getest met curl, nog niet in deze stack. Catalogi en Zaken
+    # schrijven werkt; het filter op BSN van de betrokkene wordt genegeerd, dus een zoekvraag geeft alle zaken.
+    ("nlportal", "openregister", "werkt-niet", "Dossiq negeert het filter op BSN: een portaal zou alle zaken krijgen (vastgesteld met de API, niet met het portaal zelf)."),
+    ("oip", "openregister", "werkt-niet", "Dossiq negeert het filter op BSN: een portaal zou alle zaken krijgen (vastgesteld met de API, niet met het portaal zelf)."),
+    ("mijnoverheid", "openregister", "werkt-niet", "Dossiq negeert het filter op BSN: een portaal zou alle zaken krijgen (vastgesteld met de API, niet met het portaal zelf)."),
+    ("kiss", "openregister", "werkt-niet", "Dossiq negeert het filter op BSN: KISS zou bij een persoon alle zaken tonen (vastgesteld met de API, niet met KISS zelf)."),
+    ("openforms", "openregister", "niet-getest", "Zaak en rol aanmaken via de API werkt; Open Formulieren zelf is er niet tegen gedraaid."),
     ("iko", "openzaak", "niet-getest", "IKO draait, maar de connectoren zijn nog niet ingericht."),
     ("iko", "openklant", "niet-getest", "IKO draait, maar de connectoren zijn nog niet ingericht."),
     ("oip", "openvtb", "niet-getest", "Open Inwoner leest Open VTB hier nog niet; taken komen uit Objecten."),
