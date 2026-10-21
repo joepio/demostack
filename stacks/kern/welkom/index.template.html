@@ -8,17 +8,17 @@
 <style>
 :root {
   --bg: #f3f4f6; --surface: #ffffff; --text: #1b1f27; --muted: #4f5868; --border: #d6dae1;
-  --accent: #0a4a8f; --accent-soft: #e8eff8; --band: #0b2e5c; --band-text: #ffffff; --ok: #0f7a3d; --ok-soft: #e3f4ea; --soon: #8a5a00; --soon-soft: #fbf0d9;
+  --accent: #0a4a8f; --accent-soft: #e8eff8; --band: #0b2e5c; --band-text: #ffffff; --ok: #0f7a3d; --ok-soft: #e3f4ea; --soon: #8a5a00; --soon-soft: #fbf0d9; --bad: #b42318; --bad-soft: #fde8e6;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0f131a; --surface: #171c25; --text: #e8ebf1; --muted: #a7b0c0; --border: #2b3240;
-    --accent: #8ab4ff; --accent-soft: #1b2638; --band: #0a1f3d; --band-text: #ffffff; --ok: #5fd08e; --ok-soft: #173325; --soon: #f2c46b; --soon-soft: #3a2f17;
+    --accent: #8ab4ff; --accent-soft: #1b2638; --band: #0a1f3d; --band-text: #ffffff; --ok: #5fd08e; --ok-soft: #173325; --soon: #f2c46b; --soon-soft: #3a2f17; --bad: #ff8a80; --bad-soft: #3a1d1b;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f131a; --surface: #171c25; --text: #e8ebf1; --muted: #a7b0c0; --border: #2b3240;
-  --accent: #8ab4ff; --accent-soft: #1b2638; --band: #0a1f3d; --band-text: #ffffff; --ok: #5fd08e; --ok-soft: #173325; --soon: #f2c46b; --soon-soft: #3a2f17;
+  --accent: #8ab4ff; --accent-soft: #1b2638; --band: #0a1f3d; --band-text: #ffffff; --ok: #5fd08e; --ok-soft: #173325; --soon: #f2c46b; --soon-soft: #3a2f17; --bad: #ff8a80; --bad-soft: #3a1d1b;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
@@ -140,6 +140,34 @@ body[data-off~="kcc"] tr[data-profile="kcc"] td:last-child::after,
 body[data-off~="gzac"] tr[data-profile="gzac"] td:last-child::after, body[data-off~="zac"] tr[data-profile="zac"] td:last-child::after { content: "Staat nu uit"; font-size: 13px; font-weight: 600; white-space: nowrap;
   color: var(--soon); margin-left: -60px; }
 .switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 20px; }
+/* Stacks samenstellen */
+.samenstellen .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.samenstellen .presets button { font: inherit; padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text); cursor: pointer; text-align: left; }
+.samenstellen .presets button small { display: block; color: var(--muted); font-size: 12px; }
+.samenstellen .presets button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+.samenstellen .rij { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 8px 16px; align-items: center;
+  padding: 10px 0; border-top: 1px solid var(--border); }
+.samenstellen .groep { margin: 18px 0 2px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.samenstellen .opties { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.samenstellen .optie { font: inherit; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+  color: var(--text); cursor: pointer; text-align: left; }
+.samenstellen .optie small { display: block; color: var(--muted); font-size: 12px; }
+.samenstellen .optie[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); padding: 5px 9px; }
+.samenstellen .dim .optie[aria-pressed="false"] { opacity: .45; }
+.samenstellen .optie .uit { color: var(--soon); }
+.samenstellen .geen { color: var(--muted); font-size: 14px; font-style: italic; }
+.samenstellen .koppelingen { margin-top: 20px; }
+.samenstellen .koppelingen li { list-style: none; display: grid; grid-template-columns: 22px 1fr; gap: 4px 8px; padding: 6px 0; }
+.samenstellen .koppelingen ul { padding: 0; margin: 8px 0 0; }
+.samenstellen .st { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; background: var(--muted); }
+.samenstellen .st.werkt { background: var(--ok); } .samenstellen .st.deels { background: var(--soon); }
+.samenstellen .st.werkt-niet { background: var(--bad); }
+.samenstellen .st.niet-getest { background: transparent; border: 2px solid var(--muted); }
+.samenstellen .telling { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; color: var(--muted); }
+.samenstellen .telling span { display: inline-flex; align-items: center; gap: 6px; }
+.samenstellen .telling .st { margin: 0; }
+@media (max-width: 640px) { .samenstellen .rij { grid-template-columns: 1fr; } }
 .chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border);
   border-radius: 4px; background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600; }
 .chip small { color: var(--muted); font-weight: 500; }
@@ -350,6 +378,10 @@ footer { color: var(--muted); font-size: 14px; padding: 40px 0 48px; }
     <div class="step" role="listitem">Inwoner volgt de zaak<span>Open Inwoner, NL Portal, MijnOverheid of ZaakChat</span></div>
   </div>
 
+  <h2>Stacks samenstellen</h2>
+  <p class="sub">Per functie staan de onderdelen die elkaar kunnen vervangen naast elkaar. Kies een voorbeeldstack of stel zelf een combinatie samen door onderdelen aan te klikken. Daaronder staat per koppeling wat in deze DemoStack is vastgesteld; wat hier niet is geprobeerd, staat als niet getest, ook als de leverancier zegt dat het kan.</p>
+__SAMENSTELLEN__
+
   <h2>Stacks vergelijken per functie</h2>
   <p class="sub">Een stack is een combinatie van onderdelen die samen alle flows van een gemeente dekt. Hieronder per functie welk onderdeel het doet in elke stack, en welke standaard-API's daarbij horen (versies live uit de OpenAPI-specificaties). De registers delen beide stacks; ze verschillen vooral in de werkplekken.</p>
 __FUNCTIES__
@@ -483,6 +515,67 @@ try {
     card.addEventListener('focusout', (e) => { if (!card.contains(e.relatedTarget)) { stop(); pinned = null; show(0); } });
     show(0);
   });
+})();
+</script>
+<script>
+(() => {
+  const el = document.getElementById("samenstellen"), src = document.getElementById("samenstellen-data");
+  if (!el || !src) return;
+  const D = JSON.parse(src.textContent), actief = new Set(D.actief);
+  const optie = {}, rolVan = {};
+  D.rollen.forEach(r => r.opties.forEach(o => { optie[o.id] = o; rolVan[o.id] = r.id; }));
+  const kop = {}; D.koppelingen.forEach(k => kop[k.van + ">" + k.naar] = k);
+  const NAAM = {"werkt": "werkt", "deels": "werkt deels", "werkt-niet": "werkt niet", "niet-getest": "niet getest"};
+  let preset = null, kies = {};
+  const vanHash = () => { const m = location.hash.match(/^#stack=([\w-]+)$/); return m && D.voorbeelden.find(v => v.id === m[1]); };
+  function zet(v) { preset = v ? v.id : null; kies = v ? {...v.kies} : {}; teken(); }
+  const draait = o => o.profiel === null || actief.has(o.profiel);
+  function teken() {
+    const e = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    let h = '<div class="presets" role="group" aria-label="Voorbeeldstacks">' + D.voorbeelden.map(v =>
+      `<button type="button" data-preset="${v.id}" aria-pressed="${preset === v.id}">${e(v.naam)}<small>${e(v.door)}</small></button>`).join("") +
+      `<button type="button" data-preset="" aria-pressed="${preset === null && !Object.keys(kies).length}">Alles tonen<small>alle alternatieven</small></button></div>`;
+    const leeg = !Object.keys(kies).length;
+    let groep = null;
+    D.rollen.forEach(r => {
+      if (r.wie !== groep) { groep = r.wie; h += `<div class="groep">${e(groep)}</div>`; }
+      const gekozen = kies[r.id];
+      h += `<div class="rij${leeg ? "" : " dim"}"><div><strong>${e(r.naam)}</strong></div><div class="opties">` + r.opties.map(o =>
+        `<button type="button" class="optie" data-rol="${r.id}" data-optie="${o.id}" aria-pressed="${gekozen === o.id}">${e(o.naam)}` +
+        `<small>${e(o.maker)}${draait(o) ? "" : ' · <span class="uit">staat hier uit</span>'}</small></button>`).join("") +
+        (!leeg && !gekozen ? '<span class="geen">geen in deze combinatie</span>' : "") + "</div></div>";
+    });
+    if (!leeg) {
+      const lijst = [];
+      Object.values(kies).forEach(id => (optie[id].nodig || []).forEach(rol => {
+        const doel = kies[rol];
+        if (!doel) return;
+        const k = kop[id + ">" + doel] || {status: "niet-getest", uitleg: "Niet geprobeerd in deze DemoStack."};
+        lijst.push({...k, van: optie[id].naam, naar: optie[doel].naam});
+      }));
+      const orde = {"werkt-niet": 0, "deels": 1, "niet-getest": 2, "werkt": 3};
+      lijst.sort((a, b) => orde[a.status] - orde[b.status]);
+      const tel = s => lijst.filter(k => k.status === s).length;
+      h += '<div class="koppelingen"><h3>Koppelingen in deze combinatie</h3><div class="telling">' +
+        ["werkt", "deels", "werkt-niet", "niet-getest"].map(s => `<span><i class="st ${s}"></i>${tel(s)} ${NAAM[s]}</span>`).join("") +
+        "</div><ul>" + lijst.map(k => `<li><i class="st ${k.status}" title="${NAAM[k.status]}"></i><div><strong>${e(k.van)} → ${e(k.naar)}</strong>: ${NAAM[k.status]}<br><small>${e(k.uitleg)}</small></div></li>`).join("") +
+        (lijst.length ? "" : "<li><i></i><div>Kies onderdelen die elkaar gebruiken, bijvoorbeeld een portaal en een zaakregister.</div></li>") + "</ul></div>";
+    }
+    el.innerHTML = h;
+  }
+  el.addEventListener("click", ev => {
+    const b = ev.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-preset")) {
+      const v = D.voorbeelden.find(x => x.id === b.dataset.preset);
+      history.replaceState(null, "", v ? "#stack=" + v.id : location.pathname + location.search);
+      zet(v); return;
+    }
+    const rol = b.dataset.rol, id = b.dataset.optie;
+    preset = null; history.replaceState(null, "", location.pathname + location.search);
+    if (kies[rol] === id) delete kies[rol]; else kies[rol] = id;
+    teken();
+  });
+  zet(vanHash());
 })();
 </script>
 </body>

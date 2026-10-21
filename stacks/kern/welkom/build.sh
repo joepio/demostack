@@ -21,7 +21,7 @@ from pathlib import Path
 import os
 p = Path("public") / os.environ.get("OUT", "index.html")
 t = p.read_text()
-for ph, f in [("__STACKS__", "stacks.html"), ("__FUNCTIES__", "functies.html")]:
+for ph, f in [("__STACKS__", "stacks.html"), ("__FUNCTIES__", "functies.html"), ("__SAMENSTELLEN__", "samenstellen.html")]:
     frag = Path("public") / f
     t = t.replace(ph, frag.read_text() if frag.exists() else "<p>Evaluatie nog niet gemaakt.</p>")
 p.write_text(t)

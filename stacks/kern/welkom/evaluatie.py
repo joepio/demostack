@@ -145,6 +145,85 @@ STACKS = [
 ]
 
 
+# ---------- Stacks samenstellen: per functie de alternatieven, voorbeeldstacks en wat hier is vastgesteld ----------
+# Elke rij is een functie; de opties zijn alternatieven voor elkaar. "nodig" zegt welke andere functies een
+# onderdeel gebruikt; de status van zo'n koppeling komt uit KOPPELINGEN (wat in deze DemoStack is vastgesteld).
+ROLLEN = [
+    {"id": "portaal", "naam": "Inwonerportaal", "wie": "Inwoner", "opties": [
+        {"id": "oip", "naam": "Open Inwoner", "maker": "Maykin / Dimpact", "profiel": "oip", "nodig": ["zaakregister", "taken", "klantregister", "producten"]},
+        {"id": "nlportal", "naam": "NL Portal", "maker": "Ritense", "profiel": "nlportal", "nodig": ["zaakregister", "taken"]},
+        {"id": "mijnoverheid", "naam": "MijnOverheid-demo", "maker": "VNG API Lab", "profiel": "mijnoverheid", "nodig": ["zaakregister", "taken"]}]},
+    {"id": "formulieren", "naam": "Formulieren", "wie": "Inwoner", "opties": [
+        {"id": "openforms", "naam": "Open Formulieren", "maker": "Maykin", "profiel": None, "nodig": ["zaakregister"]}]},
+    {"id": "chat", "naam": "Chatten over een zaak", "wie": "Inwoner", "opties": [
+        {"id": "zaakchat", "naam": "ZaakChat", "maker": "experiment", "profiel": "zaakchat", "nodig": ["zaakregister"]}]},
+    {"id": "kcc", "naam": "Klantcontact (KCC)", "wie": "Medewerker", "opties": [
+        {"id": "kiss", "naam": "KISS", "maker": "Dimpact / Icatt", "profiel": "kcc", "nodig": ["zaakregister", "klantregister"]}]},
+    {"id": "afhandeling", "naam": "Zaken afhandelen", "wie": "Medewerker", "opties": [
+        {"id": "zac", "naam": "ZAC", "maker": "Dimpact", "profiel": "zac", "nodig": ["zaakregister", "klantregister"]},
+        {"id": "gzac", "naam": "GZAC (Valtimo)", "maker": "Ritense", "profiel": "gzac", "nodig": ["zaakregister", "taken"]}]},
+    {"id": "klantbeeld", "naam": "Klantbeeld over bronnen heen", "wie": "Medewerker", "opties": [
+        {"id": "iko", "naam": "IKO", "maker": "Ritense", "profiel": "iko", "nodig": ["zaakregister", "klantregister"]}]},
+    {"id": "zaakregister", "naam": "Zaakregister (ZGW)", "wie": "Register", "opties": [
+        {"id": "openzaak", "naam": "Open Zaak", "maker": "Maykin / Dimpact", "profiel": None, "nodig": []},
+        {"id": "oneground", "naam": "OneGround", "maker": "Visma Roxit", "profiel": "oneground", "nodig": []}]},
+    {"id": "taken", "naam": "Taken en berichten voor de inwoner", "wie": "Register", "opties": [
+        {"id": "taakv2", "naam": "Objecten (TaakV2)", "maker": "Maykin", "profiel": None, "nodig": []},
+        {"id": "openvtb", "naam": "Open VTB", "maker": "Maykin", "profiel": "openvtb", "nodig": []}]},
+    {"id": "producten", "naam": "Producten en vergunningen", "wie": "Register", "opties": [
+        {"id": "openproduct", "naam": "Open Product", "maker": "Maykin", "profiel": "openproduct", "nodig": []}]},
+    {"id": "klantregister", "naam": "Klantgegevens en contactmomenten", "wie": "Register", "opties": [
+        {"id": "openklant", "naam": "Open Klant", "maker": "Maykin", "profiel": None, "nodig": []}]},
+]
+# Voorbeeldstacks: per functie het gekozen onderdeel (None = deze stack heeft er geen)
+VOORBEELDEN = [
+    {"id": "podiumd", "naam": "PodiumD", "door": "Dimpact", "kies": {"portaal": "oip", "formulieren": "openforms", "kcc": "kiss",
+     "afhandeling": "zac", "zaakregister": "openzaak", "taken": "taakv2", "klantregister": "openklant"}},
+    {"id": "gzac", "naam": "GZAC-stack", "door": "Ritense", "kies": {"portaal": "nlportal", "formulieren": "openforms",
+     "afhandeling": "gzac", "klantbeeld": "iko", "zaakregister": "openzaak", "taken": "taakv2", "klantregister": "openklant"}},
+    {"id": "dienstverlening", "naam": "Platform Dienstverlening", "door": "Maykin, in ontwikkeling", "kies": {"portaal": "oip",
+     "formulieren": "openforms", "kcc": "kiss", "zaakregister": "openzaak", "taken": "openvtb", "producten": "openproduct", "klantregister": "openklant"}},
+    {"id": "oneground", "naam": "Met OneGround", "door": "register van Visma Roxit", "kies": {"portaal": "nlportal", "formulieren": "openforms",
+     "kcc": "kiss", "zaakregister": "oneground", "taken": "taakv2", "klantregister": "openklant"}},
+    {"id": "lab", "naam": "MijnServices", "door": "VNG API Lab", "kies": {"portaal": "mijnoverheid", "formulieren": "openforms",
+     "zaakregister": "openzaak", "taken": "taakv2", "klantregister": "openklant"}},
+]
+# Wat in deze DemoStack is vastgesteld: (gebruiker, bron, status, toelichting). Status: werkt, deels, werkt-niet,
+# niet-getest. Alleen "werkt" als het hier aantoonbaar draait; een koppeling die hier niet staat, is niet getest.
+KOPPELINGEN = [
+    ("openforms", "openzaak", "werkt", "Een melding wordt een zaak (rooktest test_submission.py)."),
+    ("openforms", "oneground", "werkt", "Formulier melding-openbare-ruimte-oneground registreert in OneGround."),
+    ("kiss", "openzaak", "werkt", "KISS toont de zaken van een persoon."),
+    ("kiss", "oneground", "deels", "KISS toont zaken uit OneGround, maar contactmomenten staan dubbel: KISS gaat uit van één zaaksysteem per klantregister."),
+    ("kiss", "openklant", "werkt", "Contactmomenten en klantbeeld."),
+    ("oip", "openzaak", "werkt", "Mijn aanvragen, met notificaties bij een nieuwe status."),
+    ("oip", "taakv2", "werkt", "Portaaltaak van Suzanne in het takenblok."),
+    ("oip", "openklant", "werkt", "Klantgegevens en contactmomenten."),
+    ("nlportal", "openzaak", "werkt", "Lopende zaken van de ingelogde inwoner."),
+    ("nlportal", "taakv2", "werkt", "Portaaltaak van Suzanne onder Mijn taken."),
+    ("nlportal", "oneground", "werkt-niet", "NL Portal stuurt zoekfilters in _zoek als lijst; Open Zaak accepteert dat, OneGround antwoordt 415."),
+    ("mijnoverheid", "openzaak", "werkt", "Via de adapter (Lab-API MijnZaken naar ZGW)."),
+    ("mijnoverheid", "taakv2", "werkt", "Via de adapter (Lab-API MijnTaken naar Objecten)."),
+    ("zaakchat", "openzaak", "werkt", "Elke zaak van een testinwoner wordt een gesprek, via notificaties."),
+    ("zac", "openzaak", "werkt", "Werkvoorraad en afhandeling."),
+    ("zac", "openklant", "werkt", "Klantgegevens bij de zaak."),
+    ("gzac", "openzaak", "werkt", "Demo-casus evenementenvergunning."),
+    ("gzac", "taakv2", "deels", "GZAC schrijft portaaltaken in het oude formaat; die verschijnen niet in de portalen."),
+    ("iko", "openzaak", "niet-getest", "IKO draait, maar de connectoren zijn nog niet ingericht."),
+    ("iko", "openklant", "niet-getest", "IKO draait, maar de connectoren zijn nog niet ingericht."),
+    ("oip", "openvtb", "niet-getest", "Open Inwoner leest Open VTB hier nog niet; taken komen uit Objecten."),
+    ("oip", "openproduct", "niet-getest", "Volgens Maykin te koppelen; hier nog niet ingericht."),
+    ("nlportal", "openvtb", "niet-getest", "NL Portal kent Open VTB (nog) niet; taken komen uit Objecten."),
+]
+
+
+def render_samenstellen():
+    data = {"rollen": ROLLEN, "voorbeelden": VOORBEELDEN, "actief": sorted(ACTIVE),
+            "koppelingen": [{"van": a, "naar": b, "status": st, "uitleg": u} for a, b, st, u in KOPPELINGEN]}
+    js = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
+    return f'<div id="samenstellen" class="samenstellen"></div><script type="application/json" id="samenstellen-data">{js}</script>'
+
+
 def sh(*cmd):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=HERE.parent).stdout
 
@@ -209,6 +288,7 @@ def main():
     (HERE / "public" / "stacks.json").write_text(json.dumps({"domein": D, "stacks": out}, indent=1, ensure_ascii=False))
     (HERE / "public" / "stacks.html").write_text(render(out))
     (HERE / "public" / "functies.html").write_text(render_functies(out))
+    (HERE / "public" / "samenstellen.html").write_text(render_samenstellen())
 
 
 def lic_samenvatting(componenten):
