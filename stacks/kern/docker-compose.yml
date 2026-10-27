@@ -1022,7 +1022,7 @@ services:
   zaakchat-koppeling:
     profiles: [zaakchat]
     build: ./services/zaakchat-koppeling
-    image: demostack/zaakchat-koppeling:3
+    image: demostack/zaakchat-koppeling:4
     restart: unless-stopped
     mem_limit: 96m
     environment:

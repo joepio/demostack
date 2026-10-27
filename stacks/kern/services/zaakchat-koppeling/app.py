@@ -86,7 +86,7 @@ def sync_zaak(url):
             "title": f"{zt['omschrijving']}: {zaak.get('omschrijving') or zaak['identificatie']}",
             "description": (zaak.get("toelichting") or "") + f"\n\nZaaknummer {zaak['identificatie']} in Open Zaak.",
             "status": "open", "assignee": MEDEWERKERS[0] if MEDEWERKERS else None,
-            "involved": [email] + MEDEWERKERS})
+            "involved": [email] + MEDEWERKERS + [GEMEENTE]})
     statustypen = {s["url"]: s for s in oz(f"{OZ}/catalogi/api/v1/statustypen", zaaktype=zaak["zaaktype"])["results"]}
     statussen = sorted(oz(f"{OZ}/zaken/api/v1/statussen", zaak=zaak["url"])["results"], key=lambda s: s["datumStatusGezet"])
     planning(zaak, zt, statustypen, statussen)
