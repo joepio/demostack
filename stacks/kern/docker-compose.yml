@@ -1007,7 +1007,8 @@ services:
   # ZaakChat ongewijzigd; de koppeling doet het inloggen via Keycloak en zet zaken uit Open Zaak door.
   zaakchat:
     profiles: [zaakchat]
-    image: docker.io/joepmeneer/zaakchat@sha256:91af2dfe745979d13e150d7301a68abbc54f9469b3dbe6a139a4ddd712e61929
+    # master d68b65f (JSON Commit-transacties, bookworm)
+    image: docker.io/joepmeneer/zaakchat@sha256:fba6c8349d2a3b180a47584307644c86be9104b06712a2730a4c83eafe1e8e1d
     restart: unless-stopped
     mem_limit: 256m
     environment:
