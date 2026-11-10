@@ -1,0 +1,18 @@
+# Claude Code Remote Control op de DemoStack-server, zodat Claude-sessies vanuit claude.ai hier kunnen werken.
+# Installeren: cp ops/claude-rc.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now claude-rc
+# De cd staat in ExecStart: `bash -l` begint in de home-map en negeert daarmee WorkingDirectory.
+[Unit]
+Description=Claude Code Remote Control (DemoStack)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/srv/demogemeente/demostack
+ExecStart=/bin/bash -lc 'cd /srv/demogemeente/demostack && exec claude remote-control'
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

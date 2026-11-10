@@ -31,6 +31,10 @@ Vereist: een Linux-server met Docker Compose, Caddy, ongeveer 12 GB vrij geheuge
 
 Open daarna `https://demo.example.nl/` voor de welkomstpagina met alle ingangen per rol.
 
+## Beheer
+
+`ops/claude-rc.service` is de systemd-unit voor Claude Code Remote Control op de server (start in deze map; installatie staat bovenin het bestand).
+
 ## Licentie
 
 EUPL-1.2. De componenten zelf vallen onder hun eigen licenties.
