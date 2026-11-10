@@ -1,0 +1,7 @@
+# ---- OpenEvents (/srv/demogemeente/openevents) ----
+events.demostack.nl {
+	import proxy
+	reverse_proxy 127.0.0.1:8150 {
+		flush_interval -1
+	}
+}

@@ -1,0 +1,41 @@
+# OpenEvents op DemoStack: een eventregister naast de kern-stack. Raakt de kern niet aan:
+# - Open Zaak en Open Notificaties: bestaande client (open-inwoner), niets ingericht;
+#   OpenEvents meldt zich zelf aan als abonnee op kanaal zaken (en opnieuw na een reset).
+# - Keycloak: alleen tokens controleren (issuer van realm demogemeente), geen client.
+# Alleen Caddy routeert hierheen (zie caddy/Caddyfile.example).
+x-common: &common
+  restart: unless-stopped
+  logging: { driver: json-file, options: { max-size: "10m", max-file: "2" } }
+
+services:
+  oe-server:
+    <<: *common
+    build: ./src/openevents
+    image: oedemo/openevents:${OE_COMMIT:-main}
+    mem_limit: 256m
+    environment:
+      OPENEVENTS_DEV_AUTH: "true"            # persona's in de UI; demodata, zie README
+      OPENEVENTS_ADMINS: ""                  # niemand mag profielen wijzigen via de API
+      OPENEVENTS_PROFILES: /profiles
+      OPENEVENTS_OIDC_ISSUER: https://keycloak.${D}/realms/demogemeente
+      OPENEVENTS_ACTOR_CLAIM: preferred_username
+      OPENEVENTS_PUBLIC_URL: https://events.${D}
+      OPENEVENTS_NOTIFICATIES_API: https://notificaties.${D}/api/v1
+      OPENEVENTS_NOTIFICATIES_KANALEN: zaken
+      OPENEVENTS_NOTIFICATIES_AUTH: Bearer ${OE_NOTIFICATIES_TOKEN}
+      OPENEVENTS_ZGW_CLIENT_ID: open-inwoner
+      OPENEVENTS_ZGW_SECRET: ${OIP_ZGW_SECRET}
+      RUST_LOG: info,openevents_server=debug
+    volumes: [ "data:/data" ]
+    ports: [ "127.0.0.1:8150:8080" ]
+
+  # Doorlopende stroom van meldingen, vergunningaanvragen en gesprekken (Demodam).
+  oe-sim:
+    <<: *common
+    image: oedemo/openevents:${OE_COMMIT:-main}
+    mem_limit: 64m
+    depends_on: [ oe-server ]
+    entrypoint: [ "sh", "-c", "sleep 5; openevents-sim --base http://oe-server:8080 --backfill 40 --rate 0.2 --active 6" ]
+
+volumes:
+  data:
