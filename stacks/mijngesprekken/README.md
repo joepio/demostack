@@ -11,7 +11,7 @@ Draait op de server in `/srv/demogemeente/mijngesprekken-demo` (deze map plus `.
 | https://gesprekken-inwoner.demostack.nl/ | Open Inwoner | fork joepio/open-inwoner, branch mijngesprekken-poc (PR maykinmedia/open-inwoner#3191) |
 | https://gesprekken-api.demostack.nl/swagger/index.html | Gesprekken API, eventstroom op /api/v1/events | fork joepio/ZGW-APIs, branch gesprekken-poc (PR OneGround/ZGW-APIs#252) |
 | https://gesprekken-klant.demostack.nl/admin/ | Open Klant 2.19.1, eigen instantie | Maykin |
-| https://gesprekken.demostack.nl/video/mijngesprekken-demo.mp4 | Filmpje van het klikpad | `video/film.py` |
+| https://gesprekken.demostack.nl/video/mijngesprekken-demo.mp4 | Filmpje van het klikpad (openbaar, zonder inlog) | `video/film.py` |
 
 Specificatie: VNG-Realisatie/VNG-API-Lab#47 (MijnGesprekken next).
 
@@ -38,7 +38,7 @@ Specificatie: VNG-Realisatie/VNG-API-Lab#47 (MijnGesprekken next).
 
 ## Inloggen
 
-- Regie, medewerker, API en filmpje: `demo` / `CONSOLE_PASSWORD`.
+- Regie, medewerker en API: `demo` / `CONSOLE_PASSWORD`. Het filmpje is openbaar.
 - Inwoner: nep-DigiD van Open Inwoner, BSN 999993653 (Suzanne Moulin).
 - Open Klant beheer: `admin` / `ADMIN_PASSWORD`. Open Inwoner beheer: `admin@demogemeente.local` / `ADMIN_PASSWORD`.
 

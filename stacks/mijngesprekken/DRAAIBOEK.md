@@ -1,7 +1,7 @@
 # Draaiboek MijnGesprekken-demo
 
 ## Inloggen
-- Regie, medewerkerconsole, Gesprekken API en filmpje (inlogvenster van de browser): `demo` / CONSOLE_PASSWORD (.env)
+- Regie, medewerkerconsole en Gesprekken API (inlogvenster van de browser); het filmpje is openbaar: `demo` / CONSOLE_PASSWORD (.env)
 - Suzanne (inwoner): Log in met DigiD, "Met burgerservicenummer.", BSN `999993653`, geen wachtwoord
 - Open Klant beheer: `admin` / ADMIN_PASSWORD (.env)
 - Open Inwoner beheer (/admin/): `admin@demogemeente.local` / ADMIN_PASSWORD (.env)

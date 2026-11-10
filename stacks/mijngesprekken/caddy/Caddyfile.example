@@ -3,10 +3,10 @@
 gesprekken.demostack.nl {
 	import proxy
 	@stub path /idp/* /ac/*
-	respond @stub 404
-	basic_auth {
-		demo {$CONSOLE_PASSWORD_BCRYPT}
+	handle @stub {
+		respond 404
 	}
+	# Filmpje is openbaar; de rest staat achter basic auth
 	handle_path /video/* {
 		root * /srv/demogemeente/mijngesprekken-demo/video
 		route {
@@ -16,6 +16,9 @@ gesprekken.demostack.nl {
 		}
 	}
 	handle {
+		basic_auth {
+			demo {$CONSOLE_PASSWORD_BCRYPT}
+		}
 		reverse_proxy 127.0.0.1:8140 {
 			flush_interval -1
 		}
