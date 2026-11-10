@@ -12,7 +12,7 @@
 |---|---|---|---|
 | 1 | Open de regiepagina, log in met demo / CONSOLE_PASSWORD | https://gesprekken.demostack.nl/regie/ | Regiepagina (demo). Links Open Inwoner, rechts medewerkerconsole |
 | 2 | Links: "Log in met DigiD", "Met burgerservicenummer.", 999993653, Inloggen | (los: https://gesprekken-inwoner.demostack.nl/digid/login/?next=/cases/1/a444cd2c-dbf1-4635-8566-12c202daebc8/status/) | Open Inwoner (Maykin, fork) met DigiD-mock |
-| 3 | Zaak "Melding openbare ruimte" (ZAAK-2026-0000000001): scrol naar "Mijn gesprekken", klik "Nieuw gesprek" | https://gesprekken-inwoner.demostack.nl/cases/1/a444cd2c-dbf1-4635-8566-12c202daebc8/status/ | Open Inwoner; zaak en status uit Open Zaak (Maykin) |
+| 3 | Zaak "Losliggende stoeptegel: Dorpsstraat 12" (ZAAK-2026-0000000001, in Mijn aanvragen de derde): scrol naar "Mijn gesprekken", klik "Nieuw gesprek" | https://gesprekken-inwoner.demostack.nl/cases/1/a444cd2c-dbf1-4635-8566-12c202daebc8/status/ | Open Inwoner; zaak en status uit Open Zaak (Maykin) |
 | 4 | Onderwerp: *Wanneer wordt de stoeptegel gerepareerd?* | zelfde pagina | Open Inwoner |
 | 5 | Bericht: *Ik meldde op 6 oktober een losse stoeptegel voor Dorpsstraat 12. De tegel ligt nu helemaal los en mijn buurvrouw met rollator struikelde er gisteren bijna over. Wanneer wordt dit gemaakt? Ik heb een foto bijgevoegd.* | zelfde pagina | Open Inwoner |
 | 6 | Kies een pdf, klik "Start gesprek" | zelfde pagina | Open Inwoner zet pdf en gesprek in de Gesprekken API (OneGround, fork) |
