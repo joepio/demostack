@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MijnGesprekken demo</title>
+<style>
+:root { --bg:#eef0f3; --ink:#1d2433; --muted:#667085; --accent:#154273; }
+* { box-sizing:border-box; }
+html, body { height:100%; margin:0; }
+body { font:14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); display:flex; flex-direction:column; }
+.balk { padding:8px 16px; display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; background:#fff; border-bottom:1px solid #dde1e6; }
+.balk b { color:var(--accent); }
+.balk span { color:var(--muted); font-size:12px; }
+.balk a { color:var(--accent); font-size:12px; }
+.panelen { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px; min-height:0; }
+.paneel { display:flex; flex-direction:column; min-height:0; }
+.paneel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 4px; }
+iframe { flex:1; width:100%; border:1px solid #d0d5dd; border-radius:8px; background:#fff; min-height:70vh; }
+@media (max-width: 900px) { .panelen { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="balk"><b>MijnGesprekken, proof of concept</b>
+  <span>Links de inwoner in Open Inwoner, rechts de medewerker met de Gesprekken API, de eventstroom en Open Klant.</span>
+  <a href="{{OIP_URL}}" target="_blank" rel="noopener">Open Inwoner los openen</a>
+  <a href="https://gesprekken-medewerker.demostack.nl/" target="_blank" rel="noopener">Medewerker los openen</a>
+  <a href="https://gesprekken-api.demostack.nl/swagger/index.html" target="_blank" rel="noopener">Gesprekken API (Swagger)</a>
+  <a href="https://gesprekken-api.demostack.nl/api/v1/events" target="_blank" rel="noopener">Eventstroom (/events)</a>
+  <a href="https://gesprekken-klant.demostack.nl/admin/klantinteracties/klantcontact/" target="_blank" rel="noopener">Open Klant beheer</a>
+</div>
+<div class="panelen">
+  <div class="paneel"><h2>Inwoner (Open Inwoner)</h2><iframe src="{{OIP_URL}}cases/1/a444cd2c-dbf1-4635-8566-12c202daebc8/status/" title="Open Inwoner"></iframe></div>
+  <div class="paneel"><h2>Medewerker en registraties</h2><iframe src="/medewerker/" title="Medewerker"></iframe></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+# Sjabloon: vul de ${...} in vanuit .env (GRC_OIP_TOKEN: GET http://mg-app:8080/idp/longtoken?client_id=oip, intern).
+zgw_consumers_config_enable: true
+zgw_consumers:
+  services:
+  - identifier: oz-zaken
+    label: Zaken API (DemoStack Open Zaak)
+    api_root: https://zaken.demostack.nl/zaken/api/v1/
+    api_type: zrc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OZ_OIP_SECRET}
+  - identifier: oz-documenten
+    label: Documenten API (DemoStack Open Zaak)
+    api_root: https://zaken.demostack.nl/documenten/api/v1/
+    api_type: drc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OZ_OIP_SECRET}
+  - identifier: oz-catalogi
+    label: Catalogi API (DemoStack Open Zaak)
+    api_root: https://zaken.demostack.nl/catalogi/api/v1/
+    api_type: ztc
+    auth_type: zgw
+    client_id: open-inwoner
+    secret: ${OZ_OIP_SECRET}
+  - identifier: openklant
+    label: Klantinteracties API (demo)
+    api_root: https://gesprekken-klant.demostack.nl/klantinteracties/api/v1/
+    api_type: kc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Token ${OK_TOKEN}
+  - identifier: gesprekken
+    label: Gesprekken API (OneGround)
+    api_root: http://mg-grc:5000/api/v1/
+    api_type: orc
+    auth_type: api_key
+    header_key: Authorization
+    header_value: Bearer ${GRC_OIP_TOKEN}
+openzaak_config_enable: true
+openzaak_config:
+  zaak_max_confidentiality: openbaar
+  document_max_confidentiality: openbaar
+  max_upload_size: 50
+  allowed_file_extensions: [.pdf, .jpg, .jpeg, .png]
+  skip_notification_statustype_informeren: false
+  derive_zaak_titel_from: zaak_omschrijving
+  title_text: Hier vindt u een overzicht van al uw lopende en afgeronde zaken.
+  api_groups:
+  - zaken_api_identifier: oz-zaken
+    documenten_api_identifier: oz-documenten
+    catalogi_api_identifier: oz-catalogi
+klantensysteem_config_enable: true
+klantensysteem_config:
+  primary_backend: openklant2
+  register_contact_via_api: true
+  send_email_confirmation: false
+  openklant2_config:
+    service_identifier: openklant
+    mijn_vragen_actor: e76c8c82-a059-40b4-96b3-e3a1381118ed
+    mijn_vragen_kanaal: formulier
+    mijn_vragen_organisatie_naam: Demogemeente
+    interne_taak_gevraagde_handeling: Vraag beantwoorden
+    interne_taak_toelichting: Vraag via Open Inwoner
+sites_config_enable: true
+sites_config:
+  items:
+  - domain: gesprekken-inwoner.demostack.nl
+    name: Demogemeente

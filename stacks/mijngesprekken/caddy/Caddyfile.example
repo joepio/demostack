@@ -1,0 +1,75 @@
+# Caddy-blokken voor de MijnGesprekken-demo. Hash: caddy hash-password; tokens: zie README.
+# ---- MijnGesprekken-demo (tijdelijk, /srv/demogemeente/mijngesprekken-demo) ----
+gesprekken.demostack.nl {
+	import proxy
+	@stub path /idp/* /ac/*
+	respond @stub 404
+	basic_auth {
+		demo {$CONSOLE_PASSWORD_BCRYPT}
+	}
+	handle_path /video/* {
+		root * /srv/demogemeente/mijngesprekken-demo/video
+		route {
+			@nietmp4 not path *.mp4
+			respond @nietmp4 404
+			file_server
+		}
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8140 {
+			flush_interval -1
+		}
+	}
+}
+gesprekken-inwoner.demostack.nl {
+	import proxy
+	reverse_proxy 127.0.0.1:8141 {
+		header_down -X-Frame-Options
+		header_down Content-Security-Policy "frame-ancestors 'self'" "frame-ancestors 'self' https://gesprekken.demostack.nl"
+	}
+}
+gesprekken-klant.demostack.nl {
+	import proxy
+	# uWSGI leest geen chunked request bodies; bufferen geeft een Content-Length
+	reverse_proxy 127.0.0.1:8142 {
+		request_buffers 4MB
+	}
+}
+gesprekken-s3.demostack.nl {
+	@signed expression {http.request.uri.query}.contains("Signature=")
+	handle @signed {
+		reverse_proxy 127.0.0.1:8143
+	}
+	# De Gesprekken API zelf (header-ondertekend) komt alleen van deze server
+	@intern {
+		header Authorization AWS*
+		remote_ip 188.245.85.73 172.16.0.0/12 2a01:4f8:c015:842::1
+	}
+	handle @intern {
+		reverse_proxy 127.0.0.1:8143
+	}
+	respond 403
+}
+gesprekken-api.demostack.nl {
+	import proxy
+	basic_auth {
+		demo {$CONSOLE_PASSWORD_BCRYPT}
+	}
+	reverse_proxy 127.0.0.1:8144 {
+		header_up Authorization "Bearer {$GRC_SWAGGER_TOKEN}"
+		flush_interval -1
+	}
+}
+gesprekken-medewerker.demostack.nl {
+	import proxy
+	@stub path /idp/* /ac/*
+	respond @stub 404
+	basic_auth {
+		demo {$CONSOLE_PASSWORD_BCRYPT}
+	}
+	redir / /medewerker/
+	reverse_proxy 127.0.0.1:8140 {
+		flush_interval -1
+	}
+}
+# ---- einde MijnGesprekken-demo ----

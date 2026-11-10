@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medewerkerconsole</title>
+<style>
+:root { --bg:#f5f6f8; --card:#fff; --ink:#1d2433; --muted:#667085; --line:#e3e6eb; --accent:#154273; --inw:#e8f0fb; --mw:#eef7ee; --auto:#f4f4f5; }
+* { box-sizing: border-box; }
+body { margin:0; font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+header { background:var(--accent); color:#fff; padding:10px 16px; display:flex; gap:12px; align-items:baseline; }
+header h1 { font-size:16px; margin:0; }
+header span { opacity:.8; font-size:12px; }
+nav { display:flex; gap:4px; padding:8px 12px 0; border-bottom:1px solid var(--line); background:#fff; }
+nav button { border:0; background:none; padding:8px 12px; cursor:pointer; font:inherit; color:var(--muted); border-bottom:2px solid transparent; }
+nav button.on { color:var(--accent); border-color:var(--accent); font-weight:600; }
+main { padding:12px; }
+.tab { display:none; } .tab.on { display:block; }
+.wrap { display:grid; grid-template-columns: minmax(180px, 35%) 1fr; gap:12px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+.lijst .item { padding:8px; border-radius:6px; cursor:pointer; border:1px solid transparent; }
+.lijst .item:hover { background:var(--bg); }
+.lijst .item.on { border-color:var(--accent); background:var(--inw); }
+.item b { display:block; } .klein { color:var(--muted); font-size:12px; }
+.badge { display:inline-block; font-size:11px; padding:1px 6px; border-radius:10px; background:#dcfce7; color:#166534; margin-left:4px; }
+.badge.dicht { background:#e5e7eb; color:#374151; }
+.badge.wacht { background:#fef3c7; color:#92400e; }
+.bijdrage { margin:8px 0; padding:8px 10px; border-radius:8px; max-width:90%; }
+.bijdrage.partij { background:var(--inw); }
+.bijdrage.actor { background:var(--mw); margin-left:auto; }
+.bijdrage.auto { background:var(--auto); font-style:italic; margin-left:auto; }
+.bijdrage .wie { font-size:12px; color:var(--muted); margin-bottom:2px; }
+.bijdrage a { color:var(--accent); }
+textarea { width:100%; min-height:70px; font:inherit; padding:8px; border:1px solid var(--line); border-radius:6px; }
+.knoppen { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+button.primair { background:var(--accent); color:#fff; border:0; padding:7px 14px; border-radius:6px; cursor:pointer; font:inherit; }
+button.secundair { background:#fff; color:var(--accent); border:1px solid var(--accent); padding:7px 14px; border-radius:6px; cursor:pointer; font:inherit; }
+pre { white-space:pre-wrap; word-break:break-word; font-size:12px; margin:0; }
+.ev { border-bottom:1px solid var(--line); padding:6px 0; }
+.ev .t { font-weight:600; color:var(--accent); }
+.leeg { color:var(--muted); padding:12px 0; }
+@media (max-width: 700px) { .wrap { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>Demogemeente, medewerker</h1><span>Gesprekken API (OneGround) en Open Klant</span></header>
+<nav>
+  <button data-tab="gesprekken" class="on">Gesprekken</button>
+  <button data-tab="events">Eventstroom <span id="evteller" class="klein"></span></button>
+  <button data-tab="klant">Open Klant</button>
+</nav>
+<main>
+  <section id="gesprekken" class="tab on">
+    <div class="wrap">
+      <div class="card lijst" id="lijst"><div class="leeg">Nog geen gesprekken.</div></div>
+      <div class="card" id="detail"><div class="leeg">Kies een gesprek.</div></div>
+    </div>
+  </section>
+  <section id="events" class="tab"><div class="card" id="evlijst"><div class="leeg">Wacht op events (Server-Sent Events van GET /api/v1/events)...</div></div></section>
+  <section id="klant" class="tab"><div class="card"><p class="klein">Klantcontacten in Open Klant (Klantinteracties). Een gesprek levert pas een klantcontact op als het is afgesloten. <a href="{{OK_ADMIN_URL}}" target="_blank" rel="noopener">Open Klant beheer</a></p><div id="kclijst"></div></div></section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tijd = s => s ? new Date(s).toLocaleString("nl-NL", {dateStyle:"short", timeStyle:"short"}) : "";
+const uuidVan = u => u ? u.replace(/\/$/, "").split("/").pop() : "";
+let gekozen = null, concept = "";
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button, .tab").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); $("#" + b.dataset.tab).classList.add("on");
+  if (b.dataset.tab === "klant") laadKlant();
+});
+
+async function laadLijst() {
+  const r = await fetch("/api/gesprekken"); if (!r.ok) return;
+  const d = await r.json(); const gs = d.results || [];
+  if (!gs.length) { $("#lijst").innerHTML = '<div class="leeg">Nog geen gesprekken.</div>'; return; }
+  if (!gekozen) gekozen = gs[0].uuid;
+  $("#lijst").innerHTML = gs.map(g => {
+    const lb = g.laatsteBijdrage || {};
+    const open = !g.momentEindeGesprek;
+    const status = !open ? '<span class="badge dicht">afgesloten</span>' : '<span class="badge">open</span>';
+    return `<div class="item ${g.uuid === gekozen ? "on" : ""}" data-u="${g.uuid}"><b>${esc(g.gespreksonderwerp)} ${status}</b>
+      <span class="klein">${esc(g.referentie || "")} · ${tijd(g.aanvangsmomentGesprek)}</span>
+      <div class="klein">${esc((lb.tekstGespreksBijdrage || "").slice(0, 80))}</div></div>`;
+  }).join("");
+  document.querySelectorAll(".item").forEach(el => el.onclick = () => { gekozen = el.dataset.u; laadLijst(); laadDetail(); });
+}
+
+async function laadDetail() {
+  if (!gekozen) return;
+  const ta = $("#antwoord"); if (ta) concept = ta.value;
+  const r = await fetch("/api/gesprekken/" + gekozen); if (!r.ok) return;
+  const g = await r.json();
+  const dn = Object.fromEntries((g.gespreksdeelnames || []).map(d => [d.url, d]));
+  const open = !g.momentEindeGesprek;
+  const bij = (g.gespreksbijdragen || []).map(b => {
+    const v = dn[b.verzender] || {};
+    const cls = b.automatisch ? "auto" : (v.type === "actor" ? "actor" : "partij");
+    const bl = (b.bijlagen || []).map(x => `<div>📎 <a href="/api/bestand/${uuidVan(x.bestand)}" target="_blank" rel="noopener">${esc(x.bestandsnaam || x.titel || "bijlage")}</a> <span class="klein">${x.bestandsomvang ? Math.round(x.bestandsomvang/1024) + " kB" : ""}</span></div>`).join("");
+    return `<div class="bijdrage ${cls}"><div class="wie">${esc(v.naam || v.type)}${b.automatisch && !/automatisch/i.test(v.naam || "") ? " (automatisch)" : ""} · ${tijd(b.leveringsmoment)}</div>${esc(b.tekstGespreksBijdrage).replace(/\n/g, "<br>")}${bl}</div>`;
+  }).join("");
+  const kc = g.contactmoment ? `<p class="klein">Klantcontact in Open Klant: <a href="#" onclick="document.querySelector('[data-tab=klant]').click();return false">${esc(uuidVan(g.contactmoment))}</a></p>` : "";
+  const zaak = g.aanleidingZaak ? `<div class="klein">Zaak: ${esc(g.aanleidingZaak)}</div>` : "";
+  $("#detail").innerHTML = `<b>${esc(g.gespreksonderwerp)}</b> ${open ? '<span class="badge">open</span>' : '<span class="badge dicht">afgesloten ' + tijd(g.momentEindeGesprek) + '</span>'}
+    <div class="klein">${esc(g.referentie || "")} · deelnemers: ${(g.gespreksdeelnames || []).map(d => esc(d.naam)).join(", ")}</div>${zaak}${kc}
+    <div>${bij}</div>
+    ${open ? `<textarea id="antwoord" placeholder="Antwoord aan de inwoner"></textarea>
+    <div class="knoppen"><button class="primair" id="stuur">Antwoord versturen</button><button class="secundair" id="sluit">Gesprek afsluiten</button></div>` : ""}`;
+  const t = $("#antwoord"); if (t) { t.value = concept; t.oninput = () => concept = t.value; }
+  const s = $("#stuur"); if (s) s.onclick = stuur;
+  const c = $("#sluit"); if (c) c.onclick = async () => { await fetch(`/api/gesprekken/${gekozen}/eindigen`, {method:"POST"}); laadDetail(); laadLijst(); };
+}
+
+async function stuur() {
+  const tekst = $("#antwoord").value.trim(); if (!tekst) return;
+  $("#stuur").disabled = true;
+  const r = await fetch("/api/antwoord", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({gesprek: gekozen, tekst})});
+  if (r.ok) { concept = ""; } else { alert("Versturen mislukt: " + (await r.text()).slice(0, 300)); }
+  laadDetail(); laadLijst();
+}
+
+async function laadKlant() {
+  const r = await fetch("/api/klantcontacten"); if (!r.ok) { $("#kclijst").innerHTML = '<div class="leeg">Open Klant niet bereikbaar.</div>'; return; }
+  const d = await r.json(); const ks = d.results || [];
+  $("#kclijst").innerHTML = ks.length ? ks.map(k => {
+    const ex = k._expand || {};
+    const ow = (ex.gingOverOnderwerpobjecten || []).map(o => (o.onderwerpobjectidentificator || {}).codeObjecttype).filter(Boolean).join(", ");
+    const bt = (ex.hadBetrokkenen || []).map(b => ((b.contactnaam || {}).achternaam || b.rol)).join(", ");
+    return `<div class="ev"><span class="t">${esc(k.onderwerp)}</span> <span class="klein">${esc(k.kanaal)} · ${tijd(k.plaatsgevondenOp)} · ${esc(k.inhoud)}</span>
+      <div class="klein">Onderwerpobjecten: ${esc(ow || "-")} · betrokkenen: ${esc(bt || "-")}</div></div>`;
+  }).join("") : '<div class="leeg">Nog geen klantcontacten. Sluit een gesprek af (inwoner: "Vraag beantwoord").</div>';
+}
+
+let evAantal = 0;
+function volgEvents() {
+  const es = new EventSource("/api/events?vanaf=0");
+  es.onmessage = toon;
+  ["gesprek.aangemaakt","gesprek.beeindigd","gespreksbijdrage.aangemaakt","gespreksbijdrage.gelezen","gespreksbijdrage.geredigeerd","gespreksdeelname.aangemaakt","gespreksdeelname.beeindigd"]
+    .forEach(t => es.addEventListener("nl.vng.gesprekken." + t, toon));
+  function toon(e) {
+    let d = {}; try { d = JSON.parse(e.data); } catch {}
+    if (evAantal === 0) $("#evlijst").innerHTML = "";
+    evAantal++; $("#evteller").textContent = "(" + evAantal + ")";
+    const kort = {...d}; delete kort.data;
+    const el = document.createElement("div"); el.className = "ev";
+    el.innerHTML = `<span class="t">#${esc(e.lastEventId)} ${esc(e.type === "message" ? d.type : e.type)}</span> <span class="klein">${tijd(d.time)}</span><pre>${esc(JSON.stringify(d.data ?? d, null, 1).slice(0, 900))}</pre>`;
+    $("#evlijst").prepend(el);
+    laadLijst(); laadDetail();
+    if ($("#klant").classList.contains("on")) laadKlant();
+  }
+}
+
+laadLijst().then(laadDetail); volgEvents();
+setInterval(() => { laadLijst(); }, 10000);
+</script>
+</body>
+</html>

@@ -21,6 +21,8 @@ Bedoeld om de componenten en standaarden te laten zien, te analyseren en (later)
 
 Gepland: compliance-tests tegen de API-specificaties (ZGW, Klantinteracties, Objecten) met een rapport per component en versie.
 
+Daarnaast: `stacks/mijngesprekken`, een tijdelijke MijnGesprekken-demo (Gesprekken API, Open Inwoner, Open Klant), zie de README daar.
+
 ## Snel starten
 
 Vereist: een Linux-server met Docker Compose, Caddy, ongeveer 12 GB vrij geheugen met alle profielen aan (16 GB RAM plus swap), en DNS voor `<domein>` en `*.<domein>`.
