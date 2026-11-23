@@ -36,7 +36,7 @@ for v in NLP_OBJ_TOKEN NLP_OK_TOKEN OIP_OBJ_TOKEN OIP_OT_TOKEN OIP_OK_TOKEN MO_O
 grep -q "^VTB_SECRET_KEY=" .env || echo "VTB_SECRET_KEY=$(gen 30)" >> .env
 grep -q "^OP_SECRET_KEY=" .env || echo "OP_SECRET_KEY=$(gen 30)" >> .env
 grep -q "^NLP_ZGW_SECRET=" .env || echo "NLP_ZGW_SECRET=$(gen 16)" >> .env
-for v in DEMO_LOGIN_SECRET ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
+for v in DEMO_LOGIN_SECRET ZAAKCHAT_JWT_SECRET ZAAKCHAT_OIDC_SECRET ZAAKCHAT_ZGW_SECRET ZAAKCHAT_ON_KEY MO_SESSION_SECRET MO_ZGW_SECRET NLP_M2M_SECRET OIP_SECRET_KEY OIP_ZGW_SECRET OIP_NC_SECRET IKO_OIDC_SECRET IKO_CRYPTO_KEY OE_ZGW_SECRET; do grep -q "^$v=" .env || echo "$v=$(gen 24)" >> .env; done
 # OneGround: HMAC-sleutel en certificaat voor het versleuteld opslaan van BSN's in de Zaken API
 grep -q "^OG_HMAC_KEY=" .env || echo "OG_HMAC_KEY=$(openssl rand -base64 32)" >> .env
 if ! grep -q "^OG_DP_CERT=" .env; then

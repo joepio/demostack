@@ -1,0 +1,3 @@
+# Optioneel: elke nacht OpenEvents leegmaken, zodat wat bezoekers met dev-tokens schrijven hooguit een dag blijft staan.
+# Installeren: cp cron/demostack-openevents /etc/cron.d/
+30 4 * * * root /srv/demogemeente/demostack/stacks/openevents/reset.sh >>/var/log/openevents-reset.log 2>&1

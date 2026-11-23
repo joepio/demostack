@@ -24,6 +24,8 @@ vng_api_common_credentials:
       secret: ${MO_ZGW_SECRET}
     - identifier: zaakchat
       secret: ${ZAAKCHAT_ZGW_SECRET}
+    - identifier: openevents
+      secret: ${OE_ZGW_SECRET}
 vng_api_common_applicaties_config_enable: true
 vng_api_common_applicaties:
   items:
@@ -63,6 +65,10 @@ vng_api_common_applicaties:
     - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a09
       client_ids: [zaakchat]
       label: ZaakChat-koppeling
+      heeft_alle_autorisaties: true
+    - uuid: 5f6a1c2e-3b4d-4e5f-8a9b-0c1d2e3f4a0a
+      client_ids: [openevents]
+      label: OpenEvents (stacks/openevents)
       heeft_alle_autorisaties: true
 zgw_consumers_config_enable: true
 zgw_consumers:

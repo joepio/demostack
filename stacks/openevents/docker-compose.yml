@@ -1,5 +1,5 @@
 # OpenEvents op DemoStack: een eventregister naast de kern-stack. Raakt de kern niet aan:
-# - Open Zaak en Open Notificaties: bestaande client (open-inwoner), niets ingericht;
+# - Open Zaak en Open Notificaties: eigen client openevents (kern-templates openzaak.yaml, opennotificaties.yaml);
 #   OpenEvents meldt zich zelf aan als abonnee op kanaal zaken (en opnieuw na een reset).
 # - Keycloak: alleen tokens controleren (issuer van realm demogemeente), geen client.
 # Alleen Caddy routeert hierheen (zie caddy/Caddyfile.example).
@@ -23,8 +23,8 @@ services:
       OPENEVENTS_NOTIFICATIES_API: https://notificaties.${D}/api/v1
       OPENEVENTS_NOTIFICATIES_KANALEN: zaken
       OPENEVENTS_NOTIFICATIES_AUTH: Bearer ${OE_NOTIFICATIES_TOKEN}
-      OPENEVENTS_ZGW_CLIENT_ID: open-inwoner
-      OPENEVENTS_ZGW_SECRET: ${OIP_ZGW_SECRET}
+      OPENEVENTS_ZGW_CLIENT_ID: openevents
+      OPENEVENTS_ZGW_SECRET: ${OE_ZGW_SECRET:?zie .env}
       RUST_LOG: info,openevents_server=debug
     volumes: [ "data:/data" ]
     ports: [ "127.0.0.1:8150:8080" ]

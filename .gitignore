@@ -3,3 +3,4 @@
 stacks/*/config/generated/
 stacks/*/welkom/public/
 __pycache__/
+stacks/*/src/

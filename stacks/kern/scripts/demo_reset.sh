@@ -44,6 +44,11 @@ case "${1:-}" in
     docker volume rm -f kern_zaakchat-data >/dev/null 2>&1 || true
     docker compose restart mailpit >/dev/null 2>&1 || true
     docker compose up -d $stop >/dev/null 2>&1
+    # Clients uit de templates opnieuw toepassen, zodat clients die na de basis zijn toegevoegd (bv. openevents) blijven bestaan
+    for c in opennotificaties openzaak; do
+      docker compose run --rm -T -v "$PWD/config/generated/$c.yaml:/app/setup_configuration/data.yaml:ro" "$c" \
+        src/manage.py setup_configuration --yaml-file setup_configuration/data.yaml >/dev/null 2>&1 || echo "setup_configuration $c mislukt"
+    done
     # Zoekindexen bijwerken zodra de werkplekken weer draaien
     set -a; . ./.env; set +a
     for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8111/ | grep -qE '200|302' && break; sleep 5; done

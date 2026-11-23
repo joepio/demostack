@@ -19,18 +19,19 @@ Bewust zo weinig mogelijk:
 
 | Applicatie | Wijziging |
 |---|---|
-| Open Zaak | geen: bestaande client `open-inwoner` (heeft alle autorisaties) |
-| Open Notificaties | geen: OpenEvents maakt zijn abonnement zelf aan en controleert elke 5 minuten of het er nog is (overleeft de nachtelijke reset) |
+| Open Zaak | eigen client `openevents` (alle autorisaties, alleen-lezen gebruikt) in `stacks/kern/config/templates/openzaak.yaml` |
+| Open Notificaties | client `openevents` in `opennotificaties.yaml`; het abonnement maakt OpenEvents zelf aan en het controleert elke 5 minuten of het er nog is (overleeft een reset) |
 | Keycloak | geen: OpenEvents controleert alleen tokens van realm `demogemeente` |
-| Kern-stack | geen |
+| Kern-stack | `OE_ZGW_SECRET` in de kern-`.env` (`setup.sh` maakt het aan); `demo_reset.sh herstel` past de clients uit de templates opnieuw toe |
 | Caddy | één blok (`caddy/Caddyfile.example`) |
 | DNS | `events.demostack.nl` |
 
-Concessie: in de audit-trail van Open Zaak lijkt OpenEvents op Open Inwoner. Een eigen client kost drie regels in `stacks/kern/config/templates/openzaak.yaml` en `opennotificaties.yaml`.
+In de audit-trail van Open Zaak staat OpenEvents onder zijn eigen naam.
 
 ## Opzetten
 
-1. `cp .env.example .env` en vul in (`OIP_ZGW_SECRET` uit de kern-`.env`).
+1. In de kern: `OE_ZGW_SECRET` in `.env` (of `scripts/setup.sh`), dan `scripts/render-config.sh` en `setup_configuration` voor `opennotificaties` en `openzaak` (zoals in `setup.sh`).
+   Hier: `cp .env.example .env` en vul in (`OE_ZGW_SECRET` uit de kern-`.env`).
 2. `git clone https://github.com/joepio/openevents src/openevents`
 3. `docker compose up -d --build`
 4. Caddy-blok uit `caddy/Caddyfile.example` toevoegen, `systemctl reload caddy`.
@@ -38,7 +39,9 @@ Concessie: in de audit-trail van Open Zaak lijkt OpenEvents op Open Inwoner. Een
 
 ## Inloggen
 
-Dev-modus: kies rechtsboven een persona ("Bekijk als"). Alle data is demodata en mag weg; niemand kan via de API profielen wijzigen (`OPENEVENTS_ADMINS` is leeg). Machines kunnen ook een token van Keycloak (realm `demogemeente`) gebruiken.
+Dev-modus staat bewust aan: kies rechtsboven een persona ("Bekijk als"), en Mijn Demodam en de simulator schrijven met dev-tokens. Gevolg: iedereen kan als elke persona lezen en events schrijven. Dat is alleen acceptabel omdat alles demodata is; niemand kan via de API profielen wijzigen (`OPENEVENTS_ADMINS` is leeg). Machines kunnen ook een token van Keycloak (realm `demogemeente`) gebruiken.
+
+Wil je dat wat bezoekers schrijven niet blijft staan: `cp cron/demostack-openevents /etc/cron.d/` maakt OpenEvents elke nacht om 04:30 leeg (`reset.sh`).
 
 ## Leegmaken en weghalen
 

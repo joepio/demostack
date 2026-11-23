@@ -38,6 +38,8 @@ vng_api_common_credentials:
       secret: ${OBJ_TO_ON_SECRET}
     - identifier: open-inwoner
       secret: ${OIP_ZGW_SECRET}
+    - identifier: openevents
+      secret: ${OE_ZGW_SECRET}
 notifications_kanalen_config_enable: true
 notifications_kanalen_config:
   items:
