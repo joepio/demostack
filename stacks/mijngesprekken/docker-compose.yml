@@ -22,7 +22,7 @@ x-oip-env: &oip-env
   SECRET_KEY: ${OIP_SECRET_KEY}
   DB_NAME: openinwoner
   DB_USER: openinwoner
-  DB_PASSWORD: openinwoner
+  DB_PASSWORD: ${MG_DB_PASSWORD:?zie .env}
   ALLOWED_HOSTS: gesprekken-inwoner.${D},mg-oip,localhost
   CSRF_TRUSTED_ORIGINS: https://gesprekken-inwoner.${D}
   CACHE_DEFAULT: mg-redis:6379/1
@@ -41,7 +41,7 @@ services:
     <<: *common
     image: postgis/postgis:17-3.5
     mem_limit: 512m
-    environment: { POSTGRES_PASSWORD: postgres }
+    environment: { POSTGRES_PASSWORD: "${MG_DB_PASSWORD:?zie .env}", MG_DB_PASSWORD: "${MG_DB_PASSWORD:?zie .env}" }
     command: postgres -c shared_buffers=64MB -c max_connections=100
     volumes: [ "db:/var/lib/postgresql/data", "./initdb:/docker-entrypoint-initdb.d:ro" ]
     healthcheck: { test: ["CMD", "pg_isready", "-U", "postgres"], interval: 5s, retries: 30 }
@@ -83,8 +83,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Local
       ASPNETCORE_URLS: http://*:5000
-      ConnectionStrings__UserConnectionString: Host=mg-db;Port=5432;Database=grc_db;Username=oneground_admin;Password=oneground_admin
-      ConnectionStrings__AdminConnectionString: Host=mg-db;Port=5432;Database=grc_db;Username=oneground_admin;Password=oneground_admin
+      ConnectionStrings__UserConnectionString: Host=mg-db;Port=5432;Database=grc_db;Username=oneground_admin;Password=${MG_DB_PASSWORD:?zie .env}
+      ConnectionStrings__AdminConnectionString: Host=mg-db;Port=5432;Database=grc_db;Username=oneground_admin;Password=${MG_DB_PASSWORD:?zie .env}
       Redis__ConnectionString: mg-redis
       Auth__Authority: http://mg-app:8080/idp/
       Auth__ValidIssuer: i
@@ -121,7 +121,7 @@ services:
       SECRET_KEY: ${OK_SECRET_KEY}
       DB_NAME: openklant
       DB_USER: openklant
-      DB_PASSWORD: openklant
+      DB_PASSWORD: ${MG_DB_PASSWORD:?zie .env}
       ALLOWED_HOSTS: gesprekken-klant.${D},mg-openklant,localhost
       CSRF_TRUSTED_ORIGINS: https://gesprekken-klant.${D}
       CACHE_DEFAULT: mg-redis:6379/3
