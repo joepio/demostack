@@ -53,6 +53,19 @@ m2m = upsert_client({"clientId": "nl-portal-m2m", "name": "NL Portal backend", "
     "protocolMappers": [audience("nl-portal-m2m")]})
 call("PUT", f"{R}/clients/{m2m['id']}/default-client-scopes/{scopes['aanvrager']['id']}")
 
+# Mijn Demodam (OpenEvents): publieke client met PKCE; het token draagt rol=inwoner en het BSN,
+# zodat de regels in de OpenEvents-profielen werken (actor = https://id.example.nl/{gebruikersnaam})
+E = f"https://events.{D}"
+upsert_client({"clientId": "mijn-demodam", "name": "Mijn Demodam (OpenEvents)", "publicClient": True,
+    "standardFlowEnabled": True, "directAccessGrantsEnabled": False,
+    "redirectUris": [f"{E}/mijnoverheid", f"{E}/mijnoverheid/"], "webOrigins": [E],
+    "attributes": {"post.logout.redirect.uris": f"{E}/*", "pkce.code.challenge.method": "S256"},
+    "protocolMappers": [
+        {"name": "rol", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper",
+         "config": {"claim.name": "rol", "claim.value": "inwoner", "jsonType.label": "String",
+                    "access.token.claim": "true", "id.token.claim": "false", "userinfo.token.claim": "false"}},
+        attr_mapper("bsn", "bsn")]})
+
 # ZaakChat: inwoners en medewerkers loggen in via de koppeling, die een ZaakChat-token afgeeft voor hun e-mailadres
 Z = f"https://zaakchat.{D}"
 upsert_client({"clientId": "zaakchat", "name": "ZaakChat", "publicClient": False, "secret": os.environ["ZAAKCHAT_OIDC_SECRET"],

@@ -19,6 +19,8 @@ services:
       OPENEVENTS_PROFILES: /profiles
       OPENEVENTS_OIDC_ISSUER: https://keycloak.${D}/realms/demogemeente
       OPENEVENTS_ACTOR_CLAIM: preferred_username
+      OPENEVENTS_ACTOR_PREFIX: https://id.example.nl/   # zelfde ids als in de demodata
+      OPENEVENTS_UI_CLIENT_ID: mijn-demodam            # inloggen in /mijnoverheid (Keycloak, PKCE)
       OPENEVENTS_PUBLIC_URL: https://events.${D}
       OPENEVENTS_NOTIFICATIES_API: https://notificaties.${D}/api/v1
       OPENEVENTS_NOTIFICATIES_KANALEN: zaken
