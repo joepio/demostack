@@ -24,6 +24,7 @@ services:
       OPENEVENTS_PUBLIC_URL: https://events.${D}
       OPENEVENTS_NOTIFICATIES_API: https://notificaties.${D}/api/v1
       OPENEVENTS_NOTIFICATIES_KANALEN: zaken
+      OPENEVENTS_IMPORT_ZAKEN: https://zaken.${D}/zaken/api/v1   # bestaande zaken bij het opstarten
       OPENEVENTS_NOTIFICATIES_AUTH: Bearer ${OE_NOTIFICATIES_TOKEN}
       OPENEVENTS_ZGW_CLIENT_ID: openevents
       OPENEVENTS_ZGW_SECRET: ${OE_ZGW_SECRET:?zie .env}
