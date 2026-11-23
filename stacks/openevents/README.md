@@ -5,6 +5,7 @@ Een eventregister naast de kern-stack: [joepio/openevents](https://github.com/jo
 | Adres | Wat |
 |---|---|
 | https://events.demostack.nl/ui | Beheer-UI: stand, events (live), query, schrijven; "Bekijk als" met persona's |
+| https://events.demostack.nl/mijn/zaken, https://events.demostack.nl/mijn/taken | MijnZaken en MijnTaken (lab `next`) voor de MijnOverheid-demo: zet ze in de API-inspector van mijnoverheid.chat, met een dev-token zoals `dev:https://id.example.nl/jan\|rol=inwoner` |
 | https://events.demostack.nl/profiles/nl.vng.zgw.zaken/openapi.json | OpenAPI van de zaakspiegel, gegenereerd uit het profiel |
 
 ## Wat er in staat
