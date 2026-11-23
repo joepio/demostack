@@ -27,6 +27,8 @@ Specificatie: VNG-Realisatie/VNG-API-Lab#47 (MijnGesprekken next).
 ## Opzetten
 
 1. `cp .env.example .env` en vul alles in (wachtwoorden en sleutels zelf genereren; `ONTVANGER_ACTOR` en `AUTO_ACTOR` zijn de actor-URL's die `seed/openklant.py` print).
+   `MG_DB_PASSWORD` wordt alleen bij een lege `db`-volume gezet. Bij een bestaande database zet je het zo gelijk:
+   `for u in openinwoner openklant oneground_user oneground_admin; do docker compose exec -T mg-db psql -U postgres -qc "ALTER USER $u PASSWORD '$MG_DB_PASSWORD'"; done` (met `.env` geladen), daarna `docker compose up -d`.
 2. Images bouwen uit de forks:
    `git clone -b gesprekken-poc https://github.com/joepio/ZGW-APIs src/zgw` en het Gesprekken-image bouwen als `mgdemo/grc:<commit>`;
    `git clone -b mijngesprekken-poc https://github.com/joepio/open-inwoner src/oip && docker build -t mgdemo/oip:<commit> src/oip`.
