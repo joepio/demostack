@@ -43,7 +43,9 @@ OpenEvents slaat geen echt BSN op: met `OE_PSEUDONYM_KEY` worden het BSN in het 
 
 ## Inloggen
 
-Dev-modus staat bewust aan: kies rechtsboven een persona ("Bekijk als"), en Mijn Demodam en de simulator schrijven met dev-tokens. Gevolg: iedereen kan als elke persona lezen en events schrijven. Dat is alleen acceptabel omdat alles demodata is; niemand kan via de API profielen wijzigen (`OPENEVENTS_ADMINS` is leeg). Machines kunnen ook een token van Keycloak (realm `demogemeente`) gebruiken.
+Persona's zijn alleen om te bekijken: kies rechtsboven een persona ("Bekijk als") in de beheer-UI of in Mijn Demodam en je ziet wat die persoon mag zien. Iets doen (een taak afronden, een bericht sturen) vraagt een echte login via Keycloak, bijvoorbeeld met de snelkeuze voor suzanne. De simulator tekent zijn eigen tokens met `OE_JWT_SECRET`, dat alleen de server en de simulator kennen. Niemand kan via de API profielen wijzigen (`OPENEVENTS_ADMINS` is leeg).
+
+`/health` en `/metrics` (Prometheus, alleen tellingen en tijden) staan open. Backups staan hier uit, want DemoStack-data mag altijd weg; zie `docs/beheer.md` in OpenEvents om ze aan te zetten.
 
 Wil je dat wat bezoekers schrijven niet blijft staan: `cp cron/demostack-openevents /etc/cron.d/` maakt OpenEvents elke nacht om 04:30 leeg (`reset.sh`).
 

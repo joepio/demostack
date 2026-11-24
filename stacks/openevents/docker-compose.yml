@@ -14,7 +14,8 @@ services:
     image: oedemo/openevents:${OE_COMMIT:-main}
     mem_limit: 256m
     environment:
-      OPENEVENTS_DEV_AUTH: "true"            # persona's in de UI; demodata, zie README
+      OPENEVENTS_DEV_AUTH: "read"            # persona's alleen om te bekijken; schrijven vraagt een login
+      OPENEVENTS_JWT_SECRET: ${OE_JWT_SECRET:?zie .env}   # gedeeld met oe-sim, die zijn eigen tokens tekent
       OPENEVENTS_ADMINS: ""                  # niemand mag profielen wijzigen via de API
       OPENEVENTS_PROFILES: /profiles
       OPENEVENTS_OIDC_ISSUER: https://keycloak.${D}/realms/demogemeente
@@ -39,6 +40,8 @@ services:
     image: oedemo/openevents:${OE_COMMIT:-main}
     mem_limit: 64m
     depends_on: [ oe-server ]
+    environment:
+      OPENEVENTS_JWT_SECRET: ${OE_JWT_SECRET:?zie .env}
     entrypoint: [ "sh", "-c", "sleep 5; openevents-sim --base http://oe-server:8080 --backfill 40 --rate 0.2 --active 6" ]
 
 volumes:
