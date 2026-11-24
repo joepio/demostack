@@ -157,7 +157,7 @@ docker compose run --rm -T -e BASE_DOMAIN -e ADMIN_PASSWORD -e IKO_OIDC_SECRET -
 
 # OneGround: eigen Keycloak (realm, client met rsin-claim), daarna dezelfde demo-catalogus en -meldingen als in Open Zaak
 for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8137/realms/master | grep -q 200 && break; sleep 5; done
-docker compose run --rm -T --no-deps -e OG_KC_ADMIN_PASSWORD -e OG_CLIENTS="oneground-002220647=$OG_SERVICE_SECRET,openforms=$OG_OF_SECRET,nl-portal=$OG_NLP_SECRET,kiss=$OG_KISS_SECRET" \
+docker compose run --rm -T --no-deps -e OG_KC_ADMIN_PASSWORD -e OG_CLIENTS="oneground-002220647=$OG_SERVICE_SECRET,openforms=$OG_OF_SECRET,nl-portal=$OG_NLP_SECRET,kiss=$OG_KISS_SECRET,openevents=$OE_ZGW_SECRET" \
   -v "$PWD/scripts:/scripts:ro" openforms python /scripts/keycloak_oneground.py 2>&1 | q
 docker compose restart og-autorisaties og-catalogi og-zaken og-documenten og-besluiten og-notificaties >/dev/null
 for _ in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' "https://og-catalogi.$BASE_DOMAIN/api/v1/catalogussen" | grep -q 401 && break; sleep 5; done

@@ -21,6 +21,7 @@ Bewust zo weinig mogelijk:
 |---|---|
 | Open Zaak | eigen client `openevents` (alle autorisaties, alleen-lezen gebruikt) in `stacks/kern/config/templates/openzaak.yaml` |
 | Open Notificaties | client `openevents` in `opennotificaties.yaml`; het abonnement maakt OpenEvents zelf aan en het controleert elke 5 minuten of het er nog is (overleeft een reset) |
+| OneGround | dezelfde client `openevents` (zelfde geheim `OE_ZGW_SECRET`) in de OneGround-Keycloak (`OG_CLIENTS` in `setup.sh`) en in `config/oneground/applicaties.json`; OpenEvents abonneert zich zelf bij de Notificaties API van OneGround en importeert de bestaande zaken. Zo komen zaken uit Open Zaak én OneGround in één overzicht. |
 | Keycloak | publieke client `mijn-demodam` (in `stacks/kern/scripts/keycloak_portalen.py`) voor inloggen in `/mijnoverheid`, met claims `rol=inwoner` en `bsn`; OpenEvents controleert verder alleen tokens van realm `demogemeente` |
 | Kern-stack | `OE_ZGW_SECRET` in de kern-`.env` (`setup.sh` maakt het aan); `demo_reset.sh herstel` past de clients uit de templates opnieuw toe |
 | Caddy | één blok (`caddy/Caddyfile.example`) |

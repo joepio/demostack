@@ -1,5 +1,6 @@
 # OpenEvents op DemoStack: een eventregister naast de kern-stack. Raakt de kern niet aan:
 # - Open Zaak en Open Notificaties: eigen client openevents (kern-templates openzaak.yaml, opennotificaties.yaml);
+#   OneGround: dezelfde client openevents (kern setup.sh OG_CLIENTS en config/oneground/applicaties.json);
 #   OpenEvents meldt zich zelf aan als abonnee op kanaal zaken (en opnieuw na een reset).
 # - Keycloak: alleen tokens controleren (issuer van realm demogemeente), geen client.
 # Alleen Caddy routeert hierheen (zie caddy/Caddyfile.example).
@@ -29,6 +30,13 @@ services:
       OPENEVENTS_NOTIFICATIES_AUTH: Bearer ${OE_NOTIFICATIES_TOKEN}
       OPENEVENTS_ZGW_CLIENT_ID: openevents
       OPENEVENTS_ZGW_SECRET: ${OE_ZGW_SECRET:?zie .env}
+      # Tweede zaakregister: OneGround (zelfde client openevents, eigen geheim voor de callback)
+      OPENEVENTS_ZGW_SOURCES: og
+      OPENEVENTS_OG_NOTIFICATIES_AUTH: Bearer ${OE_OG_NOTIFICATIES_TOKEN:?zie .env}
+      OPENEVENTS_OG_ZGW_CLIENT_ID: openevents
+      OPENEVENTS_OG_ZGW_SECRET: ${OE_ZGW_SECRET:?zie .env}
+      OPENEVENTS_OG_NOTIFICATIES_API: https://og-notificaties.${D}/api/v1
+      OPENEVENTS_OG_IMPORT_ZAKEN: https://og-zaken.${D}/api/v1
       OPENEVENTS_PSEUDONYM_KEY: ${OE_PSEUDONYM_KEY:?zie .env}   # BSN wordt een pseudoniem in de spiegel
       RUST_LOG: info,openevents_server=debug
     volumes: [ "data:/data" ]
