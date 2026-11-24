@@ -37,6 +37,10 @@ In de audit-trail van Open Zaak staat OpenEvents onder zijn eigen naam.
 4. Caddy-blok uit `caddy/Caddyfile.example` toevoegen, `systemctl reload caddy`.
 5. Controle: `docker compose logs oe-server | grep -i notificaties` toont "subscribed at Open Notificaties"; maak een zaak in ZAC of GZAC en kijk in de UI bij type `nl.vng.zgw.zaak`.
 
+## Privacy
+
+OpenEvents slaat geen echt BSN op: met `OE_PSEUDONYM_KEY` worden het BSN in het Keycloak-token en in de rollen van Open Zaak hetzelfde pseudoniem, zodat Mijn Demodam blijft werken. Gesprekken en taken worden een jaar na afsluiten of afronden vanzelf verwijderd (`retention` in de profielen). Handmatig verwijderen (`DELETE /subjects/...`) kan hier niet, omdat `OPENEVENTS_ADMINS` leeg is. Zie `docs/wissen.md` in OpenEvents.
+
 ## Inloggen
 
 Dev-modus staat bewust aan: kies rechtsboven een persona ("Bekijk als"), en Mijn Demodam en de simulator schrijven met dev-tokens. Gevolg: iedereen kan als elke persona lezen en events schrijven. Dat is alleen acceptabel omdat alles demodata is; niemand kan via de API profielen wijzigen (`OPENEVENTS_ADMINS` is leeg). Machines kunnen ook een token van Keycloak (realm `demogemeente`) gebruiken.

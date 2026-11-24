@@ -28,6 +28,7 @@ services:
       OPENEVENTS_NOTIFICATIES_AUTH: Bearer ${OE_NOTIFICATIES_TOKEN}
       OPENEVENTS_ZGW_CLIENT_ID: openevents
       OPENEVENTS_ZGW_SECRET: ${OE_ZGW_SECRET:?zie .env}
+      OPENEVENTS_PSEUDONYM_KEY: ${OE_PSEUDONYM_KEY:?zie .env}   # BSN wordt een pseudoniem in de spiegel
       RUST_LOG: info,openevents_server=debug
     volumes: [ "data:/data" ]
     ports: [ "127.0.0.1:8150:8080" ]
